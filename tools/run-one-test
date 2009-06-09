@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+triplane="$1"
+testdir="$2"
+tmptestdir="`mktemp -d`"
+(cd "$testdir"; cp -a . "$tmptestdir")
+
+TRIPLANE_HOME="$tmptestdir" "$triplane" `cat "$tmptestdir/args"` > "$tmptestdir/output" || true
+
+if ! cmp --quiet "$testdir/output.reference" "$tmptestdir/output"; then
+    echo "Test failed. Please investigate $tmptestdir"
+    exit 1
+fi
+
+rm -r "$tmptestdir"
+

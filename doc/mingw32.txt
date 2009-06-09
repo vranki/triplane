@@ -1,0 +1,32 @@
+With these steps you can build triplane for Windows without having to
+touch any proprietary stuff yourself.
+
+Setup
+=====
+
+sudo aptitude install mingw32 mingw32-binutils mingw32-runtime
+export WINDOWS_LIBS=~/mingw32
+mkdir $WINDOWS_LIBS || exit 1
+pushd $WINDOWS_LIBS
+wget http://www.libsdl.org/release/SDL-devel-1.2.13-mingw32.tar.gz
+tar zxf SDL-devel-1.2.13-mingw32.tar.gz
+sed -i "s@^prefix=.*@prefix=$WINDOWS_LIBS/SDL-1.2.13@" SDL-1.2.13/bin/sdl-config
+sed -i "s@^libdir=.*@libdir=$WINDOWS_LIBS/SDL-1.2.13/lib@" SDL-1.2.13/lib/libSDL.la
+popd
+
+Use
+===
+
+export PATH=$WINDOWS_LIBS/SDL-1.2.13/bin:$PATH
+make CXX=i586-mingw32msvc-g++ depend
+make CXX=i586-mingw32msvc-g++ OPTIFLAG="-Drandom=rand -Dsrandom=srand" triplane
+mv triplane triplane.exe
+make fokker.dks
+
+Dist
+====
+
+cp $WINDOWS_LIBS/SDL-1.2.13/bin/SDL.dll .
+zip triplane.zip triplane.exe fokker.dks SDL.dll
+rm SDL.dll
+

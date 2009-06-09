@@ -1,0 +1,30 @@
+This file documents the keybindings of the level editor. The level
+editor is currently not meant to be used by normal users and the game
+does not yet easily support adding custom levels.
+
+ESC             Save and exit
+F2              Save file
+Insert		Add object
+F5-F8           Add infantry
+Delete		Delete object
+Home		Change Nationality of object
+End		Change Hittability of the object
+PageUp		Select Background picture
+PageDown	Select type of the object
+1-4		Place airfield
+q,w,e,r		Make airfield longer
+a,s,d,f		Make airfield shorter
+left mouse btn  Select object
+right mouse btn Deselect object
+
+1= German
+2= Finnish
+3= English
+4= Japanese
+
+FLAGS
+INFAN
+INSTOP
+KKBASE
+ITGUN
+HANGAR

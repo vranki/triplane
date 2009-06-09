@@ -1,0 +1,83 @@
+           Triplane Classic - a side-scrolling dogfighting game
+
+Intro
+=====
+
+Triplane Classic is a side-scrolling dogfighting game featuring solo
+missions and multiplayer mode with up to four players. It is a port of
+the original Triplane Turmoil game for DOS and aims to match the
+original game exactly so that high scores remain comparable to the
+original.
+
+Please read the manual page for information on how to actually play
+the game.
+
+Building from source
+====================
+
+Dependencies
+------------
+
+* g++
+* SDL 1.2 
+* SDL mixer 1.2
+* GNU make
+
+Build procedure
+---------------
+
+$ make depend
+$ make
+$ make install
+
+DESTDIR and PREFIX are supported. See doc/mingw32.txt for Windows
+build instructions.
+
+Testsuite
+---------
+
+Use "make test" to run testsuite. It plays the game with prerecorded
+inputs and checks the CRC checksum of every output frame. This is
+especially important if you are building on a weird architecture or
+have changed something in the code.
+
+Copyrights
+==========
+
+The original Triplane Turmoil was developed by Markku Rankala, Teemu
+J. Takanen and Henrikki Merikallio. Some work was also contributed by
+Risto Puhakka, Antti Lehtoranta and Mikko Kinnunen. 
+
+The portable SDL version was created from the original source by Timo
+Juhani Lindfors (timo.lindfors@iki.fi), Teemu J. Takanen
+(tjt@users.sourceforge.net), and Riku Saikkonen. We also thank Timo Lilja
+for his earlier Xlib porting efforts and Sami Liedes for
+spellchecking and optimization ideas.
+
+Dodekaedron Software Creations Oy is the current copyright holder for
+the Triplane Classic source code, documentation, images and sounds. In
+2009 it granted a license to distribute these under the terms of the
+GNU General Public License version 3 or later.
+
+
+Trademarks
+==========
+
+Triplane Turmoil is a trademark of Dodekaedron Software
+Creations Oy.
+
+Triplane Turmoil 2 is a trademark of Draconus Entertainment Ltd.
+
+Triplane Classic is not a trademark. However, if you make substantial
+modifications that, for example, change the scoring system, we
+encourage you to pick a new name for your modified game so that users
+are not confused.
+
+Contact
+=======
+
+Teemu J. Takanen <tjt@users.sourceforge.net>
+
+Timo Juhani Lindfors <timo.lindfors@iki.fi>
+
+

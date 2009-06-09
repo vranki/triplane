@@ -1,0 +1,363 @@
+fokker.dks
+;Menu graphichs
+data/menus/feat5.pgd
+data/menus/opt1.pgd
+data/menus/opt2.pgd
+data/menus/startd.pgd
+data/menus/ribbons.pgd
+data/menus/help1.pgd
+data/menus/help2.pgd
+data/menus/help3.pgd
+data/menus/help4.pgd
+data/menus/help5.pgd
+data/menus/medals1.pgd
+data/menus/medals2.pgd
+data/menus/medals3.pgd
+data/menus/medals4.pgd
+data/menus/letter.pgd
+data/menus/setk1.pgd
+data/menus/setk2.pgd
+data/menus/credi1.pgd
+data/menus/opti1.pgd
+data/menus/opti2.pgd
+data/menus/opti3.pgd
+data/menus/opti4.pgd
+data/menus/acesa.pgd
+data/menus/acesb.pgd
+data/menus/misboa.pgd
+data/menus/misbak.pgd
+data/menus/gerfac.pgd
+data/menus/finfac.pgd
+data/menus/engfac.pgd
+data/menus/japfac.pgd
+data/menus/warn1.pgd
+data/menus/warn2.pgd
+data/menus/buttc.pgd
+data/menus/buttok.pgd
+data/menus/right.pgd
+data/menus/wrong.pgd
+data/menus/kangas.pgd
+data/menus/fly.pgd
+data/menus/exit.pgd
+data/menus/menua.pgd
+data/menus/ruksi.pgd
+data/menus/desc1.pgd
+data/menus/desc2.pgd
+data/menus/desc3.pgd
+data/menus/desc4.pgd
+data/menus/desc5.pgd
+data/menus/desc6.pgd
+data/menus/fokkuva4.pgd
+data/menus/allmaisg.pgd
+data/menus/allmais2.pgd
+data/menus/germis2.pgd
+data/menus/finmis2.pgd
+data/menus/engmis2.pgd
+data/menus/japmis2.pgd
+data/menus/alkuval.pgd
+data/menus/options.pgd
+data/menus/nappis.pgd
+data/menus/nappre.pgd
+data/menus/nappbl.pgd
+data/menus/nappgr.pgd
+data/menus/nappyl.pgd
+data/misc/erreor.pgd
+data/menus/buttl.pgd
+data/menus/buttr.pgd
+data/menus/roster.pgd
+data/misc/score.pgd
+data/misc/lappu1.pgd
+data/misc/lappu2.pgd
+;SFX
+data/sfx/aargh1.wav Die1
+data/sfx/aargh2.wav Die2
+data/sfx/aargh3.wav Die3
+data/sfx/aargh4.wav Die4
+data/sfx/aargh5.wav Die5
+data/sfx/aargh6.wav Die6
+data/sfx/aargh7.wav Die7
+data/sfx/aargh8.wav Die8
+data/sfx/aargh9.wav Die9
+data/sfx/alku.wav Alku
+data/sfx/crash1.wav Crash1
+data/sfx/crash2.wav Crash2
+data/sfx/spcrash1.wav Spcra1
+data/sfx/spla1.wav Spla1
+data/sfx/spla2.wav Spla2
+data/sfx/spla3.wav Spla3
+data/sfx/bomb1.wav Bomb1
+data/sfx/bomb2.wav Bomb2
+data/sfx/bomb3.wav Bomb3
+data/sfx/hit1.wav Hit1
+data/sfx/hit2.wav Hit2
+data/sfx/hit3.wav Hit3
+data/sfx/hit4.wav Hit4
+data/sfx/konsu.wav Guns1
+data/sfx/konsu2.wav Guns2
+data/sfx/konsu3.wav Guns3
+data/sfx/kk.wav Aagun
+data/sfx/itexpl1.wav Itexp1
+data/sfx/itexpl2.wav Itexp2
+data/sfx/itexpl3.wav Itexp3
+data/sfx/it.wav Itshot
+;data/sfx/prop1.wav Prop1
+data/sfx/hurr2.wav Hurr
+data/sfx/hangar.wav Hangar
+;Mouse cursors
+data/menus/propello.pgd
+;Destroyed buildings
+data/terrain/dvec2.pgd
+data/terrain/dcbarr.pgd
+data/terrain/dhangar.pgd
+data/terrain/dtower.pgd
+data/terrain/dtent2.pgd
+data/terrain/dfactory.pgd
+data/terrain/dhouse.pgd
+data/terrain/dbarra.pgd
+data/terrain/dbarr2.pgd
+data/terrain/dcbarr.pgd
+data/terrain/dchou1.pgd
+data/terrain/dchou5.pgd
+data/terrain/dhou1.pgd
+data/terrain/dhou2.pgd
+data/terrain/dhou3.pgd
+data/terrain/dhou4.pgd
+data/terrain/dhou5.pgd
+data/terrain/dbarra2.pgd
+data/terrain/dcbarra2.pgd
+data/terrain/dfac1.pgd
+data/terrain/dfac2.pgd
+data/terrain/dwatert.pgd
+data/terrain/dbir1.pgd
+data/terrain/dbir2.pgd
+data/terrain/dbir3.pgd
+data/terrain/doak1.pgd
+data/terrain/doak2.pgd
+data/terrain/doak3.pgd
+data/terrain/dpalm1.pgd
+data/terrain/dpalm2.pgd
+data/terrain/dpalm3.pgd
+data/terrain/diglu1.pgd
+data/terrain/dstore.pgd
+data/terrain/dvec1.pgd
+data/terrain/dtowe2.pgd
+;Fonts
+data/font/acesfn.pgd
+data/font/grid3.pgd
+data/font/grid2.pgd
+data/font/gridfont.pgd
+data/font/fontt/fontzero.pgd
+data/font/fontt/fontone.pgd
+data/font/fontt/fonttwo.pgd
+data/font/fontt/fontthre.pgd
+data/font/fontt/fontfour.pgd
+data/font/fontt/fontfive.pgd
+data/font/fontt/fontsix.pgd
+data/font/fontt/fontseve.pgd
+data/font/fontt/fonteigh.pgd
+data/font/fontt/fontnine.pgd
+data/font/fontt/fontpros.pgd
+data/font/fontt/fontnega.pgd
+;Flags
+data/misc/flags0.pgd
+data/misc/flags1.pgd
+data/misc/flags2.pgd
+data/misc/flags3.pgd
+data/misc/flags.pgd
+;Infantry
+data/misc/infantry.pgd
+data/misc/infan.pgd
+;Terrain Structures
+data/terrain/bush1.pgd
+data/terrain/bush2.pgd
+data/terrain/bridge.pgd
+data/terrain/aut1.pgd
+data/terrain/aut2.pgd
+data/terrain/aut3.pgd
+data/terrain/tower2.pgd
+data/terrain/t1.pgd
+data/terrain/t2.pgd
+data/terrain/vec1.pgd
+data/terrain/vec2.pgd
+data/terrain/kiito.pgd
+data/terrain/iglu1.pgd
+data/terrain/store1.pgd
+data/terrain/barra2.pgd
+data/terrain/barr2.pgd
+data/terrain/cbarra2.pgd
+data/terrain/chou1.pgd
+data/terrain/chou5.pgd
+data/terrain/fac1.pgd
+data/terrain/fac2.pgd
+data/terrain/hou1.pgd
+data/terrain/hou2.pgd
+data/terrain/hou3.pgd
+data/terrain/hou4.pgd
+data/terrain/hou5.pgd
+data/terrain/watert.pgd
+data/terrain/birch1.pgd
+data/terrain/birch2.pgd
+data/terrain/pole.pgd
+data/terrain/tunnel.pgd
+data/terrain/birch3.pgd
+data/terrain/woak1.pgd
+data/terrain/woak2.pgd
+data/terrain/woak3.pgd
+data/terrain/oak1.pgd
+data/terrain/oak2.pgd
+data/terrain/oak3.pgd
+data/terrain/palm1.pgd
+data/terrain/palm2.pgd
+data/terrain/palm3.pgd
+data/terrain/cbarra.pgd
+data/terrain/chou1.pgd
+data/terrain/hou1.pgd
+data/terrain/warning.pgd
+data/terrain/cartow.pgd
+data/terrain/kaktus.pgd
+data/terrain/kak1.pgd
+data/terrain/kak2.pgd
+data/terrain/kak3.pgd
+data/terrain/factory.pgd
+data/terrain/hangar.pgd
+data/terrain/house.pgd
+data/terrain/house2.pgd
+data/terrain/tent2.pgd
+data/terrain/tower.pgd
+data/terrain/barra.pgd
+data/terrain/back1.pgd
+data/terrain/back2.pgd
+data/terrain/t1.pgd
+data/terrain/t2.pgd
+data/terrain/t3.pgd
+data/terrain/t4.pgd
+data/terrain/t5.pgd
+data/terrain/kasa.pgd
+data/terrain/outo.pgd
+data/terrain/outo2.pgd
+;Terrain guns & artillery
+data/terrain/kkbase.pgd
+data/terrain/kkpesa.pgd
+data/misc/it.pgd
+data/misc/itgun.pgd
+;Level Graphics
+data/terrain/lvl1.pgd
+data/terrain/lvl2.pgd
+data/terrain/lvl3.pgd
+data/terrain/lvl4.pgd
+data/terrain/lvl6.pgd
+data/terrain/lvl7.pgd
+data/terrain/lvl8.pgd
+data/terrain/lvl9.pgd
+data/terrain/lvl10.pgd
+data/terrain/lvl11.pgd
+data/terrain/lvl12.pgd
+data/terrain/lvl13.pgd
+data/terrain/lvl14.pgd
+data/terrain/lvl15.pgd
+data/terrain/wholema5.pgd
+data/terrain/wholema6.pgd
+data/terrain/wholema4.pgd
+data/terrain/wholema3.pgd
+data/terrain/wholema2.pgd
+data/terrain/wholemai.pgd
+;Levels
+data/levels/level6 level6
+data/levels/level5 level5
+data/levels/level4 level4
+data/levels/level3 level3
+data/levels/level2 level2
+data/levels/level1 level1
+data/levels/0-0 0-0
+data/levels/0-1 0-1
+data/levels/0-2 0-2
+data/levels/0-3 0-3
+data/levels/0-4 0-4
+data/levels/0-5 0-5
+data/levels/1-0 1-0
+data/levels/1-1 1-1
+data/levels/1-2 1-2
+data/levels/1-3 1-3
+data/levels/1-4 1-4
+data/levels/1-5 1-5
+data/levels/2-0 2-0
+data/levels/2-1 2-1
+data/levels/2-2 2-2
+data/levels/2-3 2-3
+data/levels/2-4 2-4
+data/levels/2-5 2-5
+data/levels/3-0 3-0
+data/levels/3-1 3-1
+data/levels/3-2 3-2
+data/levels/3-3 3-3
+data/levels/3-4 3-4
+data/levels/3-5 3-5
+;On-Screen-Things
+data/misc/pwoff.pgd
+data/misc/pwon.pgd
+data/misc/picons.pgd
+data/misc/board.pgd
+data/misc/board2.pgd
+data/icons/ase1.pgd
+data/icons/ase2.pgd
+data/icons/ase3.pgd
+data/icons/ase4.pgd
+data/misc/closed2.pgd
+;Planes Graphics
+data/planes/data1.pgd
+data/planes/tricrash.pgd
+data/planes/savua.pgd
+data/misc/bomb.pgd
+;Palet
+data/misc/palette.001 PALET1
+data/misc/palette.002 PALET2
+data/misc/palet.003 PALET3
+data/misc/palet.005 PALET5
+data/misc/palet.006 PALET6
+data/misc/palet.007 PALET7
+data/misc/palet.a PALETA
+data/misc/palet.d PALETD
+;Music
+data/mod/triplane.mod music1
+data/mod/japanese.mod mjapan
+data/mod/deutch.mod mgerma
+data/mod/english.mod mengla
+data/mod/finnish.mod mfinla
+data/mod/aces.mod maces
+;data/mod/death.mod mdeath
+;Bites & Explosions
+data/misc/itexpl1.pgd
+data/misc/explox.pgd
+data/misc/palasia.pgd
+data/misc/expls0.pgd
+data/misc/expls1.pgd
+data/misc/expls2.pgd
+data/misc/expls3.pgd
+data/misc/expls4.pgd
+data/misc/expls5.pgd
+data/misc/expls6.pgd
+data/misc/expls7.pgd
+;Trigs
+data/misc/trigdata.dta trigdt
+data/misc/arcsin.dta arcsin
+;Misc
+data/misc/instop.pgd
+data/misc/wave.pgd
+data/misc/wave2.pgd
+data/misc/data2.pgd
+data/misc/flame.pgd
+data/misc/smokex.pgd 
+data/misc/mekan1.pgd
+data/misc/mekan2.pgd
+data/misc/mekan3.pgd
+data/misc/ovi.pgd
+data/misc/desc.txt midesc
+data/misc/hmenu.pgd
+data/misc/hinact.pgd
+data/misc/hactiv.pgd
+data/misc/radar.pgd
+data/misc/piece10.pgd
+data/misc/piece11.pgd
+data/misc/rifle.pgd
+data/misc/hruks.pgd
+data/misc/ssmoke.pgd

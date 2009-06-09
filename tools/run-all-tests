@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+tester="$1"
+triplane="$2"
+testdir="$3"
+
+for test in `find "$testdir" -mindepth 1 -type d | grep -v _darcs`; do
+    echo "Running test $test"
+    bash "$tester" "$triplane" "$test"
+done
+echo "All tests passed."
+

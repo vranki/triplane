@@ -1,0 +1,51 @@
+Joo...      
+
+
+     <------\ /---------------/
+      |  |\  |   ___    ____/
+      |  | | |     \|  |     
+      |  |/  |_\    |   \____                TÑllÑstÑkî sÑ sillon kerran
+     <______/______/ \________\              tarkotit?
+
+F-Roster = Font for Triplane Roster
+
+kaikkiin FROST      -alku
+ALF     =Alfa
+BET     =Beta  
+E1      =!
+E2      ="          ESIM. FROSTE2.PCX
+E3      =#
+E4      =$
+E5      =%
+e6      =&
+e7      =(
+e8      =)
+e9      =*
+e10     =+
+e11     =,
+e12     =-
+e13     =.
+e14     =/
+e15     =\
+e16     =[
+e17     =]
+e18     =~
+e19     =:
+e20     =;
+e21     =<
+e22     =>
+e23     ==
+e24     =?
+e25     =@
+e26     =, Samakuin e11
+co      =Copyrightmarker.
+
+IA-IZ   =Isot A-Z
+PA-PZ   =Pienet A-Z
+N0-9    =Numeeeeeeeeerot
+IAR     =iso ruotsalainen è
+IAU     =iso a-umlautti = é
+PAU     =pieni ------"--= Ñ
+PAR     =pieni ruotsalainen Ü
+IOU     =iso o-uml =ô
+POU     =pieni edellinen.

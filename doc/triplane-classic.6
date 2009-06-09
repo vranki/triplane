@@ -1,0 +1,402 @@
+.TH "TRIPLANE-CLASSIC" "6"
+.SH "NAME" 
+Triplane Classic \- a side-scrolling dogfighting game.
+.SH "SYNOPSIS" 
+.PP 
+.B triplane
+[\fIOPTION\fR]...
+.SH "DESCRIPTION" 
+.PP 
+\fBTriplane Classic\fR is a side-scrolling dogfighting game featuring
+solo missions and multiplayer mode with up to four players. It is a
+port of the original \fBTriplane Turmoil\fR game for DOS and aims to
+match the original game exactly so that high scores remain comparable
+to the original.
+.SH "OPTIONS"
+.PP
+.IP "\fB\-fullscreen\fP"
+Start the game in fullscreen mode (this is the default).
+.IP "\fB\-nofullscreen\fP"
+Start the game in windowed mode.
+.IP "\fB\-nosound\fP"
+Start the game without sounds.  Note: This option also disables sounds
+in the configuration file so sounds will be disabled also the next
+time you start triplane.  To enable sounds set Physical
+Examination->Hearing->Sounds on in the game menus.
+.IP "\fB\-2, -3, -4\fP"
+Scale the 320x200-pixel game window 2x, 3x or 4x using software
+scaling.  This helps you play Triplane on displays that cannot switch to
+such low resolutions.
+.IP "\fB\-2svga\fP"
+Scale the 800x600-pixel window 2x using software scaling, to
+produce a 1600x1200-pixel window.  This resolution is used only in
+multiplayer mode.
+.PP
+Note that triplane does not warn about unknown options.
+.SH "GETTING STARTED"
+.PP
+After starting the game, click through the splash screens to see the
+main menu.  Then click \fBROSTER\fP and click the pen on the right to
+create a new pilot entry.  Type your name and press enter.  Click the
+keys on the left to get back to main menu.  Click \fBASSIGN PILOTS\fP
+and check the SOLO check box beside the red plane (top left) to select
+the German plane for solo game.  Click on the background to get back to
+the main menu.
+
+Click \fBTAKEOFF TIMES\fP and \fBMISSION I\fP.  Read your assignment
+carefully and click on the arrows to look around the map.  Your
+objective is to destroy the buildings identified by red boxes around
+them.  When you are ready click \fBFLY\fP and use the following
+controls:
+.IP "\(bu press S (roll) to get out of hangar" 4
+.IP "\(bu hold TAB (power) down to accelerate" 4
+.IP "\(bu use X and W to steer the plane" 4
+.IP "\(bu use 1 to drop a bomb" 4
+.IP "\(bu use S to roll the plane upside down" 4
+.PP
+When you have destroyed all the targets try to land by releasing power
+and gliding to the runway.  Holding up and down simultaneously
+activates the air brake system.  When the plane is stopped on the
+runway, press S to re-enter the hangar and resupply bombs and fuel.
+
+N.B.: If you have a new computer you may encounter serious keyboard
+errors.  This is due to the cost savings of the keyboard manufacturers.
+The current keyboards cannot handle more than 3-6 keys simultaneously.
+If you encounter keyboard problems, see the "on/off power" option
+below.
+
+.SH "SOLO GAME MODE"
+See the "ASSIGN PLAYERS MENU" chapter on how to select the solo game
+country.
+
+Winning a solo game requires that:
+.IP "\(bu all mission targets have been destroyed" 4
+.IP "\(bu all protection objectives are met" 4
+.IP "\(bu all enemy airplanes are destroyed, and" 4
+.IP "\(bu at least one plane is left and stopped on a runway." 4
+.PP
+Scoring is mostly based on how many planes you have shot down.  Extra
+points are awarded from destroyed enemy ground installations and
+infantry without regard to who destroyed them.  You will get penalty
+points for shooting down allied planes and for destroyed allied ground
+targets and infantry.
+
+.SH "MULTIPLAYER MODE"
+See the "ASSIGN PLAYERS MENU" chapter on how to select
+players for multiplayer mode and visit the "REQUEST TRANSFER" menu to
+select the multiplayer level.
+
+To configure plane controls for multiplayer mode, visit the "PLANE
+MECHANICS" menu.  Choose a country and then configure either the
+keyboard or a joystick (a game pad is also OK).
+
+If you want to change the keyboard layout for the chosen country,
+click the keyboard and you will be prompted to press buttons for all
+six controls needed to fly.  The order is Up, Down, Roll, Engine power,
+Bombs and Guns.  Remember that brake is always Up+Down simultaneously.
+
+Joystick configuration is still a bit experimental and it is not easy
+to play the game with a joystick.  Start by clicking Joystick 1 or
+Joystick 2 and follow the on-screen instructions.  There are two types
+of joystick actions.  You can hold down a joystick button and press
+Space on the keyboard.  Alternatively you can move a joystick to a
+different position (left, right, up or down) and press Space.  Finally,
+by pressing "D" you can disable a control completely.  You can use this
+for example if you have configured up and down actions to be buttons
+so that you can hold them together and thus do not need a separate
+brake control.  Disabling the roll control enables autoroll, which
+keeps the plane upright.
+
+.SH "HANGAR MENU"
+
+This is a special menu.  This appears when the actual game is in
+progress.  There are three columns: Bombs, ammo and fuel.  Use the Bomb
+and Guns buttons to select one of the columns, and adjust the value
+using the Up and Down buttons.  Press Roll or Power to exit, and a
+mechanic will push your plane onto the runway.  If you want to return
+to the hangar, just press Roll or Bomb, and the mechanic will push
+your plane into the hangar.
+
+.SH "ASSIGN PLAYERS MENU"
+.PP
+This menu is used to select players for solo and multiplayer
+modes.  There are four boxes, one for each country.
+
+Inside each box there are four radio buttons and two text fields:
+
+.IP "first radio button (red circle)" 4
+This country is disabled.
+.IP "second radio button (SOLO)" 4
+This country is used to play a solo mission.  Other countries are
+automatically disabled.  Remember to set pilot name in the text box to
+the right of this radio button.
+.IP "third radio button (computer)" 4
+This country is played by a computer pilot in multiplayer mode.  The
+text box to the right is not implemented.
+.IP "fourth radio button (human)" 4
+This country is played by a human pilot in multiplayer game.  Remember
+to set pilot name in the first text box.
+.PP
+If you activate the solo mode the computer will automatically adjust
+the other countries to NO-PLAYER mode.  (If you want to play the solo
+missions, now just exit and click the take-off times flyer in the main
+menu.) For example, assume that you want to be the German player, your
+friend wants to be the Japanese player and computer wants(?) to be the
+Finnish player.  Choose "Human pilot" in the German and Japanese boxes,
+"No player" in the English box, and "Computer pilot" in the Finnish
+box.
+
+Note: If you select the last multiplayer level (CAVERN) and you set
+the computer to be the Finnish or the English plane, these planes will
+be disabled when game begins.  (Computers cannot handle takeoffs in
+caves.)
+
+.SH "PHYSICAL EXAMINATION MENU"
+
+This is the options menu, where you can define game-related
+parameters.  On the right side you can see four tabs:
+
+\fBVISION\fP
+
+.IP "Shots visible?"
+If deactivated, no flying ammunition will be seen (planes & infantry).
+
+.IP "AAA shots visible?"
+If deactivated, no ammunition of flak battery will be seen.
+
+.IP "AA-Mg shots visible?"
+If deactivated, no ammunition of ground machine gun will be seen.
+
+.IP "Flags?"
+If deactivated, all flags will disappear.
+
+.IP "Structure flames?"
+If deactivated, the bombed structures will not burn.
+
+.IP "Use 800*600 window (in MULTIPLAYER)?" 
+Activate this option to play multiplayer games in a 800*600 window.
+
+.PP
+\fBHEARING\fP
+
+.IP "Sounds on?"
+Activate this to enable or disable all sound.  Note that the \fB-nosound\fP
+command line option turns this off.
+
+.IP "Musics on?"
+Play music in the menus, if the "Sounds on?" option is also activated.
+
+.IP "SFX on?"
+Enable various sound effects in the game, if the "Sounds on?" option
+is also activated.
+
+.IP "Explosion sounds?"
+If deactivated, a sound will be not heard when a bomb collides with ground.
+
+.IP "Gunfire sounds?"
+If deactivated, a sound will be not heard when a plane fires its guns.
+
+.IP "AAA fire sounds?"
+If deactivated, a sound will be not heard when ground defenses fire
+(machine guns & flaks).
+
+.IP "Water splash sound?"
+If deactivated, a sound will be not heard when a bomb collides with water.
+
+.IP "Infantry death sounds?"
+If deactivated, infantry soldiers will not scream when they die.
+
+.IP "Do you want on/off power?"
+When activated, the behavior of the engine power button will be
+dramatically changed.  On/off power allows toggling the engine on or
+off by pressing the Power button, instead of having to hold it down.
+Use this option \fBif you encounter keyboard problems\fP, because this
+decreases the number of keys pressed down simultaneously.
+
+.IP "Do you want a reversed power switch?"
+Turns the behavior of the engine power button upside-down: when you
+are \fBnot\fP holding the power key down, the plane accelerates.  When
+held down, the engine will be deactivated.  This is not the same as
+braking, you still need to use Up+Down to brake.
+
+.PP
+The following options are for multiplayer only.
+
+.IP "Are all the planes the same?"
+Sets all planes' attributes to a specific country.  For example: Choose
+the German plane on the left, and every plane has 4 bombs etc.  This
+affects all plane abilities.
+
+.IP "Collisions on?"
+If active, a collision of two planes results in an immediate
+destruction of \fBboth\fP planes.  Both players lose one point in
+collision.
+
+.IP "Flying parts?"
+If enabled the parts which appear when a plane crashes cause damage to
+other planes.
+
+.IP "Battle ends after n points"
+End the game after one of the players has this number of points.  The
+number can be increased by pressing it with the left mouse button and
+decreased with the right mouse button.  UnLtd means unlimited, where
+the multiplayer game will not end before you press Esc.
+
+.IP "Alliances enabled?"
+Enables alliances.  The sides are selected at the box in the lower left
+corner.
+
+.IP "AA-MGs?"
+If deactivated, all ground machine gun batteries will disappear.
+
+.IP "AAAs?"
+If deactivated, all flak batteries will disappear.
+
+.IP "Infantry?"
+If deactivated, all infantry will disappear.
+
+.IP "Unlimited ammo?"
+If activated, you can shoot even when you have no gun rounds left, but
+you cannot adjust your ammo load.
+
+.IP "Unlimited fuel?"
+If activated, the plane will still fly even when you have run out of
+fuel, but you always have to take the full load of fuel when leaving
+the hangar.
+
+.PP
+.SH "PLANE TYPES"
+.TS
+l l l l l.
+Country	Germany	Finland	England	Japan
+Ammunition	**	**	***	*
+Maneuverability	**	*	*	***
+Fuel	**	**	***	*
+Speed	**	***	**	*
+Bombs	**	*	**	***
+Endurance	**	***	**	*
+.TE
+.PP
+The German plane is very deadly in dogfight because it is designed for
+it.  It does not have any particular strengths or weaknesses.
+
+The Finnish plane is the fastest and the toughest but it has a poor
+bomb capacity and great skill is needed to pilot it because of its low
+turning rate.
+
+The English plane never runs out of anything (except bombs).  Its only
+disadvantage is the low maneuverability.
+
+The Japanese plane has the biggest bomb capacity and it is even more
+agile than the German plane.  Too bad it always runs out of fuel.
+
+.SH "MEDALS, RIBBONS AND RANKS"
+Like in a real Air Force, you will be awarded with higher ranks and
+medals when you have served your country well.  The medals are shown on
+top of your pilot in the roster menu.  Every rank has its own ribbon
+which is located beside your pilot in the roster menu.  When you start
+a new pilot you have no medals and you have only one ribbon, 2nd
+Lieutenant.  When you advance ranks you do not lose your previous
+ribbons like you would in real life.
+
+\fBBest pilot in the country - Medals\fP
+
+When you complete a sequence of solo missions (six of them) you will
+be awarded the "Best pilot in the country" medal.  Every country has
+its unique medal, but the main color of the medal depends on the
+country so it will be very easy to see which country has awarded you
+with it.
+
+\fBSpecial medals\fP
+
+There are two special medals.  The first is the veteran medal, Golden
+Star.  It will be awarded to you when you have flown 1000 missions.  The
+second is the hero medal, Silver Eagle.  It will be awarded to the
+pilot who has killed the most and died the least.  There is only one
+Silver Eagle medal in the world, so be careful, it will change its
+owner very quickly.
+
+\fBRanks and their abbreviations\fP
+
+Here is a list of ranks appearing in Triplane.  In the roster an
+abbreviation of the rank will be automatically added to your name (for
+example: 2nd Lt. Dragst).  Both solo and multiplayer games will affect
+it so you probably will not gain a lot of promotions by just playing one
+of them.
+
+The ranks are:
+
+.IP "Second Lieutenant (2nd Lt.)"
+A simple blue ribbon with one golden column 
+
+.IP "First Lieutenant (1st Lt.)"
+A blue ribbon with 1 golden column and 2 stars
+
+.IP "Captain (Capt.)"
+A blue ribbon with 2 golden columns and 2 stars
+
+.IP "Major (Major)"
+A blue ribbon with 2 golden columns and 4 stars
+
+.IP "Lieutenant Colonel (Lt Col.)"
+A blue ribbon with a Golden Shield of the Air Force
+
+.IP "Colonel (Colonel)"
+A blue ribbon with a Golden Eagle of the Air Force
+
+.PP
+If you are ever promoted to Colonel, you have probably played for some
+time.  But remember, it is not impossible to gain it, you just need
+play a little longer.
+
+.SH "TIPS AND TRICKS"
+.PP
+.IP "\(bu Remember that stalling is a VERY good way to brake fast, but do not even think about it unless you can handle the plane very well." 4
+.IP "\(bu When flying the Finnish plane remember to deactivate the power when turning." 4
+.IP "\(bu There are several \fBAce missions\fP which are quite easy to complete, but great effort is needed for receiving a higher score.  Patriot Flight is a very good example of this, it is possible to get at least 169 points in it." 4
+.IP "\(bu The Japanese plane can even outmaneuver the German plane, but only with an empty bomb load.  The German plane is still a bit better in dogfight." 4
+.IP "\(bu Remember to use hit and run techniques when playing the Finnish plane." 4
+.IP "\(bu There is no need to leave any bombs behind if you are playing with the Finnish plane, because it does not make any difference." 4
+.IP "\(bu In the missions with a lots of enemy air activity, try protect your AAAs." 4
+.IP "\(bu In solo missions you should learn to use the \fBRadar\fP markers, because that makes it easier to avoid enemy airplanes." 4
+.IP "\(bu Avoid shooting too many bullets at the enemy plane, because it will probably explode.  In the solo game you cannot deactivate the part collision, so this is quite vital." 4
+.IP "\(bu Remember that Japanese plane will always run out of fuel, particularly with six bombs." 4
+
+.SH "FILES"
+.PP
+Triplane finds its configuration directory by searching the following
+directories in this order:
+.IP "\(bu 1) $TRIPLANE_HOME" 4
+.IP "\(bu 2) $HOME/.triplane-classic (created if missing)" 4
+.IP "\(bu 3) the current directory (if step 2 fails for some reason)." 4
+.PP
+The configuration directory contains the following files:
+.IP "\(bu triplane.cfg" 4
+Main configuration file.
+.IP "\(bu roster.dta" 4
+High score file.
+.IP "\(bu keyset.dta" 4
+Keyboard configuration file.
+
+.PP
+Triplane tries to locate its data directory by looking at which of the
+following directories exist, in the following order:
+.IP "\(bu 1) $TRIPLANE_DATA" 4
+.IP "\(bu 2) TRIPLANE_DATA set at compilation time (if step 2 fails)" 4
+.IP "\(bu 3) current directory." 4
+.PP
+The data directory contains only one file:
+.IP "\(bu fokker.dks" 4
+Game data file containing levels, graphics and sounds.
+
+.SH "HISTORY"
+.PP
+The original \fBTriplane Turmoil\fR was developed by Markku Rankala, Teemu
+J. Takanen and Henrikki Merikallio. Some work was also contributed by
+Risto Puhakka, Antti Lehtoranta and Mikko Kinnunen. 
+
+The portable SDL version, \fBTriplane Classic\fR, was created from the
+original source by Timo Juhani Lindfors (timo.lindfors@iki.fi), Teemu
+J. Takanen (tjt@users.sourceforge.net), and Riku Saikkonen. We also thank
+Timo Lilja for his earlier Xlib porting efforts and Sami Liedes for
+spellchecking and optimization ideas.
