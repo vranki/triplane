@@ -71,10 +71,30 @@ int check_structs(int x, int y, int number);
 void do_mekan(void);
 void do_doors(void);
 
-#define MEKAN_NO_MISSION 0
-#define MEKAN_RETURN 1
-#define MEKAN_PUSH_OUT 2
-#define MEKAN_PUSH_IN 3
+#define MEKAN_DIRECTION_LEFT 0
+#define MEKAN_DIRECTION_RIGHT 1
+
+#define MEKAN_MISSION_IDLE 0
+#define MEKAN_MISSION_RETURN 1
+#define MEKAN_MISSION_PUSH_OUT 2
+#define MEKAN_MISSION_PUSH_IN 3
+
+/* Submissions of MEKAN_MISSION_PUSH_IN */
+#define MEKAN_PUSH_IN_MOVE_TO_PLANE 0
+#define MEKAN_PUSH_IN_PUSH 1
+#define MEKAN_PUSH_IN_WAIT_DOOR_CLOSE 2
+
+/* Submissions of MEKAN_MISSION_PUSH_OUT */
+#define MEKAN_PUSH_OUT_WAIT_DOOR_OPEN 0
+#define MEKAN_PUSH_OUT_MOVE_TO_PLANE 1
+#define MEKAN_PUSH_OUT_PUSH 2
+
+/* These only affect graphics. */
+#define MEKAN_ANIMATION_INVISIBLE 0
+#define MEKAN_ANIMATION_WALK 1
+#define MEKAN_ANIMATION_PUSH_PROPELLER 2
+#define MEKAN_ANIMATION_PUSH_TAIL 3
+
 
 /******************************************************************************/
 
@@ -129,37 +149,37 @@ void do_mekan(void) {
         }
 
         switch (mekan_mission[l]) {
-        case MEKAN_RETURN:
-            if (mekan_direction[l]) {
+        case MEKAN_MISSION_RETURN:
+            if (mekan_direction[l] == MEKAN_DIRECTION_RIGHT) {
                 if (mekan_x[l] >= (hangar_x[l] + 38)) {
-                    mekan_mission[l] = MEKAN_NO_MISSION;
-                    mekan_status[l] = 0;
+                    mekan_mission[l] = MEKAN_MISSION_IDLE;
+                    mekan_status[l] = MEKAN_ANIMATION_INVISIBLE;
                     hangar_door_closing[l] = 1;
                 }
 
             } else {
                 if (mekan_x[l] <= (hangar_x[l] + 38)) {
-                    mekan_mission[l] = MEKAN_NO_MISSION;
-                    mekan_status[l] = 0;
+                    mekan_mission[l] = MEKAN_MISSION_IDLE;
+                    mekan_status[l] = MEKAN_ANIMATION_INVISIBLE;
                     hangar_door_closing[l] = 1;
                 }
 
 
             }
             break;
-        case MEKAN_NO_MISSION:
+        case MEKAN_MISSION_IDLE:
             for (l2 = l + 8; l2 >= 0; l2 -= 4) {
                 if (plane_wants_in[l2]) {
-                    mekan_mission[l] = MEKAN_PUSH_IN;
+                    mekan_mission[l] = MEKAN_MISSION_PUSH_IN;
                     mekan_target[l] = l2;
-                    mekan_subtarget[l] = 0;
+                    mekan_subtarget[l] = MEKAN_PUSH_IN_MOVE_TO_PLANE;
                     mekan_x[l] = hangar_x[l] + 38;
-                    mekan_status[l] = 1;
+                    mekan_status[l] = MEKAN_ANIMATION_WALK;
                     if ((player_x_8[l2] - 38) > hangar_x[l]) {
-                        mekan_direction[l] = 1;
+                        mekan_direction[l] = MEKAN_DIRECTION_RIGHT;
 
                     } else {
-                        mekan_direction[l] = 0;
+                        mekan_direction[l] = MEKAN_DIRECTION_LEFT;
 
                     }
                 }
@@ -168,28 +188,28 @@ void do_mekan(void) {
 
             for (l2 = l + 8; l2 >= 0; l2 -= 4) {
                 if (plane_wants_out[l2]) {
-                    mekan_mission[l] = MEKAN_PUSH_OUT;
+                    mekan_mission[l] = MEKAN_MISSION_PUSH_OUT;
                     mekan_target[l] = l2;
-                    mekan_subtarget[l] = 0;
+                    mekan_subtarget[l] = MEKAN_PUSH_OUT_WAIT_DOOR_OPEN;
                     mekan_x[l] = hangar_x[l] + 38;
-                    mekan_status[l] = 1;
+                    mekan_status[l] = MEKAN_ANIMATION_WALK;
                     if (leveldata.plane_direction[player_tsides[l2]]) {
-                        mekan_direction[l] = 1;
+                        mekan_direction[l] = MEKAN_DIRECTION_RIGHT;
 
                     } else {
-                        mekan_direction[l] = 0;
+                        mekan_direction[l] = MEKAN_DIRECTION_LEFT;
 
                     }
                 }
 
             }
 
-            if (mekan_mission[l] == MEKAN_NO_MISSION)
+            if (mekan_mission[l] == MEKAN_MISSION_IDLE)
                 hangar_door_closing[l] = 1;
 
             break;
 
-        case MEKAN_PUSH_IN:
+        case MEKAN_MISSION_PUSH_IN:
 
             if (!mekan_subtarget[l] && hangar_door_frame[l] != 12) {
                 hangar_door_opening[l] = 1;
@@ -197,15 +217,15 @@ void do_mekan(void) {
             }
 
             if (!plane_wants_in[mekan_target[l]]) {
-                mekan_mission[l] = MEKAN_RETURN;
+                mekan_mission[l] = MEKAN_MISSION_RETURN;
 
-                mekan_status[l] = 1;
+                mekan_status[l] = MEKAN_ANIMATION_WALK;
 
                 if (mekan_x[l] > (hangar_x[l] + 38)) {
-                    mekan_direction[l] = 0;
+                    mekan_direction[l] = MEKAN_DIRECTION_LEFT;
 
                 } else {
-                    mekan_direction[l] = 1;
+                    mekan_direction[l] = MEKAN_DIRECTION_RIGHT;
 
                 }
                 break;
@@ -214,43 +234,43 @@ void do_mekan(void) {
 
 
             switch (mekan_subtarget[l]) {
-            case 0:
-                if (mekan_direction[l] == 1 && mekan_x[l] >= (player_x_8[mekan_target[l]] + 10)) {
+            case MEKAN_PUSH_IN_MOVE_TO_PLANE:
+                if (mekan_direction[l] == MEKAN_DIRECTION_RIGHT && mekan_x[l] >= (player_x_8[mekan_target[l]] + 10)) {
                     mekan_x[l] = player_x_8[mekan_target[l]] + 10;
-                    mekan_direction[l] = 0;
+                    mekan_direction[l] = MEKAN_DIRECTION_LEFT;
 
 
                     if (player_angle[mekan_target[l]] < 90 * 256) {
-                        mekan_status[l] = 2;
+                        mekan_status[l] = MEKAN_ANIMATION_PUSH_PROPELLER;
 
                     } else {
-                        mekan_status[l] = 3;
+                        mekan_status[l] = MEKAN_ANIMATION_PUSH_TAIL;
 
                     }
 
-                    mekan_subtarget[l] = 1;
+                    mekan_subtarget[l] = MEKAN_PUSH_IN_PUSH;
 
-                } else if (mekan_direction[l] == 0 && (mekan_x[l] + 13) <= (player_x_8[mekan_target[l]] - 10)) {
+                } else if (mekan_direction[l] == MEKAN_DIRECTION_LEFT && (mekan_x[l] + 13) <= (player_x_8[mekan_target[l]] - 10)) {
                     mekan_x[l] = player_x_8[mekan_target[l]] - 10 - 13;
-                    mekan_direction[l] = 1;
+                    mekan_direction[l] = MEKAN_DIRECTION_RIGHT;
 
 
                     if (player_angle[mekan_target[l]] < 90 * 256) {
-                        mekan_status[l] = 3;
+                        mekan_status[l] = MEKAN_ANIMATION_PUSH_TAIL;
 
                     } else {
-                        mekan_status[l] = 2;
+                        mekan_status[l] = MEKAN_ANIMATION_PUSH_PROPELLER;
 
                     }
 
-                    mekan_subtarget[l] = 1;
+                    mekan_subtarget[l] = MEKAN_PUSH_IN_PUSH;
 
                 }
 
                 break;
-            case 1:
+            case MEKAN_PUSH_IN_PUSH:
 
-                if (mekan_direction[l]) {
+                if (mekan_direction[l] == MEKAN_DIRECTION_RIGHT) {
                     player_x_8[mekan_target[l]] = (mekan_x[l] + 10 + 13);
                     player_x[mekan_target[l]] = player_x_8[mekan_target[l]] << 8;
 
@@ -259,8 +279,8 @@ void do_mekan(void) {
                         hangar_door_closing[l] = 1;
                         plane_present[mekan_target[l]] = 0;
                         plane_coming[mekan_target[l]] = 1;
-                        mekan_subtarget[l] = 2;
-                        mekan_status[l] = 0;
+                        mekan_subtarget[l] = MEKAN_PUSH_IN_WAIT_DOOR_CLOSE;
+                        mekan_status[l] = MEKAN_ANIMATION_INVISIBLE;
                     }
                 } else {
                     player_x_8[mekan_target[l]] = (mekan_x[l] - 10);
@@ -271,8 +291,8 @@ void do_mekan(void) {
                         hangar_door_closing[l] = 1;
                         plane_present[mekan_target[l]] = 0;
                         plane_coming[mekan_target[l]] = 1;
-                        mekan_subtarget[l] = 2;
-                        mekan_status[l] = 0;
+                        mekan_subtarget[l] = MEKAN_PUSH_IN_WAIT_DOOR_CLOSE;
+                        mekan_status[l] = MEKAN_ANIMATION_INVISIBLE;
                     }
 
 
@@ -281,10 +301,10 @@ void do_mekan(void) {
 
                 break;
 
-            case 2:
+            case MEKAN_PUSH_IN_WAIT_DOOR_CLOSE:
                 if (!hangar_door_frame[l]) {
-                    mekan_mission[l] = MEKAN_NO_MISSION;
-                    mekan_status[l] = 0;
+                    mekan_mission[l] = MEKAN_MISSION_IDLE;
+                    mekan_status[l] = MEKAN_ANIMATION_INVISIBLE;
                     plane_wants_in[mekan_target[l]] = 0;
                     init_player(mekan_target[l]);
 
@@ -295,7 +315,7 @@ void do_mekan(void) {
 
             break;
 
-        case MEKAN_PUSH_OUT:
+        case MEKAN_MISSION_PUSH_OUT:
 
             if (!mekan_subtarget[l] && hangar_door_frame[l] != 12) {
                 hangar_door_opening[l] = 1;
@@ -309,15 +329,15 @@ void do_mekan(void) {
             }
 
             if (!plane_wants_out[mekan_target[l]]) {
-                mekan_mission[l] = MEKAN_RETURN;
+                mekan_mission[l] = MEKAN_MISSION_RETURN;
 
-                mekan_status[l] = 1;
+                mekan_status[l] = MEKAN_ANIMATION_WALK;
 
                 if (mekan_x[l] > (hangar_x[l] + 38)) {
-                    mekan_direction[l] = 0;
+                    mekan_direction[l] = MEKAN_DIRECTION_LEFT;
 
                 } else {
-                    mekan_direction[l] = 1;
+                    mekan_direction[l] = MEKAN_DIRECTION_RIGHT;
 
                 }
 
@@ -326,67 +346,67 @@ void do_mekan(void) {
 
 
             switch (mekan_subtarget[l]) {
-            case 0:
+            case MEKAN_PUSH_OUT_WAIT_DOOR_OPEN:
                 if (hangar_door_frame[l] == 12) {
                     plane_present[mekan_target[l]] = 1;
                     plane_coming[mekan_target[l]] = 0;
-                    mekan_subtarget[l] = 1;
+                    mekan_subtarget[l] = MEKAN_PUSH_OUT_MOVE_TO_PLANE;
                 }
 
                 break;
-            case 1:
+            case MEKAN_PUSH_OUT_MOVE_TO_PLANE:
 
-                if (mekan_direction[l] == 1 && mekan_x[l] >= (player_x_8[mekan_target[l]] + 10)) {
+                if (mekan_direction[l] == MEKAN_DIRECTION_RIGHT && mekan_x[l] >= (player_x_8[mekan_target[l]] + 10)) {
                     mekan_x[l] = player_x_8[mekan_target[l]] + 10;
-                    mekan_direction[l] = 0;
+                    mekan_direction[l] = MEKAN_DIRECTION_LEFT;
 
 
                     if (player_angle[mekan_target[l]] < 90 * 256) {
-                        mekan_status[l] = 2;
+                        mekan_status[l] = MEKAN_ANIMATION_PUSH_PROPELLER;
 
                     } else {
-                        mekan_status[l] = 3;
+                        mekan_status[l] = MEKAN_ANIMATION_PUSH_TAIL;
 
                     }
 
-                    mekan_subtarget[l] = 2;
+                    mekan_subtarget[l] = MEKAN_PUSH_OUT_PUSH;
 
-                } else if (mekan_direction[l] == 0 && (mekan_x[l] + 13) <= (player_x_8[mekan_target[l]] - 10)) {
+                } else if (mekan_direction[l] == MEKAN_DIRECTION_LEFT && (mekan_x[l] + 13) <= (player_x_8[mekan_target[l]] - 10)) {
                     mekan_x[l] = player_x_8[mekan_target[l]] - 10 - 13;
-                    mekan_direction[l] = 1;
+                    mekan_direction[l] = MEKAN_DIRECTION_RIGHT;
 
 
                     if (player_angle[mekan_target[l]] < 90 * 256) {
-                        mekan_status[l] = 3;
+                        mekan_status[l] = MEKAN_ANIMATION_PUSH_TAIL;
 
                     } else {
-                        mekan_status[l] = 2;
+                        mekan_status[l] = MEKAN_ANIMATION_PUSH_PROPELLER;
 
                     }
 
-                    mekan_subtarget[l] = 2;
+                    mekan_subtarget[l] = MEKAN_PUSH_OUT_PUSH;
 
                 }
                 break;
 
-            case 2:
+            case MEKAN_PUSH_OUT_PUSH:
 
-                if (mekan_direction[l]) {
+                if (mekan_direction[l] == MEKAN_DIRECTION_RIGHT) {
                     player_x_8[mekan_target[l]] = (mekan_x[l] + 10 + 13);
                     player_x[mekan_target[l]] = player_x_8[mekan_target[l]] << 8;
 
                     if ((mekan_x[l] + 13) >= (leveldata.airfield_x[l] + leveldata.airfield_lenght[l] - PLANE_AIRFIELD_POSITION - 5)) {
 
                         plane_wants_out[mekan_target[l]] = 0;
-                        mekan_mission[l] = MEKAN_RETURN;
+                        mekan_mission[l] = MEKAN_MISSION_RETURN;
 
-                        mekan_status[l] = 1;
+                        mekan_status[l] = MEKAN_ANIMATION_WALK;
 
                         if (mekan_x[l] > (hangar_x[l] + 38)) {
-                            mekan_direction[l] = 0;
+                            mekan_direction[l] = MEKAN_DIRECTION_LEFT;
 
                         } else {
-                            mekan_direction[l] = 1;
+                            mekan_direction[l] = MEKAN_DIRECTION_RIGHT;
 
                         }
 
@@ -399,15 +419,15 @@ void do_mekan(void) {
 
                     if (mekan_x[l] <= (leveldata.airfield_x[l] + PLANE_AIRFIELD_POSITION + 5)) {
                         plane_wants_out[mekan_target[l]] = 0;
-                        mekan_mission[l] = MEKAN_RETURN;
+                        mekan_mission[l] = MEKAN_MISSION_RETURN;
 
-                        mekan_status[l] = 1;
+                        mekan_status[l] = MEKAN_ANIMATION_WALK;
 
                         if (mekan_x[l] > (hangar_x[l] + 38)) {
-                            mekan_direction[l] = 0;
+                            mekan_direction[l] = MEKAN_DIRECTION_LEFT;
 
                         } else {
-                            mekan_direction[l] = 1;
+                            mekan_direction[l] = MEKAN_DIRECTION_RIGHT;
 
                         }
 
@@ -435,7 +455,7 @@ void do_mekan(void) {
 
 
         if (hangar_door_frame[l] == 12 && !hangar_door_closing[l]) {
-            if (mekan_status[l] < 3) {
+            if (mekan_status[l] != MEKAN_ANIMATION_PUSH_TAIL) {
                 if (++mekan_frame[l] >= 14) {
                     mekan_frame[l] = 0;
 
@@ -447,7 +467,7 @@ void do_mekan(void) {
                 }
             }
 
-            if (mekan_direction[l]) {
+            if (mekan_direction[l] == MEKAN_DIRECTION_RIGHT) {
                 mekan_x[l] += 2;
 
             } else {
