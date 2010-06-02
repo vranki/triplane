@@ -208,7 +208,7 @@ void do_mekan(void) {
                     mekan_direction[l] = 1;
 
                 }
-
+                break;
             }
 
 
