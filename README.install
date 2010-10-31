@@ -1,0 +1,29 @@
+Building from source
+====================
+
+Dependencies
+------------
+
+* g++
+* SDL 1.2 
+* SDL mixer 1.2
+* GNU make
+
+Build procedure
+---------------
+
+$ make depend
+$ make
+$ make install
+
+DESTDIR and PREFIX are supported. See doc/mingw32.txt for Windows
+build instructions.
+
+Testsuite
+---------
+
+Use "make test" to run testsuite. It plays the game with prerecorded
+inputs and checks the CRC checksum of every output frame. This is
+especially important if you are building on a weird architecture or
+have changed something in the code.
+
