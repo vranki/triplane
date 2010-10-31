@@ -1,16 +1,7 @@
 /*******************************************************************************
 
-      This file is Copyright (c) 1996 Dodekaedron Software Creations, Inc
-         
-     All rights reserved. Distribution, modifications and usage forbidden 
-     without permission from the author.  
-
-
-   File: DKSBUILD.CPP
-
    Purpose: 
    	Wsystem 2.0 Databuilder.
-  
 
 *******************************************************************************/
 

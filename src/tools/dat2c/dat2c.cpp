@@ -20,16 +20,7 @@
 
 /*******************************************************************************
 
-      This file is Copyright (c) 1996 Dodekaedron Software Creations, Inc.
-         
-     All rights reserved. Distribution, modifications and usage forbidden 
-     without permission of the copyright owner.  
-
-
-   File: DAT2C.CPP
-
    Purpose: Converts files to unsigned char strings in c
-  
 
 *******************************************************************************/
 

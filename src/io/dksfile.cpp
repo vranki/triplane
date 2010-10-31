@@ -20,17 +20,8 @@
 
 /*******************************************************************************
 
-      This file is Copyright (c) 1996 Dodekaedron Software Creations, Inc
-         
-     All rights reserved. Distribution, modifications and usage forbidden 
-     without permission from the author.  
-
-
-   File: DKSOPEN.CPP
-
    Purpose: 
    	DKS-datafile handling routines for Wsystem 2.0 for DJGPP v.2.0á5
-  
 
 *******************************************************************************/
 

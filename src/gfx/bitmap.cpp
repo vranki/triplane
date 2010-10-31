@@ -20,17 +20,8 @@
 
 /*******************************************************************************
 
-      This file is Copyright (c) 1996 Dodekaedron Software Creations, Inc
-         
-     All rights reserved. Distribution, modifications and usage forbidden 
-     without permission from the author.  
-
-
-   File: BITMAP.CPP
-
    Purpose: 
    	Bitmap handling part of Wsystem 2.0
-  
 
 *******************************************************************************/
 
