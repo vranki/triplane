@@ -28,11 +28,18 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <dos.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <conio.h>
+#include <unistd.h>
+
+/* Dummy relics from DOS age. */
+void gotoxy(int x, int y) {
+}
+
+int wherey(void) {
+    return 0;
+}
 
 #define RAJA 192
 unsigned char getpixel(int x, int y);
@@ -60,7 +67,7 @@ void pakit(int dx, int dy, char inputfile[], char picturename[]) {
     FILE *in, *out;
     long int xx, yy;
     short int x, y;
-    char inf[30], outf[30];
+    char inf[FILENAME_MAX], outf[FILENAME_MAX];
     unsigned char vali;
     unsigned int lippu, lask, lask2, lask3;
     unsigned char *pointteri, *pointteri2;
@@ -198,7 +205,7 @@ void pakit(int dx, int dy, char inputfile[], char picturename[]) {
 
     fwrite(&x, sizeof(x), 1, out);
     fwrite(&y, sizeof(y), 1, out);
-    lask2++;
+    lask2++; /* Why? Last byte is always uninitialized according to valgrind. */
     fwrite(&lask2, sizeof(lask2), 1, out);
     fwrite(kuvan_nimi, sizeof(kuvan_nimi), 1, out);
     fwrite(pointteri2, lask2, 1, out);
@@ -258,20 +265,20 @@ void pcx_load(char *file_name, short int *xl, short int *yl) {
 
 
 int main(int argc, char *argv[]) {
-    char infile[30], outfile[30];
+    char infile[FILENAME_MAX], outfile[FILENAME_MAX];
     char dxs[5], dys[5];
     int dx, dy;
     char ch;
     short int leveys, korkeus;
     int laskx, lasky, lask;
-    char stringi1[20], stringi2[20];
+    char stringi1[FILENAME_MAX], stringi2[FILENAME_MAX];
 
     FILE *out;
 
     printf("\nPcx2pgd v. 1.14 For Wsystem 2.0 (c) 1996 Dodekaedron Software Creations, Inc.\n");
     printf("    This program is registered to Dodekaedron Squad. All rights reserved.\n\n");
 
-    if (!(argc == 5 | argc == 3 | argc == 2)) {
+    if (!(argc == 5 || argc == 3 || argc == 2)) {
         printf("\nUsage: PCX2PGD inputfile picturename [delta-x delta-y]\n");
         printf("Or:    PCX2PGD inputfile (creates palet)\n");
         printf("  NOTE: Filenames are given without extension!\n");

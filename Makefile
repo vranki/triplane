@@ -18,12 +18,14 @@ TRIPLANE_OBJS = src/triplane.o src/world/tripai.o \
 	src/world/tripaudio.o
 LVLEDIT_OBJS = src/tools/lvledit/lvledit.o
 PGDVIEW_OBJS = src/tools/pgdview/pgdview.o
+PCX2PGD_OBJS = src/tools/pcx2pgd/pcx2pgd.o
 
 COMMON_SRCS = $(COMMON_OBJS:.o=.cpp)
 TRIPLANE_SRCS = $(TRIPLANE_OBJS:.o=.cpp)
 LVLEDIT_SRCS = $(LVLEDIT_OBJS:.o=.cpp)
 PGDVIEW_SRCS = $(PGDVIEW_OBJS:.o=.cpp)
-ALLSRCS = $(COMMON_SRCS) $(TRIPLANE_SRCS) $(LVLEDIT_SRCS) $(PGDVIEW_SRCS)
+PCX2PGD_SRCS = $(PCX2PGD_OBJS:.o=.cpp)
+ALLSRCS = $(COMMON_SRCS) $(TRIPLANE_SRCS) $(LVLEDIT_SRCS) $(PGDVIEW_SRCS) $(PCX2PGD_SRCS)
 
 all: checkdepend triplane-classic tools/dksbuild fokker.dks tools/lvledit tools/pgdview
 
@@ -45,7 +47,7 @@ clean:
 	rm -f src/*.o
 	rm -f src/*/*.o
 	rm -f src/*/*/*.o
-	rm -f triplane-classic tools/dksbuild tools/lvledit tools/pgdview
+	rm -f triplane-classic tools/dksbuild tools/lvledit tools/pgdview tools/pcx2pgd
 	rm -f fokker.dks
 
 fokker.dks:
@@ -61,6 +63,9 @@ tools/lvledit: $(LVLEDIT_OBJS) $(COMMON_OBJS)
 	$(CXX) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LIBS)
 
 tools/pgdview: $(PGDVIEW_OBJS) $(COMMON_OBJS)
+	$(CXX) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LIBS)
+
+tools/pcx2pgd: $(PCX2PGD_OBJS) $(COMMON_OBJS)
 	$(CXX) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LIBS)
 
 tools/dksbuild: src/tools/dksbuild/dksbuild.cc
