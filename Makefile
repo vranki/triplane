@@ -78,6 +78,9 @@ test:
 	if [ ! -d triplane-testsuite ]; then echo Please darcs get http://iki.fi/lindi/darcs/triplane-testsuite; false; fi
 	bash tools/run-all-tests tools/run-one-test ./triplane-classic triplane-testsuite
 
+build-data-from-source: tools/pcx2pgd
+	tools/build-data-from-source
+
 # man -Tps doc/triplane-classic.6 > triplane-classic.ps
 # ps2pdf triplane-classic.ps
 .PHONY: all checkdepend depend clean install test

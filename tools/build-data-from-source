@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+cat data_src/pcx.lst | while read pgd pcx name end width height; do
+    echo "pgd $pgd pcx $pcx name $name end $end width $width height $height"
+    tools/pcx2pgd $(echo $pcx | sed 's/.pcx$//') dummy $width $height > /dev/null
+    printf "$name" | dd bs=1 seek=8 count=7 of=$(echo $pcx | sed 's/.pcx$/.pgd/') conv=notrunc 2> /dev/null
+    printf "$end" | dd bs=1 seek=$(expr $(find $(echo $pcx | sed 's/.pcx$/.pgd/') -printf %s) - 1) count=1 of=$(echo $pcx | sed 's/.pcx$/.pgd/') conv=notrunc 2> /dev/null
+    mkdir -p $(dirname $pgd)
+    mv $(echo $pcx | sed 's/.pcx$/.pgd/') $pgd
+done
