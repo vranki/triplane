@@ -45,7 +45,7 @@ clean:
 	rm -f src/*.o
 	rm -f src/*/*.o
 	rm -f src/*/*/*.o
-	rm -f triplane-classic tools/dksbuild tools/lvledit
+	rm -f triplane-classic tools/dksbuild tools/lvledit tools/pgdview
 	rm -f fokker.dks
 
 fokker.dks:
