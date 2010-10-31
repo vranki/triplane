@@ -7,4 +7,5 @@ Support for more than two joysticks
 Network game
 src/gfx/extra.cpp: embedded graphics, should read from data file instead
 document how to build data from data_src
+investigate if http://scale2x.sourceforge.net/ could be used for scaling
 
