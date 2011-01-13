@@ -72,8 +72,10 @@ tools/dksbuild: src/tools/dksbuild/dksbuild.cc
 	$(CXX) -o tools/dksbuild -g src/tools/dksbuild/dksbuild.cc
 
 install:
-	install -D triplane-classic $(DESTDIR)$(PREFIX)/games/triplane-classic
-	install -D -m 644 fokker.dks $(DESTDIR)$(PREFIX)/share/games/triplane-classic/fokker.dks
+	mkdir -p $(DESTDIR)$(PREFIX)/games/triplane-classic
+	install triplane-classic $(DESTDIR)$(PREFIX)/games/triplane-classic
+	mkdir -p $(DESTDIR)$(PREFIX)/share/games/triplane-classic
+	install -m 644 fokker.dks $(DESTDIR)$(PREFIX)/share/games/triplane-classic/fokker.dks
 test:
 	if [ ! -d triplane-testsuite ]; then echo Please darcs get http://iki.fi/lindi/darcs/triplane-testsuite; false; fi
 	bash tools/run-all-tests tools/run-one-test ./triplane-classic triplane-testsuite
