@@ -72,7 +72,7 @@ tools/dksbuild: src/tools/dksbuild/dksbuild.cc
 	$(CXX) -o tools/dksbuild -g src/tools/dksbuild/dksbuild.cc
 
 install:
-	mkdir -p $(DESTDIR)$(PREFIX)/games/triplane-classic
+	mkdir -p $(DESTDIR)$(PREFIX)/games
 	install triplane-classic $(DESTDIR)$(PREFIX)/games/triplane-classic
 	mkdir -p $(DESTDIR)$(PREFIX)/share/games/triplane-classic
 	install -m 644 fokker.dks $(DESTDIR)$(PREFIX)/share/games/triplane-classic/fokker.dks
