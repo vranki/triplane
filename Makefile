@@ -1,11 +1,14 @@
-PREFIX = /usr/local
-DESTDIR = ""
+PREFIX ?= /usr/local
+DESTDIR ?=
 
-CXX	     = g++
+CXX	     ?= g++
 OPTIFLAG     = -O2 -g
-CFLAGS      := -Wall -Isrc $(OPTIFLAG) $(CFLAGS_NOSDL) `sdl-config --cflags` -DHAVE_SDL_MIXER "-DTRIPLANE_DATA=\"$(PREFIX)/share/games/triplane-classic\""
+SDL_CONFIG  ?= sdl-config
+CFLAGS      := -Wall -Isrc $(OPTIFLAG) $(CFLAGS_NOSDL) `$(SDL_CONFIG) --cflags` -DHAVE_SDL_MIXER "-DTRIPLANE_DATA=\"$(PREFIX)/share/games/triplane-classic\""
 LDFLAGS      = 
-LIBS        := `sdl-config --libs` -lSDL_mixer -lm
+LIBS        := `$(SDL_CONFIG) --libs` -lSDL_mixer -lm
+INSTALL_DATA     ?= install
+INSTALL_PROGRAM  ?= install -m 644
 
 COMMON_OBJS = src/gfx/bitmap.o src/gfx/font.o \
 	src/gfx/gfx.o src/util/wutil.o src/util/random.o \
@@ -73,9 +76,9 @@ tools/dksbuild: src/tools/dksbuild/dksbuild.cc
 
 install:
 	mkdir -p $(DESTDIR)$(PREFIX)/games
-	install triplane-classic $(DESTDIR)$(PREFIX)/games/triplane-classic
+	$(INSTALL_PROGRAM) triplane-classic $(DESTDIR)$(PREFIX)/games/triplane-classic
 	mkdir -p $(DESTDIR)$(PREFIX)/share/games/triplane-classic
-	install -m 644 fokker.dks $(DESTDIR)$(PREFIX)/share/games/triplane-classic/fokker.dks
+	$(INSTALL_DATA) fokker.dks $(DESTDIR)$(PREFIX)/share/games/triplane-classic/fokker.dks
 test:
 	if [ ! -d triplane-testsuite ]; then echo Please darcs get http://iki.fi/lindi/darcs/triplane-testsuite; false; fi
 	bash tools/run-all-tests tools/run-one-test ./triplane-classic triplane-testsuite
