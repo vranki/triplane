@@ -79,6 +79,8 @@ install:
 	$(INSTALL_PROGRAM) triplane-classic $(DESTDIR)$(PREFIX)/games/triplane-classic
 	mkdir -p $(DESTDIR)$(PREFIX)/share/games/triplane-classic
 	$(INSTALL_DATA) fokker.dks $(DESTDIR)$(PREFIX)/share/games/triplane-classic/fokker.dks
+	mkdir -p $(DESTDIR)$(PREFIX)/man/man6
+	$(INSTALL_DATA) doc/triplane-classic.6 $(DESTDIR)$(PREFIX)/man/man6/triplane-classic.6
 test:
 	if [ ! -d triplane-testsuite ]; then echo Please darcs get http://iki.fi/lindi/darcs/triplane-testsuite; false; fi
 	bash tools/run-all-tests tools/run-one-test ./triplane-classic triplane-testsuite
