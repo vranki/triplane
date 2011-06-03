@@ -4,7 +4,7 @@ DESTDIR ?=
 CXX	     ?= g++
 OPTIFLAG     = -O2 -g
 SDL_CONFIG  ?= sdl-config
-CFLAGS      := -Wall -Isrc $(OPTIFLAG) $(CFLAGS_NOSDL) `$(SDL_CONFIG) --cflags` -DHAVE_SDL_MIXER "-DTRIPLANE_DATA=\"$(PREFIX)/share/games/triplane-classic\""
+CFLAGS      := -Wall -Isrc $(OPTIFLAG) $(CFLAGS_NOSDL) `$(SDL_CONFIG) --cflags` -DHAVE_SDL_MIXER "-DTRIPLANE_DATA=\"$(PREFIX)/share/games/triplane\""
 LDFLAGS      = 
 LIBS        := `$(SDL_CONFIG) --libs` -lSDL_mixer -lm
 INSTALL_DATA     ?= install
@@ -30,7 +30,7 @@ PGDVIEW_SRCS = $(PGDVIEW_OBJS:.o=.cpp)
 PCX2PGD_SRCS = $(PCX2PGD_OBJS:.o=.cpp)
 ALLSRCS = $(COMMON_SRCS) $(TRIPLANE_SRCS) $(LVLEDIT_SRCS) $(PGDVIEW_SRCS) $(PCX2PGD_SRCS)
 
-all: checkdepend triplane-classic tools/dksbuild fokker.dks tools/lvledit tools/pgdview
+all: checkdepend triplane tools/dksbuild fokker.dks tools/lvledit tools/pgdview
 
 checkdepend:
 	@[ -f .depend ] || ( echo 'Please run "make depend" first!'; exit 1 )
@@ -50,7 +50,7 @@ clean:
 	rm -f src/*.o
 	rm -f src/*/*.o
 	rm -f src/*/*/*.o
-	rm -f triplane-classic tools/dksbuild tools/lvledit tools/pgdview tools/pcx2pgd
+	rm -f triplane tools/dksbuild tools/lvledit tools/pgdview tools/pcx2pgd
 	rm -f fokker.dks
 
 fokker.dks:
@@ -59,7 +59,7 @@ fokker.dks:
 %.o: %.cpp
 	$(CXX) -o $@ $(CFLAGS) -c $<
 
-triplane-classic: $(TRIPLANE_OBJS) $(COMMON_OBJS)
+triplane: $(TRIPLANE_OBJS) $(COMMON_OBJS)
 	$(CXX) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LIBS)
 
 tools/lvledit: $(LVLEDIT_OBJS) $(COMMON_OBJS)
@@ -76,19 +76,19 @@ tools/dksbuild: src/tools/dksbuild/dksbuild.cc
 
 install:
 	mkdir -p $(DESTDIR)$(PREFIX)/games
-	$(INSTALL_PROGRAM) triplane-classic $(DESTDIR)$(PREFIX)/games/triplane-classic
-	mkdir -p $(DESTDIR)$(PREFIX)/share/games/triplane-classic
-	$(INSTALL_DATA) fokker.dks $(DESTDIR)$(PREFIX)/share/games/triplane-classic/fokker.dks
+	$(INSTALL_PROGRAM) triplane $(DESTDIR)$(PREFIX)/games/triplane
+	mkdir -p $(DESTDIR)$(PREFIX)/share/games/triplane
+	$(INSTALL_DATA) fokker.dks $(DESTDIR)$(PREFIX)/share/games/triplane/fokker.dks
 	mkdir -p $(DESTDIR)$(PREFIX)/man/man6
-	$(INSTALL_DATA) doc/triplane-classic.6 $(DESTDIR)$(PREFIX)/man/man6/triplane-classic.6
+	$(INSTALL_DATA) doc/triplane.6 $(DESTDIR)$(PREFIX)/man/man6/triplane.6
 test:
 	if [ ! -d triplane-testsuite ]; then echo Please darcs get http://iki.fi/lindi/darcs/triplane-testsuite; false; fi
-	bash tools/run-all-tests tools/run-one-test ./triplane-classic triplane-testsuite
+	bash tools/run-all-tests tools/run-one-test ./triplane triplane-testsuite
 
 build-data-from-source: tools/pcx2pgd
 	tools/build-data-from-source
 
-# man -Tps doc/triplane-classic.6 > triplane-classic.ps
-# ps2pdf triplane-classic.ps
+# man -Tps doc/triplane.6 > triplane.ps
+# ps2pdf triplane.ps
 .PHONY: all checkdepend depend clean install test
 -include .depend

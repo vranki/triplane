@@ -49,7 +49,7 @@ struct configuration config;
  * tried in the following order:
  *
  * "$TRIPLANE_HOME/"
- * "$HOME/.triplane-classic/" (created if missing)
+ * "$HOME/.triplane/" (created if missing)
  * "" (current directory)
  *
  * @param pointer to FILENAME_MAX bytes where settings directory path
@@ -73,7 +73,7 @@ static void find_settings_directory(char *dir) {
         struct stat st;
 
         strncpy(dir, home, FILENAME_MAX - 1);
-        strncat(dir, "/.triplane-classic", FILENAME_MAX - 1);
+        strncat(dir, "/.triplane", FILENAME_MAX - 1);
         ret = stat(dir, &st);
         if (ret) {
             ret = mkdir(dir, 0755);
