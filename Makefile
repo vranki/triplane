@@ -7,8 +7,8 @@ SDL_CONFIG  ?= sdl-config
 CFLAGS      := -Wall -Isrc $(OPTIFLAG) $(CFLAGS_NOSDL) `$(SDL_CONFIG) --cflags` -DHAVE_SDL_MIXER "-DTRIPLANE_DATA=\"$(PREFIX)/share/games/triplane\""
 LDFLAGS      = 
 LIBS        := `$(SDL_CONFIG) --libs` -lSDL_mixer -lm
-INSTALL_DATA     ?= install
-INSTALL_PROGRAM  ?= install -m 644
+INSTALL_DATA     ?= install -m 644
+INSTALL_PROGRAM  ?= install
 
 COMMON_OBJS = src/gfx/bitmap.o src/gfx/font.o \
 	src/gfx/gfx.o src/util/wutil.o src/util/random.o \
