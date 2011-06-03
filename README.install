@@ -27,3 +27,11 @@ inputs and checks the CRC checksum of every output frame. This is
 especially important if you are building on a weird architecture or
 have changed something in the code.
 
+Regenerating data/
+------------------
+
+It is possible to modify the data files that are included in the
+fokker.dks file. Just modify the files in data_src with your favourite
+image editor that understand the PCX format and then use the helper
+script tools/build-data-from-source to regenerate contents of the
+data/ directory.
