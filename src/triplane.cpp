@@ -3600,7 +3600,7 @@ int main(int argc, char *argv[]) {
 
 
     if (findparameter("-?") || findparameter("-h") || findparameter("--help") || findparameter("-help")) {
-        printf("Triplane Classic 1.0.5 - a side-scrolling dogfighting game.\n");
+        printf("Triplane Classic 1.0.6 - a side-scrolling dogfighting game.\n");
         printf("Copyright (C) 1996,1997,2009  Dodekaedron Software Creations Oy\n");
         printf("This program is free software; you may redistribute it under the terms of\n");
         printf("the GNU General Public License version 3 or (at your option) a later version.\n");
