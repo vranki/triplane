@@ -83,7 +83,7 @@ install:
 	$(INSTALL_DATA) doc/triplane.6 $(DESTDIR)$(PREFIX)/share/man/man6/triplane.6
 test:
 	if [ ! -d triplane-testsuite ]; then echo Please darcs get http://iki.fi/lindi/darcs/triplane-testsuite; false; fi
-	bash tools/run-all-tests tools/run-one-test ./triplane triplane-testsuite
+	SDL_VIDEODRIVER=dummy bash tools/run-all-tests tools/run-one-test ./triplane triplane-testsuite
 
 build-data-from-source: tools/pcx2pgd
 	tools/build-data-from-source
