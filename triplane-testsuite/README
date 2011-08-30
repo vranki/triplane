@@ -1,0 +1,6 @@
+The test games have been recorded with the following commands:
+
+TRIPLANE_HOME=triplane-testsuite/0-0 ./triplane-classic -record -autostart -solomenumission 0 -autoquit -debugtrace -2 -fullscreen > triplane-testsuite/0-0/output.reference 
+TRIPLANE_HOME=triplane-testsuite/1-0 ./triplane-classic -record -autostart -solomenumission 0 -autoquit -debugtrace -2 -fullscreen > triplane-testsuite/1-0/output.reference 
+TRIPLANE_HOME=triplane-testsuite/multi1 ./triplane-classic -record -autostart -autoquit -debugtrace -2 -fullscreen > triplane-testsuite/multi1/output.reference 
+TRIPLANE_HOME=triplane-testsuite/multi2 ./triplane-classic -record -autostart -autoquit -debugtrace -2 -fullscreen > triplane-testsuite/multi2/output.reference 
