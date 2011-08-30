@@ -50,6 +50,7 @@ int main(int argv, char *argc[]) {
     char nimi[30];
     int lask, lask2 = 0;
 
+    wantfullscreen = 0;
     printf("PGDView 1.1 for Wsystem.  (c) 1996 Dodekaedron Software Creations, Inc.\n\n");
 
     if ((argv != 3) && (argv != 2)) {
