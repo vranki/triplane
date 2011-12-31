@@ -366,7 +366,7 @@ void load_roster(void) {
             fread(&roster, sizeof(roster), 1, faili);
         } else {
             fread(&droster, sizeof(droster), 1, faili);
-            printf("Converting roster form DOS format.\n");
+            printf("Converting roster from DOS format.\n");
             convert_dos_roster((struct dos_roster *) &droster);
         }
         fclose(faili);
