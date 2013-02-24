@@ -2,7 +2,7 @@
 set -e
 triplane="$1"
 testdir="$2"
-tmptestdir="`mktemp -d /tmp/triplane-testsuite.XXXXXXXXXX`"
+tmptestdir="`mktemp -d --tmpdir triplane-testsuite.XXXXXXXXXX`"
 (cd "$testdir"; cp -R . "$tmptestdir")
 
 TRIPLANE_HOME="$tmptestdir" "$triplane" `cat "$tmptestdir/args"` > "$tmptestdir/output" || true
