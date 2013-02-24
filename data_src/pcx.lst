@@ -11,7 +11,6 @@ data/terrain/kkpesa.pgd data_src/pcx/terrain/kkpesa.pcx \\x4b\\x4b\\x50\\x45\\x5
 data/terrain/hou4.pgd data_src/pcx/terrain/hou4.pcx \\x48\\x4f\\x55\\x34\\x00\\x7e\\x00 \\x00 43 19
 data/terrain/warning.pgd data_src/pcx/terrain/warning.pcx \\x53\\x49\\x47\\x4e\\x30\\x31\\x00 \\x00 13 21
 data/terrain/aut2.pgd data_src/pcx/terrain/aut2.pcx \\x41\\x55\\x54\\x32\\x00\\x7e\\x00 \\x16 16 18
-data/terrain/polar.pgd data_src/pcx/terrain/polar.pcx \\x50\\x4f\\x4c\\x41\\x52\\x00\\x00 \\x74 2400 200
 data/terrain/hou2.pgd data_src/pcx/terrain/hou2.pcx \\x48\\x4f\\x55\\x32\\x00\\x7e\\x00 \\x00 48 23
 data/terrain/dtower.pgd data_src/pcx/terrain/dtower.pcx \\x44\\x54\\x4f\\x57\\x45\\x52\\x00 \\x00 19 31
 data/terrain/bush2.pgd data_src/pcx/terrain/bush2.pcx \\x42\\x55\\x53\\x48\\x32\\x00\\x00 \\x6a 12 6
