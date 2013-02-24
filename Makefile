@@ -93,6 +93,7 @@ dist:
 	make clean
 	test -z "`git ls-files -d -o -m -u -s`" || (echo "There are uncommitted changes" >&2; /bin/false)
 	test -z "`git diff --cached`" || (echo "There are uncommitted changes in the index" >&2; /bin/false)
+	test -z "`find -type d -empty ! -path "./.git/*"`" || (echo "There are empty directories" >&2; /bin/false)
 	tar --transform "s/^./triplane-$(VERSION)/" --exclude=.git --exclude=debian -zcf ../triplane-$(VERSION).tar.gz .
 
 # man -Tps doc/triplane.6 > triplane.ps
