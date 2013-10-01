@@ -235,6 +235,7 @@ extern int bomb_angle[MAX_BOMBS];
 extern int bomb_owner[MAX_BOMBS];
 extern int bomb_x_speed[MAX_BOMBS];
 extern int bomb_y_speed[MAX_BOMBS];
+extern int bomb_age[MAX_BOMBS];
 
 extern int roll_key_down[16];
 extern int plane_tire_y;

@@ -1,7 +1,7 @@
 /* 
  * Triplane Classic - a side-scrolling dogfighting game.
  * Copyright (C) 1996,1997,2009  Dodekaedron Software Creations Oy
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -142,10 +142,10 @@ void do_shots(void) {
             for (l2 = 0; l2 < 16; l2++) {
                 if (plane_present[l2])
                     if (((player_x[l2] + 2304) > shots_flying_x[l]) &&
-                        ((player_x[l2] - 2304) < shots_flying_x[l]) &&
-                        ((player_y[l2] + 2304) > shots_flying_y[l]) && ((player_y[l2] - 2304) < shots_flying_y[l]))
+                            ((player_x[l2] - 2304) < shots_flying_x[l]) &&
+                            ((player_y[l2] + 2304) > shots_flying_y[l]) && ((player_y[l2] - 2304) < shots_flying_y[l]))
                         if (plane_p[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]][player_upsidedown[l2]]
-                            [(shots_flying_x[l] >> 8) - (player_x_8[l2]) + 10 + ((shots_flying_y[l] >> 8) - (player_y_8[l2]) + 10) * 20] != 255) {
+                                [(shots_flying_x[l] >> 8) - (player_x_8[l2]) + 10 + ((shots_flying_y[l] >> 8) - (player_y_8[l2]) + 10) * 20] != 255) {
 
                             if (config.sound_on && config.sfx_on)
                                 play_2d_sample(sample_hit[wrandom(4)], player_x_8[solo_country], player_x_8[l2]);
@@ -232,6 +232,10 @@ void start_shot(int player) {
         shots_flying_y[l] = player_y[player] - 12 * sinit[player_angle[player] >> 8];
         shots_flying_x_speed[l] = (cosinit[player_angle[player] >> 8] * (player_speed[player] + SHOTS_SPEED)) >> 2;
         shots_flying_y_speed[l] = (sinit[player_angle[player] >> 8] * (player_speed[player] + SHOTS_SPEED)) >> 2;
+
+        shots_flying_x_speed[l] += wrandom(SHOT_RANDOMNESS) - SHOT_RANDOMNESS/2;
+        shots_flying_y_speed[l] += wrandom(SHOT_RANDOMNESS) - SHOT_RANDOMNESS/2;
+
         shots_flying_owner[l] = player;
         shots_flying_infan[l] = -1;
     }
@@ -257,7 +261,7 @@ void do_fobjects(void) {
             }
 
             if ((level_bitmap[(fobjects[l].x >> 8) + (fobjects[l].y >> 8) * 2400]) < 112
-                || ((level_bitmap[(fobjects[l].x >> 8) + (fobjects[l].y >> 8) * 2400])) > 119) {
+                    || ((level_bitmap[(fobjects[l].x >> 8) + (fobjects[l].y >> 8) * 2400])) > 119) {
                 fobjects[l].x = 0;
                 continue;
             }
@@ -266,9 +270,9 @@ void do_fobjects(void) {
                 for (l2 = 0; l2 < 16; l2++) {
                     if (plane_present[l2]) {
                         if (((player_x[l2] + 2304) > fobjects[l].x) &&
-                            ((player_x[l2] - 2304) < fobjects[l].x) && ((player_y[l2] + 2304) > fobjects[l].y) && ((player_y[l2] - 2304) < fobjects[l].y))
+                                ((player_x[l2] - 2304) < fobjects[l].x) && ((player_y[l2] + 2304) > fobjects[l].y) && ((player_y[l2] - 2304) < fobjects[l].y))
                             if (plane_p[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]][player_upsidedown[l2]]
-                                [(fobjects[l].x >> 8) - (player_x_8[l2]) + 10 + ((fobjects[l].y >> 8) - (player_y_8[l2]) + 10) * 20] != 255) {
+                                    [(fobjects[l].x >> 8) - (player_x_8[l2]) + 10 + ((fobjects[l].y >> 8) - (player_y_8[l2]) + 10) * 20] != 255) {
                                 fobjects[l].x = 0;
                                 player_endurance[l2] -= wrandom(FOBJECTS_DAMAGE);
                                 if (player_endurance[l2] < 1) {
@@ -573,7 +577,7 @@ void drop_bomb(int player, int target) {
     bomb_y_speed[l] = (sinit[bomb_angle[l] >> 8] * bomb_speed[l]) >> 2;
     bomb_x[l] = player_x[player] + (9 - player_upsidedown[player] * 18) * sinit[player_angle[player] >> 8];
     bomb_y[l] = player_y[player] + (9 - player_upsidedown[player] * 18) * cosinit[player_angle[player] >> 8];
-
+    bomb_age[l] = 0;
     bomb_owner[l] = player;
 }
 
@@ -632,40 +636,41 @@ void do_bombs(void) {
 
         if (bomb_y[l] >= 0)
             if ((level_bitmap[(bomb_x[l] >> 8) + (bomb_y[l] >> 8) * 2400]) < 112 || ((level_bitmap[(bomb_x[l] >> 8) + (bomb_y[l] >> 8) * 2400])) > 119
-                || ((bomb_y[l] >> 8) >= 200)) {
+                    || ((bomb_y[l] >> 8) >= 200)) {
                 start_bomb_explo(l);
 
                 bomb_x[l] = 0;
                 continue;
             }
 
+        if(bomb_age[l]++ > BOMB_PRIME_TIME) { // Dont' destroy players if not primed yet
+            for (l2 = 0; l2 < 16; l2++) {
+                if (plane_present[l2]) {
+                    if (((player_x[l2] + 2304) > bomb_x[l]) &&
+                            ((player_x[l2] - 2304) < bomb_x[l]) && ((player_y[l2] + 2304) > bomb_y[l]) && ((player_y[l2] - 2304) < bomb_y[l]))
+                        if (plane_p[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]][player_upsidedown[l2]]
+                                [(bomb_x[l] >> 8) - (player_x_8[l2]) + 10 + ((bomb_y[l] >> 8) - (player_y_8[l2]) + 10) * 20] != 255) {
+                            bomb_x[l] = 0;
+                            player_endurance[l2] = 0;
+                            if (player_endurance[l2] < 1) {
+                                if ((!player_spinning[l2]) && (!in_closing[l2])) {
+                                    if (player_sides[bomb_owner[l]] != player_sides[l2])
+                                        player_points[bomb_owner[l]]++;
+                                    else
+                                        player_points[bomb_owner[l]]--;
 
-        for (l2 = 0; l2 < 16; l2++) {
-            if (plane_present[l2]) {
-                if (((player_x[l2] + 2304) > bomb_x[l]) &&
-                    ((player_x[l2] - 2304) < bomb_x[l]) && ((player_y[l2] + 2304) > bomb_y[l]) && ((player_y[l2] - 2304) < bomb_y[l]))
-                    if (plane_p[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]][player_upsidedown[l2]]
-                        [(bomb_x[l] >> 8) - (player_x_8[l2]) + 10 + ((bomb_y[l] >> 8) - (player_y_8[l2]) + 10) * 20] != 255) {
-                        bomb_x[l] = 0;
-                        player_endurance[l2] = 0;
-                        if (player_endurance[l2] < 1) {
-                            if ((!player_spinning[l2]) && (!in_closing[l2])) {
-                                if (player_sides[bomb_owner[l]] != player_sides[l2])
-                                    player_points[bomb_owner[l]]++;
-                                else
-                                    player_points[bomb_owner[l]]--;
+                                    player_shots_down[bomb_owner[l]][l2]++;
+                                }
 
-                                player_shots_down[bomb_owner[l]][l2]++;
+                                in_closing[l2] = 2;
+                                plane_present[l2] = 0;
+                                start_parts(l2);
+                                start_bomb_explo(l, 1);
+
                             }
-
-                            in_closing[l2] = 2;
-                            plane_present[l2] = 0;
-                            start_parts(l2);
-                            start_bomb_explo(l, 1);
-
+                            break;
                         }
-                        break;
-                    }
+                }
             }
         }
 
@@ -713,7 +718,7 @@ void start_bomb_explo(int bb, int hitted) {
 
 
     if ((level_bitmap[(bomb_x[bb] >> 8) + (bomb_y[bb] >> 8) * 2400] >= 224)
-        && (level_bitmap[(bomb_x[bb] >> 8) + (bomb_y[bb] >> 8) * 2400] <= 231)) {
+            && (level_bitmap[(bomb_x[bb] >> 8) + (bomb_y[bb] >> 8) * 2400] <= 231)) {
         start_wave(bomb_x[bb] >> 8);
         if (config.splash && config.sound_on && config.sfx_on)
             play_2d_sample(sample_splash[wrandom(3)], player_x_8[solo_country], bomb_x[bb] >> 8);
@@ -727,7 +732,7 @@ void start_bomb_explo(int bb, int hitted) {
     for (l = 0; l < MAX_AA_GUNS; l++)
         if (kkbase_x[l] && kkbase_status[l] != 2) {
             if ((bomb_x[bb] >> 8) >= kkbase_x[l] && (bomb_x[bb] >> 8) <= (kkbase_x[l] + 25) &&
-                (bomb_y[bb] >> 8) >= (kkbase_y[l] - 5) && (bomb_y[bb] >> 8) <= (kkbase_y[l] + 30)) {
+                    (bomb_y[bb] >> 8) >= (kkbase_y[l] - 5) && (bomb_y[bb] >> 8) <= (kkbase_y[l] + 30)) {
                 if (kkbase_country[l] == player_sides[bomb_owner[bb]])
                     hitted = -1;
 
@@ -755,7 +760,7 @@ void start_bomb_explo(int bb, int hitted) {
     for (l = 0; l < MAX_STRUCTURES; l++)
         if ((structures[l][1] != NULL) && (!struct_state[l])) {
             if ((bomb_x[bb] >> 8) >= leveldata.struct_x[l] && (bomb_x[bb] >> 8) <= (leveldata.struct_x[l] + struct_width[l]) &&
-                (bomb_y[bb] >> 8) >= (leveldata.struct_y[l] - 5) && (bomb_y[bb] >> 8) <= (leveldata.struct_y[l] + 5 + struct_heigth[l])) {
+                    (bomb_y[bb] >> 8) >= (leveldata.struct_y[l] - 5) && (bomb_y[bb] >> 8) <= (leveldata.struct_y[l] + 5 + struct_heigth[l])) {
                 if (config.flames)
                     start_flame(leveldata.struct_x[l], leveldata.struct_y[l] + struct_heigth[l], struct_width[l]);
 
@@ -803,7 +808,7 @@ void start_bomb_explo(int bb, int hitted) {
     for (l = 0; l < MAX_INFANTRY; l++) {
         if (infan_x[l] && infan_state[l] < 3) {
             if ((bomb_x[bb] >> 8) >= (infan_x[l] - 30) && (bomb_x[bb] >> 8) <= (infan_x[l] + 44) &&
-                (bomb_y[bb] >> 8) >= (infan_y[l] - 20) && (bomb_y[bb] >> 8) <= (infan_y[l] + 30)) {
+                    (bomb_y[bb] >> 8) >= (infan_y[l] - 20) && (bomb_y[bb] >> 8) <= (infan_y[l] + 30)) {
                 if (player_sides[infan_country[l]] == player_sides[bomb_owner[bb]])
                     hitted = -1;
 

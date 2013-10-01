@@ -45,17 +45,19 @@
 #define MAX_BOMB_PARTS 50       //50
 #define MAX_BOMBS 25            //25
 #define MAX_STRUCTURES 100
+#define BOMB_PRIME_TIME 20
 
 #define NUMBER_OF_SCENES 15
 
 #define MAX_SHOTS 500
 #define SHOTS_SPEED 4000
 #define SHOTS_RATE 3
-#define SHOTS_GRAVITY 400
+#define SHOTS_GRAVITY 1000 // was: 400
 #define SHOTS_COLOR 8
-#define SHOTS_RANGE 55
+#define SHOTS_RANGE 80 // was: 55
+#define SHOT_RANDOMNESS 30000
 
-#define MAX_FLYING_OBJECTS 200
+#define MAX_FLYING_OBJECTS 800
 #define SMOKE_FRAMES 17
 #define WAVE1_FRAMES 15
 #define WAVE2_FRAMES 5

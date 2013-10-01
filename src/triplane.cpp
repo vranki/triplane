@@ -237,6 +237,7 @@ int bomb_angle[MAX_BOMBS];
 int bomb_owner[MAX_BOMBS];
 int bomb_x_speed[MAX_BOMBS];
 int bomb_y_speed[MAX_BOMBS];
+int bomb_age[MAX_BOMBS];
 
 int roll_key_down[16];
 int bomb_key_down[16];

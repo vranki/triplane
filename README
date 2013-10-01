@@ -13,6 +13,22 @@ Please read the manual page for information on how to actually play
 the game. Also see README.install if you want to build the game from
 source code.
 
+Changes in this "new version" located in https://github.com/vranki/triplane:
+
+ - Bullets fly a bit further
+ - Bullets get some randomness in their velocity causing a small 
+shotgun effect
+ - Bullets have a bit more gravity
+ - Bombs have a short fuse time when they are released and they cannot
+aeroplanes during it
+ - Damaged planes lose some engine power
+
+These changes have been extensively play-tested in four player
+combat in Symbio Tampere office. We really enjoy the game.
+
+Todo: Make these configurable to stay compatible with original gameplay
+
+
 Copyrights
 ==========
 
@@ -25,6 +41,9 @@ Juhani Lindfors (timo.lindfors@iki.fi), Teemu J. Takanen
 (tjt@users.sourceforge.net), and Riku Saikkonen. We also thank Timo Lilja
 for his earlier Xlib porting efforts and Sami Liedes for
 spellchecking and optimization ideas.
+
+The "new version" located in github is created by Ville Ranki. It contains
+some minor enhancements to the original gameplay.
 
 Dodekaedron Software Creations Oy is the current copyright holder for
 the Triplane Classic source code, documentation, images and sounds. In
@@ -52,4 +71,4 @@ Teemu J. Takanen <tjt@users.sourceforge.net>
 
 Timo Juhani Lindfors <timo.lindfors@iki.fi>
 
-
+Ville Ranki <ville.ranki@iki.fi>

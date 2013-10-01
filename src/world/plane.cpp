@@ -259,7 +259,15 @@ void model_planes(void) {
                 player_speed[c] -= ((90 << 8) - abs(player_angle[c] - (90 << 8))) * mass / 32000;
 
         if (controls_power[c] && player_gas[c]) {
-            player_speed[c] += (plane_power[c] << 8) / mass;
+            // Give player speed
+            int speedIncrease = (plane_power[c] << 8);
+
+            // If plane is badly damaged, decrease speed
+            if(wrandom(plane_mass[c] >> 4) >= player_endurance[c] && wrandom(2)) {
+                speedIncrease = speedIncrease / 2;
+            }
+
+            player_speed[c] += speedIncrease / mass;
             player_gas[c]--;
         }
 
