@@ -20,7 +20,7 @@ Changes in this "new version" located in https://github.com/vranki/triplane:
 shotgun effect
  - Bullets have a bit more gravity
  - Bombs have a short fuse time when they are released and they cannot
-aeroplanes during it
+hit aeroplanes during it
  - Damaged planes lose some engine power
  - Debian packaging copied from Ubuntu source package
 
