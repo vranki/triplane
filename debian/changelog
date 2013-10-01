@@ -2,7 +2,7 @@ triplane (1.0.8-vranki) unstable; urgency=low
 
   * Small enhancements to gameplay
 
- -- Ville Ranki <ville.ranki@iki.fi> Tue, 1 Oct 2013 21:11:28 +0000
+ -- Ville Ranki <ville.ranki@iki.fi>  Tue, 1 Oct 2013 21:11:28 +0000
 
 triplane (1.0.7-1) unstable; urgency=low
 
@@ -16,3 +16,4 @@ triplane (1.0.6-1) unstable; urgency=low
   * Initial release (Closes: #628797)
 
  -- Timo Juhani Lindfors <timo.lindfors@iki.fi>  Sat, 04 Jun 2011 01:05:46 +0300
+

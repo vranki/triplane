@@ -19,6 +19,13 @@ $ make install
 DESTDIR and PREFIX are supported. See doc/mingw32.txt for Windows
 build instructions.
 
+Debian packging
+---------------
+
+$ dpkg-buildpackage -rfakeroot -b
+
+Resulting .deb package is located in parent directory.
+
 Testsuite
 ---------
 
