@@ -1,0 +1,3 @@
+?package(triplane):needs="X11" section="Games/Action"\
+  icon32x32="/usr/share/pixmaps/triplane.xpm"\
+  title="Triplane Classic" command="/usr/games/triplane -nofullscreen -2"

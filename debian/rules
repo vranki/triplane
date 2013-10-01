@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+%:
+	dh $@ 
+override_dh_auto_build:
+	make depend -- PREFIX=/usr
+	dh_auto_build -- PREFIX=/usr
+override_dh_auto_install:
+	dh_auto_install -- PREFIX=/usr DESTDIR=$(CURDIR)/debian/triplane
+	mkdir -p $(CURDIR)/debian/triplane/usr/share/applications
+	install -m 644 debian/triplane.desktop $(CURDIR)/debian/triplane/usr/share/applications
+	mkdir -p $(CURDIR)/debian/triplane/usr/share/pixmaps
+	install -m 644 data/application_icon/triplane.xpm $(CURDIR)/debian/triplane/usr/share/pixmaps
