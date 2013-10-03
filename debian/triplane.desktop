@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Triplane Classic
 Comment=side-scrolling dogfighting game
-Exec=triplane -nofullscreen -2
+Exec=triplane
 Icon=triplane.png
 StartupNotify=false
 Terminal=false

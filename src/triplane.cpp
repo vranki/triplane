@@ -1,7 +1,7 @@
 /* 
  * Triplane Classic - a side-scrolling dogfighting game.
  * Copyright (C) 1996,1997,2009  Dodekaedron Software Creations Oy
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -410,7 +410,7 @@ extern void ai_turnplus(int number);
 extern void ai_turnminus(int number);
 
 extern "C" {
-    extern void init_alkucallback(void);
+extern void init_alkucallback(void);
 }
 
 #define NUMBER_OF_STRUCT_NAMES 35
@@ -742,7 +742,7 @@ void airfield_checks(void) {
         player_on_airfield[l] = 0;
         for (l2 = 0; l2 < 4; l2++)
             if (leveldata.airfield_x[l2] && ((player_x_8[l]) >= leveldata.airfield_x[l2])
-                && ((player_x_8[l]) <= (leveldata.airfield_x[l2] + leveldata.airfield_lenght[l2])) && (plane_tire_y >= (leveldata.airfield_y[l2] - 1))) {
+                    && ((player_x_8[l]) <= (leveldata.airfield_x[l2] + leveldata.airfield_lenght[l2])) && (plane_tire_y >= (leveldata.airfield_y[l2] - 1))) {
 
 
                 if (((player_angle[l] >> 8) <= TAIL_HIT_ANGLE) || ((player_angle[l] >> 8) >= (360 - HIT_ANGLE))) {
@@ -890,17 +890,12 @@ void init_player(int l, int pommit) {
             player_bombs[l] = computer_active[l] ? ((wrandom(mission_duration + 1) < 1440) ? plane_bombs[l] : 0) : (pommit ? plane_bombs[l] : 0);
         }
 
-
         player_gas[l] = plane_gas[l];
         player_rolling[l] = 0;
         player_spinning[l] = 0;
         spinning_remaining[l] = 0;
         player_last_shot[l] = 0;
         player_endurance[l] = plane_mass[l] >> 3;       //4
-
-
-
-
     }
 }
 
@@ -1106,7 +1101,7 @@ void controls(void) {
                 new_mc_roll[l] = 0;
                 if (new_mc_down[l] == new_mc_up[l])     /* not turning up/down */
                     if ((player_upsidedown[l] && (player_angle[l] < 23040 || player_angle[l] > 69120)) ||
-                        (!player_upsidedown[l] && (player_angle[l] < 69120 && player_angle[l] > 23040)))
+                            (!player_upsidedown[l] && (player_angle[l] < 69120 && player_angle[l] > 23040)))
                         if (!player_rolling[l])
                             new_mc_roll[l] = 1;
             }
@@ -1119,7 +1114,7 @@ void controls(void) {
                     new_mc_roll[l] = 0;
                     if (new_mc_down[l] == new_mc_up[l]) /* not turning up/down */
                         if ((player_upsidedown[l] && (player_angle[l] < 23040 || player_angle[l] > 69120)) ||
-                            (!player_upsidedown[l] && (player_angle[l] < 69120 && player_angle[l] > 23040)))
+                                (!player_upsidedown[l] && (player_angle[l] < 69120 && player_angle[l] > 23040)))
                             if (!player_rolling[l])
                                 new_mc_roll[l] = 1;
                 }
@@ -2272,7 +2267,7 @@ void do_aftermath(int show_it_all) {
 
     }
 
-    //// Bug up ^^^^  
+    //// Bug up ^^^^
 
     if (show_it_all) {
         l = 1;
@@ -3051,7 +3046,6 @@ void load_level(void) {
         }
     } else {
         sprintf(levelname, parametrit[findparameter("-level")] + 6);
-
     }
 
 
@@ -3514,39 +3508,42 @@ void init_data(void) {
         player_y_speed[l] = 0;
         player_last_shot[l] = 0;
 
-
         hangarmenu_active[l] = 0;
         hangarmenu_position[l] = 0;
 
-        if (playing_solo)
+        if (playing_solo) {
             switch (fighter[l]) {
             case 0:
-                hangarmenu_ammo[l] = hangarmenu_max_ammo[l] = 0;
+                hangarmenu_max_ammo[l] = 0;
                 hangarmenu_bombs[l] = hangarmenu_max_bombs[l] = plane_bombs[l];
                 break;
-
             case 1:
-                hangarmenu_ammo[l] = hangarmenu_max_ammo[l] = plane_ammo[l];
-                hangarmenu_bombs[l] = hangarmenu_max_bombs[l] = plane_bombs[l];
+                hangarmenu_max_ammo[l] = plane_ammo[l];
+                hangarmenu_max_bombs[l] = plane_bombs[l];
                 break;
             case 2:
-                hangarmenu_ammo[l] = hangarmenu_max_ammo[l] = plane_ammo[l];
-                hangarmenu_bombs[l] = hangarmenu_max_bombs[l] = 0;
+                hangarmenu_max_ammo[l] = plane_ammo[l];
+                hangarmenu_max_bombs[l] = 0;
                 break;
-
+            }
         } else {
-            hangarmenu_ammo[l] = hangarmenu_max_ammo[l] = plane_ammo[l];
-            hangarmenu_bombs[l] = hangarmenu_max_bombs[l] = plane_bombs[l];
-
+            hangarmenu_max_ammo[l] = plane_ammo[l];
+            hangarmenu_max_bombs[l] = plane_bombs[l];
         }
 
-        hangarmenu_gas[l] = hangarmenu_max_gas[l] = plane_gas[l];
+        hangarmenu_max_gas[l] = plane_gas[l];
+
+        // Set sane default amounts (max value / 2 + 1)
+        hangarmenu_gas[l] = hangarmenu_max_gas[l] / 2 + 1;
+        hangarmenu_ammo[l] = hangarmenu_max_ammo[l];
+        hangarmenu_bombs[l] = hangarmenu_max_bombs[l];
+
+        if(hangarmenu_ammo[l]) hangarmenu_ammo[l] = hangarmenu_ammo[l] / 2 + 1;
+        if(hangarmenu_bombs[l]) hangarmenu_bombs[l] = hangarmenu_bombs[l] / 2 + 1;
 
         for (l2 = 0; l2 < 16; l2++)
             player_shots_down[l][l2] = 0;
-
     }
-
 }
 
 void handle_parameters(void) {
@@ -3710,7 +3707,7 @@ int main(int argc, char *argv[]) {
     }
 
     n1 = 0;
-    while (!n1 && !findparameter("-autostart")) {
+    while (!n1 && !findparameter("-autostart") && !findparameter("-nosplash")) {
         if (kbhit())
             break;
 
@@ -3730,7 +3727,6 @@ int main(int argc, char *argv[]) {
     if (sfx_loaded) {
         sample_alku->right_volume = 0;
         sample_alku->left_volume = 0;
-
     }
 
 #ifdef NO_TRADEMARK_PROBLEMS

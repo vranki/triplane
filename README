@@ -22,12 +22,16 @@ shotgun effect
  - Bombs have a short fuse time when they are released and they cannot
 hit aeroplanes during it
  - Damaged planes lose some engine power
+ - Game starts with sane default amounts of bombs, ammo & fuel
  - Debian packaging copied from Ubuntu source package
+ - New option -nosplash to disable splash screen
 
 These changes have been extensively play-tested in four player
 combat in Symbio Tampere office. We really enjoy the game.
 
 Todo: Make these configurable to stay compatible with original gameplay
+You can see source changes by comparing initial git import to
+latest revision.
 
 
 Copyrights

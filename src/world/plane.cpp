@@ -264,7 +264,7 @@ void model_planes(void) {
 
             // If plane is badly damaged, decrease speed
             if(wrandom(plane_mass[c] >> 4) >= player_endurance[c] && wrandom(2)) {
-                speedIncrease = speedIncrease / 2;
+                speedIncrease = speedIncrease / 4;
             }
 
             player_speed[c] += speedIncrease / mass;
