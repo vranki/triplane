@@ -23,6 +23,7 @@ shotgun effect
 hit aeroplanes during it
  - Damaged planes lose some engine power
  - Game starts with sane default amounts of bombs, ammo & fuel
+ - Damage from bullets is constant, not random
  - Debian packaging copied from Ubuntu source package
  - New option -nosplash to disable splash screen
 
