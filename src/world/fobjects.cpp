@@ -156,7 +156,7 @@ void do_shots(void) {
                                 player_hits[shots_flying_owner[l]]++;
 
                             // Damage caused when a shot hits player. This is now constant.
-                            player_endurance[l2] -= 6;
+                            player_endurance[l2] -= 4;
 
                             if (player_endurance[l2] < 1) {
                                 if (!player_spinning[l2] && !in_closing[l2]) {
