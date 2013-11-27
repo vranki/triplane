@@ -167,7 +167,7 @@ void model_planes(void) {
         mass += player_gas[c] / 160;
 
         if (player_y[c] < 0 && !player_spinning[c]) {
-            spinning_remaining[c] = wrandom(80) + 30;
+            spinning_remaining[c] = wrandom(10) + 25;
         }
 
         if (controls_power[c]) {

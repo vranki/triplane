@@ -1,3 +1,5 @@
+
+
            Triplane Classic - a side-scrolling dogfighting game
 
 Intro
@@ -26,11 +28,22 @@ hit aeroplanes during it
  - Damage from bullets is constant, not random
  - Debian packaging copied from Ubuntu source package
  - New option -nosplash to disable splash screen
+ - Spinning when going too high is now shorter - there is a
+   good chance of survival
+ - If throttle is reversed, plane does not take off automatically
+   when button is not held. Player needs to press throttle button
+   to take off.
+
 
 These changes have been extensively play-tested in four player
 combat in Symbio Tampere office. We really enjoy the game.
 
-Todo: Make these configurable to stay compatible with original gameplay
+Todo:
+
+Make these configurable to stay compatible with original gameplay
+OR
+Rename the project to clearly show this is different from original.
+
 You can see source changes by comparing initial git import to
 latest revision.
 
@@ -49,7 +62,8 @@ for his earlier Xlib porting efforts and Sami Liedes for
 spellchecking and optimization ideas.
 
 The "new version" located in github is created by Ville Ranki. It contains
-some minor enhancements to the original gameplay.
+some minor enhancements to the original gameplay. Esko Oramaa has
+also contributed some patches.
 
 Dodekaedron Software Creations Oy is the current copyright holder for
 the Triplane Classic source code, documentation, images and sounds. In

@@ -338,6 +338,12 @@ int new_mc_roll[16];
 int new_mc_guns[16];
 int new_mc_power[16];
 
+// This is used to prevent player from taking off
+// when reversed throttle is enabled. 
+// If it is 1, the player won't start until
+// throttle button is pressed, even with reverse throttle.
+int power_break_active[16];
+
 int main_version;
 int sub_version;
 
@@ -561,8 +567,9 @@ void hangarmenu_handle(void) {
         } else
             hangarkey_down_down[l] = 0;
 
-        if (mc_roll[l] || mc_power[l]) {
+        if (mc_roll[l]) {
             plane_wants_out[l] = 1;
+            power_break_active[l] = 1;
 
             player_rolling[l] = 0;
             player_spinning[l] = 0;
@@ -800,6 +807,7 @@ void init_player(int l, int pommit) {
     plane_wants_in[l] = 0;
     player_x_speed[l] = 0;
     player_y_speed[l] = 0;
+    power_break_active[l] = 1;
 
 
 
@@ -1130,18 +1138,31 @@ void controls(void) {
                     new_mc_up[l] = 0;
 
                 if (!power_on_off) {
+// Toggle power is off
                     if (!power_reverse) {
+// ..and no reverse
                         if ((playing_solo ? key[roster[config.player_number[solo_country]].power] : key[player_keys[l].power]))
                             new_mc_power[l] = 1;
                         else
                             new_mc_power[l] = 0;
                     } else {
-                        if ((playing_solo ? key[roster[config.player_number[solo_country]].power] : key[player_keys[l].power]))
+// Toggle off but reverse - we need to prevent takeoff with
+// power_break_active
+                        if ((playing_solo ? key[roster[config.player_number[solo_country]].power] : key[player_keys[l].power])) {
+// Power is pressed
                             new_mc_power[l] = 0;
-                        else
-                            new_mc_power[l] = 1;
+                            if(power_break_active[l])
+                                power_break_active[l] = 0;
+                        } else {
+// Power is not pressed
+                            if(!power_break_active[l])
+                                new_mc_power[l] = 1;
+                            else
+                                new_mc_power[l] = 0;
+                        }
                     }
                 } else {
+// Toggle power is on
                     if ((playing_solo ? key[roster[config.player_number[solo_country]].power] : key[player_keys[l].power])) {
                         if (!controls_power2[l]) {
                             if (new_mc_power[l])
