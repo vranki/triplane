@@ -570,7 +570,8 @@ void hangarmenu_handle(void) {
         if (mc_roll[l]) {
             plane_wants_out[l] = 1;
             power_break_active[l] = 1;
-
+            mc_power[l] = 0;
+            new_mc_power[l] = 0;
             player_rolling[l] = 0;
             player_spinning[l] = 0;
             spinning_remaining[l] = 0;
