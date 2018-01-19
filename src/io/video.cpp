@@ -20,6 +20,7 @@
 
 #include "io/video.h"
 #include "io/dksfile.h"
+#include "triplane.h"
 #include "util/wutil.h"
 #include <SDL.h>
 #include <signal.h>
@@ -99,8 +100,8 @@ void do_all(int do_retrace) {
     if (draw_with_vircr_mode) {
         if (pixel_multiplier > 1) {
             int i, j, k;
-            int w = (current_mode == VGA_MODE) ? 320 : 800;
-            int h = (current_mode == VGA_MODE) ? 200 : 600;
+            int w = (current_mode == VGA_MODE) ? 320 : screen_width;
+            int h = (current_mode == VGA_MODE) ? 200 : screen_height;
             uint8_t *in = vircr, *out = (uint8_t *) video_state.surface->pixels;
             /* optimized versions using 32-bit and 16-bit writes when possible */
             if (pixel_multiplier == 4 && sizeof(char *) >= 4) { /* word size >= 4 */
@@ -162,7 +163,7 @@ static void sigint_handler(int dummy) {
 }
 
 void init_video(void) {
-    int ret;
+    int ret;	
 
     if (!video_state.init_done) {
         ret = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK | SDL_INIT_NOPARACHUTE);
@@ -178,7 +179,7 @@ void init_video(void) {
         SDL_ShowCursor(SDL_DISABLE);
 
         if (!draw_with_vircr_mode) {
-            vircr = (unsigned char *) walloc(800 * 600);
+            vircr = (unsigned char *) walloc(screen_width * screen_height);
         }
     }
 }
@@ -187,8 +188,8 @@ static int init_mode(int new_mode, const char *paletname) {
     Uint32 mode_flags;
     const SDL_VideoInfo *vi;
     int las, las2;
-    int w = (new_mode == SVGA_MODE) ? 800 : 320;
-    int h = (new_mode == SVGA_MODE) ? 600 : 200;
+    int w = (new_mode == SVGA_MODE) ? screen_width : 320;
+    int h = (new_mode == SVGA_MODE) ? screen_height : 200;
 
     init_video();
 

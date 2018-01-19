@@ -22,6 +22,7 @@
 #include <assert.h>
 #include "gfx/gfx.h"
 #include "io/video.h"
+#include "triplane.h"
 
 static void do_isa_clear(void);
 
@@ -40,7 +41,7 @@ void putpix(int x, int y, unsigned char c, int x1, int y1, int x2, int y2) {
         if (current_mode == VGA_MODE) {
             vircr[x + (y << 8) + (y << 6)] = c;
         } else {
-            vircr[x + y * 800] = c;
+            vircr[x + y * screen_width] = c;
         }
     }
 
@@ -95,7 +96,7 @@ void tyhjaa_vircr(void) {
             fill_vircr(0, 0, 319, 199, 0);
         } else {
             assert(current_mode == SVGA_MODE);
-            fill_vircr(0, 0, 799, 599, 0);
+            fill_vircr(0, 0, screen_width_less, screen_height_less, 0);
         }
 
         do_isa_clear();
@@ -110,7 +111,7 @@ static void do_isa_clear(void) {
     if (current_mode == VGA_MODE) {
         standard_background->blit_fullscreen();
     } else {
-        standard_background->blit(0, 0, 0, 0, 799, 599);
+        standard_background->blit(0, 0, 0, 0, screen_width_less, screen_height_less);
     }
 
 }

@@ -785,15 +785,15 @@ void start_bomb_explo(int bb, int hitted) {
 
                 if (current_mode == SVGA_MODE) {
 
-                    structures[l][1]->blit_to_bitmap(standard_background, leveldata.struct_x[l] - (leveldata.struct_x[l] / 800) * 800,
-                                                     leveldata.struct_y[l] + (leveldata.struct_x[l] / 800) * 196 - 4);
+                    structures[l][1]->blit_to_bitmap(standard_background, leveldata.struct_x[l] - (leveldata.struct_x[l] / screen_width) * screen_width,
+                                                     leveldata.struct_y[l] + (leveldata.struct_x[l] / screen_width) * 196 - 4);
 
-                    structures[l][1]->blit(leveldata.struct_x[l] - (leveldata.struct_x[l] / 800) * 800,
-                                           leveldata.struct_y[l] + (leveldata.struct_x[l] / 800) * 196 - 4);
+                    structures[l][1]->blit(leveldata.struct_x[l] - (leveldata.struct_x[l] / screen_width) * screen_width,
+                                           leveldata.struct_y[l] + (leveldata.struct_x[l] / screen_width) * 196 - 4);
 
-                    if ((leveldata.struct_x[l] - (leveldata.struct_x[l] / 800) * 800) + struct_width[l] > 800)
-                        structures[l][1]->blit(leveldata.struct_x[l] - (leveldata.struct_x[l] / 800) * 800 - 800,
-                                               leveldata.struct_y[l] + (leveldata.struct_x[l] / 800 + 1) * 196 - 4);
+                    if ((leveldata.struct_x[l] - (leveldata.struct_x[l] / screen_width) * screen_width) + struct_width[l] > screen_width)
+                        structures[l][1]->blit(leveldata.struct_x[l] - (leveldata.struct_x[l] / screen_width) * screen_width - screen_width,
+                                               leveldata.struct_y[l] + (leveldata.struct_x[l] / screen_width + 1) * 196 - 4);
                 }
 
                 if (leveldata.struct_hit[l]) {

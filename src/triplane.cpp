@@ -193,6 +193,12 @@ int y1_raja[4] = { 2, 2, 102, 102 };
 int x2_raja[4] = { 157, 317, 157, 317 };
 int y2_raja[4] = { 89, 89, 187, 187 };
 
+//Screen resolution
+int screen_width = 800;
+int screen_height = 600;
+int screen_width_less = screen_width - 1;
+int screen_height_less = screen_height - 1;
+
 //\ Airfields
 
 
@@ -379,6 +385,7 @@ void init_data(void);
 void do_aftermath(int show_it_all);
 void airfield_checks(void);
 void handle_parameters(void);
+void init_resolution(int width, int height);
 void load_level(void);
 void clear_level(void);
 void do_flags(void);
@@ -1450,7 +1457,7 @@ void do_debug_trace(void) {
         if (current_mode == VGA_MODE) {
             len = 320 * 200;
         } else {
-            len = 800 * 600;
+            len = screen_width * screen_height;
         }
 
         vircr_checksum = crc32_le(~0, vircr, len);
@@ -1560,30 +1567,30 @@ void main_engine(void) {
     if (current_mode == SVGA_MODE) {
 
         tyhjaa_vircr();
-        maisema->blit(-1600, 388, 0, 0, 799, 599);
-        maisema->blit(-800, 192, 0, 0, 799, 599);
-        maisema->blit(0, -4, 0, 0, 799, 599);
+        maisema->blit(-2 * screen_width, 388, 0, 0, screen_width_less, screen_height_less);
+        maisema->blit(-screen_width, 192, 0, 0, screen_width_less, screen_height_less);
+        maisema->blit(0, -4, 0, 0, screen_width_less, screen_height_less);
 
         for (l = 0; l < MAX_STRUCTURES; l++) {
             if (structures[l][0] != NULL) {
                 if (leveldata.struct_hit[l])
                     continue;
 
-                structures[l][0]->blit(leveldata.struct_x[l] - (leveldata.struct_x[l] / 800) * 800,
-                                       leveldata.struct_y[l] + (leveldata.struct_x[l] / 800) * 196 - 4);
+                structures[l][0]->blit(leveldata.struct_x[l] - (leveldata.struct_x[l] / screen_width) * screen_width,
+                                       leveldata.struct_y[l] + (leveldata.struct_x[l] / screen_width) * 196 - 4);
 
                 structures[l][0]->info(&xx, &yy);
 
-                if ((leveldata.struct_x[l] - (leveldata.struct_x[l] / 800) * 800) + xx > 800)
-                    structures[l][0]->blit(leveldata.struct_x[l] - (leveldata.struct_x[l] / 800) * 800 - 800,
-                                           leveldata.struct_y[l] + (leveldata.struct_x[l] / 800 + 1) * 196 - 4);
+                if ((leveldata.struct_x[l] - (leveldata.struct_x[l] / screen_width) * screen_width) + xx > screen_width)
+                    structures[l][0]->blit(leveldata.struct_x[l] - (leveldata.struct_x[l] / screen_width) * screen_width - screen_width,
+                                           leveldata.struct_y[l] + (leveldata.struct_x[l] / screen_width + 1) * 196 - 4);
 
             }
 
         }
 
-        standard_background = new Bitmap(0, 0, 800, 600);
-        standard_background->blit(0, 0, 0, 0, 799, 599);
+        standard_background = new Bitmap(0, 0, screen_width, screen_height);
+        standard_background->blit(0, 0, 0, 0, screen_width_less, screen_height_less);
 
 
     } else {
@@ -3600,11 +3607,28 @@ void handle_parameters(void) {
 
     if (findparameter("-nofullscreen")) {
         wantfullscreen = 0;
-    }
+    }	
 
     if (findparameter("-sdldraw")) {
         draw_with_vircr_mode = 0;
     }
+
+	if (findparameter("-nogap")) {
+		init_resolution(2400, 200);
+	}
+
+	if (findparameter("-1gap")) {
+		init_resolution(1200, 400);
+	}
+
+	//if (findparameter("-3gap")) {		init_resolution(600, 800);	}
+}
+
+void init_resolution(int width, int height){	
+	screen_width = width;
+	screen_height = height;
+	screen_width_less = screen_width - 1;
+	screen_height_less = screen_height - 1;
 }
 
 int main(int argc, char *argv[]) {

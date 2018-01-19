@@ -3069,7 +3069,7 @@ void main_menu(void) {
         }
 
         koords(&x, &y, &n1, &n2);
-        menu1->blit(0, 0);      // 0,0,799,599
+        menu1->blit(0, 0);      // 0,0,screen_width_less,screen_height_less
         grid2->printf(34, 156, "Press F1\nfor Help");
 
         for (l = 0; l < 4; l++)

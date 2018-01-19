@@ -875,15 +875,15 @@ void infan_to_struct(int l) {
 
                 if (current_mode == SVGA_MODE) {
 
-                    structures[l2][1]->blit_to_bitmap(standard_background, leveldata.struct_x[l2] - (leveldata.struct_x[l2] / 800) * 800,
-                                                      leveldata.struct_y[l2] + (leveldata.struct_x[l2] / 800) * 196 - 4);
+                    structures[l2][1]->blit_to_bitmap(standard_background, leveldata.struct_x[l2] - (leveldata.struct_x[l2] / screen_width) * screen_width,
+                                                      leveldata.struct_y[l2] + (leveldata.struct_x[l2] / screen_width) * 196 - 4);
 
-                    structures[l2][1]->blit(leveldata.struct_x[l2] - (leveldata.struct_x[l2] / 800) * 800,
-                                            leveldata.struct_y[l2] + (leveldata.struct_x[l2] / 800) * 196 - 4);
+                    structures[l2][1]->blit(leveldata.struct_x[l2] - (leveldata.struct_x[l2] / screen_width) * screen_width,
+                                            leveldata.struct_y[l2] + (leveldata.struct_x[l2] / screen_width) * 196 - 4);
 
-                    if ((leveldata.struct_x[l2] - (leveldata.struct_x[l2] / 800) * 800) + struct_width[l2] > 800)
-                        structures[l2][1]->blit(leveldata.struct_x[l2] - (leveldata.struct_x[l2] / 800) * 800 - 800,
-                                                leveldata.struct_y[l2] + (leveldata.struct_x[l2] / 800 + 1) * 196 - 4);
+                    if ((leveldata.struct_x[l2] - (leveldata.struct_x[l2] / screen_width) * screen_width) + struct_width[l2] > screen_width)
+                        structures[l2][1]->blit(leveldata.struct_x[l2] - (leveldata.struct_x[l2] / screen_width) * screen_width - screen_width,
+                                                leveldata.struct_y[l2] + (leveldata.struct_x[l2] / screen_width + 1) * 196 - 4);
                 }
 
                 if (leveldata.struct_hit[l2]) {
