@@ -442,7 +442,7 @@ void swap_config_endianes(void) {
     config.unlimited_ammo = SDL_SwapLE32(config.unlimited_ammo);
     config.unlimited_gas = SDL_SwapLE32(config.unlimited_gas);
 
-	for (i = 0; i < 4; i++)
+	for (i = 0; i < 5; i++)
 	{
 		config.joystick[i] = SDL_SwapLE32(config.joystick[i]);
 		config.joystick_calibrated[i] = SDL_SwapLE32(config.joystick_calibrated[i]);
@@ -497,7 +497,7 @@ void load_config(void) {
     config.unlimited_ammo = 0;
     config.unlimited_gas = 0;
 
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 5; i++) {
 		config.joystick[i] = -1;
 		config.joystick_calibrated[i] = 0;
 	}

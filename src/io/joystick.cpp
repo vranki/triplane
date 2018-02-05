@@ -33,9 +33,9 @@
  */
 #define JOYSTICK_THRESHOLD_MULTIPLIER 0.8
 
-joystick_configuration joystick_config[4];
+joystick_configuration joystick_config[5];
 
-SDL_Joystick *joydev[4] = { NULL, NULL, NULL, NULL };
+SDL_Joystick *joydev[5] = { NULL, NULL, NULL, NULL, NULL };
 
 /**
  * Initializes joystick configuration.
@@ -76,6 +76,9 @@ short init_joysticks(void) {
 	memcpy(&joystick_config[2], &joystick_config[0], sizeof(joystick_configuration));
 	memcpy(&joystick_config[3], &joystick_config[0], sizeof(joystick_configuration));
 
+	//for solo
+	memcpy(&joystick_config[4], &joystick_config[0], sizeof(joystick_configuration));
+
 	if (SDL_NumJoysticks() >= 4)
         return JOY1 | JOY2 | JOY3 |JOY4;
 	else if (SDL_NumJoysticks() == 3)
@@ -98,7 +101,7 @@ int load_joysticks_data(const char *filename) {
     fp = settings_open(filename, "rb");
 
     if (fp != NULL) {
-        fread(&joystick_config, sizeof(joystick_configuration), 4, fp);
+        fread(&joystick_config, sizeof(joystick_configuration), 5, fp);
         fclose(fp);
         return 1;
     }
@@ -112,7 +115,7 @@ int load_joysticks_data(const char *filename) {
 
 void save_joysticks_data(const char *filename) {
     FILE *fp = settings_open(filename, "wb");
-    fwrite(&joystick_config, sizeof(joystick_configuration), 4, fp);
+    fwrite(&joystick_config, sizeof(joystick_configuration), 5, fp);
     fclose(fp);
 }
 
@@ -126,9 +129,10 @@ void open_close_joysticks(int joy1, int joy2, int joy3, int joy4) {
         if (!joy1 && SDL_JoystickOpened(0)) {
             SDL_JoystickClose(joydev[0]);
             joydev[0] = NULL;
+			joydev[4] = NULL;
         }
         if (joy1 && !SDL_JoystickOpened(0)) {
-            joydev[0] = SDL_JoystickOpen(0);
+            joydev[0] = joydev[4] = SDL_JoystickOpen(0);
         }
     }
     if (SDL_NumJoysticks() >= 2) {

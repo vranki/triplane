@@ -60,6 +60,7 @@ char rank_names[6][10] = {
 };
 
 /**************************** Functions ***************************************/
+void joystick_roster_setup(Bitmap* controlme);
 
 void show_feat5(void) {
     Bitmap *feat5;
@@ -804,12 +805,38 @@ void roster_menu(void) {
                 grid2->printf(152, 40, "Keys Info");
                 setk2->blit(286, 190);
                 setk1->blit(125, 172);
+								
+				frost->printf(125, 162, "Set Joystick");
 
-                frost->printf(125, 93, "Up [%s]\nDown [%s]\nRoll [%s]",
-                              SDL_GetKeyName((SDLKey) roster[number].up), SDL_GetKeyName((SDLKey) roster[number].down),
-                              SDL_GetKeyName((SDLKey) roster[number].roll));
-                frost->printf(170, 114, "Power [%s]\nBombs [%s]\nGuns [%s]\n", SDL_GetKeyName((SDLKey) roster[number].power),
-                              SDL_GetKeyName((SDLKey) roster[number].bombs), SDL_GetKeyName((SDLKey) roster[number].guns));
+				if (config.joystick[4] == -1)
+				{
+					frost->printf(125, 93, "Up [%s]\nDown [%s]\nRoll [%s]",
+						SDL_GetKeyName((SDLKey)roster[number].up), SDL_GetKeyName((SDLKey)roster[number].down),
+						SDL_GetKeyName((SDLKey)roster[number].roll));
+					frost->printf(170, 114, "Power [%s]\nBombs [%s]\nGuns [%s]\n", SDL_GetKeyName((SDLKey)roster[number].power),
+						SDL_GetKeyName((SDLKey)roster[number].bombs), SDL_GetKeyName((SDLKey)roster[number].guns));
+				}
+				else
+				{					
+					char *ups = get_joy_action_string(&joystick_config[4].up);
+					char *downs = get_joy_action_string(&joystick_config[4].down);
+					char *rolls = get_joy_action_string(&joystick_config[4].roll);
+					char *powers = get_joy_action_string(&joystick_config[4].power);
+					char *gunss = get_joy_action_string(&joystick_config[4].guns);
+					char *bombss = get_joy_action_string(&joystick_config[4].bombs);
+					char *brakes = get_joy_action_string(&joystick_config[4].brake);
+
+					frost->printf(125, 93, "J1: Up [%s]\nDown [%s]\nRoll [%s]", ups, downs, rolls);
+					frost->printf(170, 114, "Power [%s]\nBombs [%s]\nGuns [%s]\nBreak [%s]", powers, bombss, gunss, brakes);
+
+					wfree(ups);
+					wfree(downs);
+					wfree(rolls);
+					wfree(powers);
+					wfree(gunss);
+					wfree(bombss);
+					wfree(brakes);
+				}
 
             }
         } else {
@@ -906,6 +933,11 @@ void roster_menu(void) {
             frost->printf(15, 24, "Set Sologame\n Keys");
             menuselect = 7;
         }
+
+		if (keysetmode && x >= 125 && x <= 172 && y >= 161 && y <= 166) {
+			frost->printf(15, 24, "Set Sologame\n Joystick");
+			menuselect = 8;
+		}
 
         if (help_on)
             help->blit(0, 0);
@@ -1012,6 +1044,8 @@ void roster_menu(void) {
                 do_all();
                 wait_mouse_relase();
 
+				config.joystick[4] = -1;
+
                 rosteri->blit(0, 0);
 
                 frost->printf(125, 100, "Key for upward turn [%s]", SDL_GetKeyName((SDLKey) roster[number].up));
@@ -1052,6 +1086,22 @@ void roster_menu(void) {
 
                 roster[number].guns = select_key(number, roster[number].guns);
                 break;
+
+			case 8:
+				if (joystick_exists & JOY1) {
+					config.joystick[4] = 1;					
+					joystick_roster_setup(rosteri);
+					save_joysticks_data(CALIBRATION_FILENAME);
+					config.joystick_calibrated[4] = 1;
+				}
+				else 
+				{
+					rosteri->blit(0, 0);
+					frost->printf(125, 100, "Joystick 1 not connected");
+					do_all();
+					wait_mouse_relase();
+				}
+				break;
 
             case 5:
                 if (number == -1)
@@ -2045,6 +2095,70 @@ static void joystick_setup(int joy, Bitmap * controlme) {
   joystick_setup_exit:
     wfree(idle);
     wfree(current);
+
+	open_close_joysticks(0, 0, 0, 0);
+}
+
+void joystick_roster_setup(Bitmap* controlme) {
+	Sint16 *idle, *current;
+	int i, c;
+	struct {
+		const char *prompt;
+		joystick_action *act;
+	} acts[] = {
+		{
+			"Up", &joystick_config[4].up },{
+				"Down", &joystick_config[4].down },{
+					"Roll", &joystick_config[4].roll },{
+						"Power", &joystick_config[4].power },{
+							"Guns", &joystick_config[4].guns },{
+								"Bombs", &joystick_config[4].bombs },{
+									"Brake", &joystick_config[4].brake },{
+										NULL, NULL }
+	};
+
+	open_close_joysticks(1, 0, 0, 0);
+
+	idle = allocate_axis_state(4);
+	current = allocate_axis_state(4);
+
+	controlme->blit(0, 0);
+	frost->printf(125, 100, "Keep joystick idle and press");
+	frost->printf(125, 107, "Space (Esc=use old settings)");
+	do_all();
+	do {
+		c = getch();
+	} while (c != 27 && c != ' ');
+	if (c == 27)
+		goto joystick_setup_exit;
+
+	save_axis_state(idle, 4);
+
+	for (i = 0; acts[i].prompt != NULL; i++) {
+		controlme->blit(0, 0);
+		frost->printf(125, 100, "Do '%s' on joystick and", acts[i].prompt);
+		frost->printf(125, 107, "press Space or D=disable this");
+		do_all();
+		do {
+			c = getch();
+		} while (c != 27 && c != ' ' && c != 'd' && c != 'D');
+		if (c == 27) {
+			goto joystick_setup_exit;
+		}
+		else if (c == 'd' || c == 'D') {
+			set_disabled_action(acts[i].act);
+		}
+		else {
+			if (!find_changed_button(acts[i].act, 4)) {
+				save_axis_state(current, 4);
+				find_changed_axis(acts[i].act, idle, current, 4);
+			}
+		}
+	}
+
+joystick_setup_exit:
+	wfree(idle);
+	wfree(current);
 
 	open_close_joysticks(0, 0, 0, 0);
 }

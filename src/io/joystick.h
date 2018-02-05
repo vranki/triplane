@@ -39,7 +39,7 @@ struct joystick_configuration {
     /* if roll.type = 0, use autoroll */
     joystick_action up, down, roll, power, guns, bombs, brake;
 };
-extern joystick_configuration joystick_config[4];
+extern joystick_configuration joystick_config[5];
 
 short init_joysticks(void);
 int load_joysticks_data(const char *filename);
