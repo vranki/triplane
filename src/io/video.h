@@ -66,6 +66,6 @@ extern int screen_height;
 extern int screen_width_less;
 extern int screen_height_less;
 
-extern int solo_vesa;
+extern int split_num;
 
 #endif

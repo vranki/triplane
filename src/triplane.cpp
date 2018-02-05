@@ -1543,7 +1543,7 @@ void main_engine(void) {
 
     if (playing_solo) {
 
-		if (solo_vesa)
+		if (config.svga)
 		{
 			if (!findparameter("-debugnographics")) {
 				if (findparameter("-black"))
@@ -1572,11 +1572,11 @@ void main_engine(void) {
 
         tyhjaa_vircr();
 
-		if (findparameter("-nogap"))
+		if (split_num == 0)
 		{
 			maisema->blit(0, -4, 0, 0, screen_width_less, screen_height_less);
 		}
-		else if (findparameter("-1gap"))
+		else if (split_num == 1)
 		{
 			maisema->blit(-screen_width, 192, 0, 0, screen_width_less, screen_height_less);
 			maisema->blit(0, -4, 0, 0, screen_width_less, screen_height_less);
@@ -1816,17 +1816,18 @@ void main_engine(void) {
             do_mekan();
         }
 
-        if (solo_mode == -1)
-            terrain_to_screen();
-        else {            
-			if (solo_vesa)
-				solo_vesa_terrain_to_screen();			
+		if (config.svga)
+			vesa_terrain_to_screen();
+		else
+		{
+			if (solo_mode == -1)
+				terrain_to_screen();
 			else
 			{
 				solo_do_all();
 				solo_terrain_to_screen();
 			}
-        }
+		}		       
 
         hangarmenu_handle();
 
@@ -3635,19 +3636,15 @@ void handle_parameters(void) {
         draw_with_vircr_mode = 0;
     }
 
-	if (findparameter("-nogap")) {
+	if (findparameter("-nosplit")) {
+		split_num = 0;
 		init_resolution(2400, 208);
 	}
 
-	if (findparameter("-1gap")) {
+	if (findparameter("-1split")) {
+		split_num = 1;
 		init_resolution(1200, 404);
-	}
-
-	if (findparameter("-solo_vesa")) {
-		solo_vesa = 1;
-	}
-
-	//if (findparameter("-3gap")) {		init_resolution(600, 800);	}
+	}		
 }
 
 void init_resolution(int width, int height){	

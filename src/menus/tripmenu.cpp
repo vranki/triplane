@@ -1187,15 +1187,12 @@ void options_menu(void) {
             frost->printf(73, 90, "Flags?");
             frost->printf(73, 100, "Structure flames?");
             frost->printf(73, 110, "Use 800x600 window?");
-            frost->printf(73, 130, "Structure smoke?");
+            frost->printf(73, 120, "Structure smoke?");
 
-            for (l = 0; l < 6; l++) {
+            for (l = 0; l < 7; l++) {
                 boxi(214, 60 + l * 10, 221, 68 + l * 10, 0);
                 boxi(224, 60 + l * 10, 231, 68 + l * 10, 0);
-            }
-
-            boxi(214, 130, 221, 138, 0);
-            boxi(224, 130, 231, 138, 0);
+            }			           
 
             if (config.shots_visible)
                 right->blit(215, 60);
@@ -1220,18 +1217,17 @@ void options_menu(void) {
             if (config.flames)
                 right->blit(215, 100);
             else
-                wrong->blit(225, 100);
+                wrong->blit(225, 100);		           	           
 
-            if (config.structure_smoke)
-                right->blit(215, 130);
-            else
-                wrong->blit(225, 130);
+			if (config.structure_smoke)
+				right->blit(215, 120);
+			else
+				wrong->blit(225, 120);
 
-
-            if (config.svga)
-                right->blit(215, 110);
-            else
-                wrong->blit(225, 110);
+			if (config.svga)
+				right->blit(215, 110);
+			else
+				wrong->blit(225, 110);
 
             break;
 
@@ -1478,7 +1474,7 @@ void options_menu(void) {
 
                 }
 
-                if (y >= 130 && y <= 138) {
+                if (y >= 120 && y <= 128) {
                     // structure_smoke
                     menuselect = 64;
 
@@ -3340,7 +3336,7 @@ void main_menu(void) {
                 main_engine();
 
 
-                if (config.svga || solo_vesa) {
+                if (config.svga) {
                     if (!findparameter("-debugnographics")) {
 
                         init_vga("PALET5");

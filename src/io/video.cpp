@@ -44,7 +44,7 @@ int screen_height = 600;
 int screen_width_less = screen_width - 1;
 int screen_height_less = screen_height - 1;
 
-int solo_vesa = 0;
+int split_num = 2;
 
 SDL_Color curpal[256];
 

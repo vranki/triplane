@@ -41,7 +41,7 @@ int play_sample(sb_sample * sample_ptr) {
 int play_2d_sample(sb_sample * sample_ptr, int player, int target) {
     int balance = 7;
 
-    if (!playing_solo || solo_vesa) {
+    if (!playing_solo || config.svga) {
         play_sample(sample_ptr);
 
         return 0;
