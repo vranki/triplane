@@ -67,6 +67,7 @@ extern int number_of_planes[16];
 
 void terrain_to_screen(void);
 void solo_terrain_to_screen(void);
+void solo_vesa_terrain_to_screen(void);
 void kangas_terrain_to_screen(int leftx);
 void tboxi(int x1, int y1, int x2, int y2, unsigned char vari);
 
@@ -902,6 +903,42 @@ void solo_terrain_to_screen(void) {
 
 }
 
+void solo_vesa_terrain_to_screen(void) {
+	int l, l2;
+	int temp;
+
+	l = solo_mode;
+	
+	for (l2 = 0; l2 <= number_of_planes[solo_country]; l2++)
+		picons[solo_country]->blit(181 + l2 * 10, 1);
+
+	if (controls_power[solo_country])
+		pwon->blit(163, 2);
+	else
+		pwoff->blit(163, 6);
+
+	if (++status_frames > STATUS_SPEED) {
+		status_frames = 0;
+		if (status_state)
+			status_state = 0;
+		else
+			status_state = 1;
+
+	}
+
+	if (solo_failed) {
+		status_icons[0][status_state]->blit(285, 1);
+
+	}
+	else {
+		if (solo_success) {
+			status_icons[1][status_state]->blit(285, 1);
+		}
+	}
+
+	vesa_terrain_to_screen();
+}
+
 void kangas_terrain_to_screen(int left_x) {
     int l2, l, l3;
     static int color_frame = 0;
@@ -1285,13 +1322,14 @@ void vesa_terrain_to_screen(void) {
 
     }
 
+	//Icons
     for (l = 0; l < 4; l++) {
-        boards[l]->blit(l * 160, 588, 0, 0, screen_width_less, screen_height_less);
+        boards[l]->blit(l * 160, screen_height - 12, 0, 0, screen_width_less, screen_height_less);
         for (l2 = 5; l2 >= 0; l2--) {
             if ((player_bombs[l] - 1) >= l2)
                 break;
 
-            bomb_icon->blit(l * 160 + 57 + l2 * 6, 589, 0, 0, screen_width_less, screen_height_less);
+            bomb_icon->blit(l * 160 + 57 + l2 * 6, screen_height - 11, 0, 0, screen_width_less, screen_height_less);
 
         }
 
@@ -1299,31 +1337,31 @@ void vesa_terrain_to_screen(void) {
             if (((player_ammo[l] >> 4) - 1) >= l2)
                 break;
 
-            big_ammo_icon->blit(l * 160 + 101 + l2 * 4, 589, 0, 0, screen_width_less, screen_height_less);
+            big_ammo_icon->blit(l * 160 + 101 + l2 * 4, screen_height - 11, 0, 0, screen_width_less, screen_height_less);
         }
 
         for (l2 = 15; l2 >= 0; l2--) {
             if ((player_ammo[l] - ((player_ammo[l] >> 4) << 4) - 1) >= l2)
                 break;
 
-            small_ammo_icon->blit(l * 160 + 101 + l2 * 2, 595, 0, 0, screen_width_less, screen_height_less);
+            small_ammo_icon->blit(l * 160 + 101 + l2 * 2, screen_height - 5, 0, 0, screen_width_less, screen_height_less);
         }
 
         for (l2 = 7; l2 >= 0; l2--) {
             if (((player_gas[l]) >> 8) == l2)
                 break;
 
-            gas_icon->blit(l * 160 + 1 + l2 * 3, 590, 0, 0, screen_width_less, screen_height_less);
+            gas_icon->blit(l * 160 + 1 + l2 * 3, screen_height - 10, 0, 0, screen_width_less, screen_height_less);
         }
 
-        gas_icon->blit(l * 160 + 1 + (player_gas[l] >> 8) * 3, 590 - ((player_gas[l] - ((player_gas[l] >> 8) << 8))) / 32, 0, 590, screen_width_less, screen_height_less);
+        gas_icon->blit(l * 160 + 1 + (player_gas[l] >> 8) * 3, screen_height - 10 - ((player_gas[l] - ((player_gas[l] >> 8) << 8))) / 32, 0, screen_height - 10, screen_width_less, screen_height_less);
 
 
 
 
-        fontti->printf(l * 160 + 142, 591, "%3d", abs(player_points[l]));
+        fontti->printf(l * 160 + 142, screen_height - 9, "%3d", abs(player_points[l]));
         if (player_points[l] < 0)
-            fontti->printf(l * 160 + 142, 591, "-");
+            fontti->printf(l * 160 + 142, screen_height - 9, "-");
 
 
 

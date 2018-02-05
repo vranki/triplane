@@ -20,7 +20,6 @@
 
 #include "io/video.h"
 #include "io/dksfile.h"
-#include "triplane.h"
 #include "util/wutil.h"
 #include <SDL.h>
 #include <signal.h>
@@ -38,6 +37,14 @@ int draw_with_vircr_mode = 1;
 int pixel_multiplier = 1;       /* current pixel multiplier */
 int pixel_multiplier_vga = 1, pixel_multiplier_svga = 1;
 int wantfullscreen = 1;
+
+//Screen resolution
+int screen_width = 800;
+int screen_height = 600;
+int screen_width_less = screen_width - 1;
+int screen_height_less = screen_height - 1;
+
+int solo_vesa = 0;
 
 SDL_Color curpal[256];
 

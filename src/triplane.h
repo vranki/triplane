@@ -163,12 +163,6 @@ extern int y1_raja[4];
 extern int x2_raja[4];
 extern int y2_raja[4];
 
-//Screen resolution
-extern int screen_width;
-extern int screen_height;
-extern int screen_width_less;
-extern int screen_height_less;
-
 //\ Airfields
 
 extern int player_on_airfield[16];

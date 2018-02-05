@@ -32,7 +32,6 @@
 #include "gfx/bitmap.h"
 #include "gfx/gfx.h"
 #include "io/trip_io.h"
-#include "triplane.h"
 #include "util/wutil.h"
 #include <assert.h>
 #include <SDL.h>

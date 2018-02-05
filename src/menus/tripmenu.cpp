@@ -1186,7 +1186,7 @@ void options_menu(void) {
             frost->printf(73, 80, "AA-MG shots visible?");
             frost->printf(73, 90, "Flags?");
             frost->printf(73, 100, "Structure flames?");
-            frost->printf(73, 110, "Use 800x600 window\nin multiplayergame?");
+            frost->printf(73, 110, "Use 800x600 window?");
             frost->printf(73, 130, "Structure smoke?");
 
             for (l = 0; l < 6; l++) {
@@ -3340,7 +3340,7 @@ void main_menu(void) {
                 main_engine();
 
 
-                if (config.svga) {
+                if (config.svga || solo_vesa) {
                     if (!findparameter("-debugnographics")) {
 
                         init_vga("PALET5");

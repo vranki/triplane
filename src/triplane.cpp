@@ -193,14 +193,7 @@ int y1_raja[4] = { 2, 2, 102, 102 };
 int x2_raja[4] = { 157, 317, 157, 317 };
 int y2_raja[4] = { 89, 89, 187, 187 };
 
-//Screen resolution
-int screen_width = 800;
-int screen_height = 600;
-int screen_width_less = screen_width - 1;
-int screen_height_less = screen_height - 1;
-
 //\ Airfields
-
 
 int player_on_airfield[16];
 
@@ -1549,6 +1542,17 @@ void main_engine(void) {
     }
 
     if (playing_solo) {
+
+		if (solo_vesa)
+		{
+			if (!findparameter("-debugnographics")) {
+				if (findparameter("-black"))
+					init_vesa("PALET3");
+				else
+					init_vesa("PALET5");
+			}
+		}
+
         solo_failed = 0;
         solo_success = 0;
         solo_dest_remaining = 0;
@@ -1567,9 +1571,22 @@ void main_engine(void) {
     if (current_mode == SVGA_MODE) {
 
         tyhjaa_vircr();
-        maisema->blit(-2 * screen_width, 388, 0, 0, screen_width_less, screen_height_less);
-        maisema->blit(-screen_width, 192, 0, 0, screen_width_less, screen_height_less);
-        maisema->blit(0, -4, 0, 0, screen_width_less, screen_height_less);
+
+		if (findparameter("-nogap"))
+		{
+			maisema->blit(0, -4, 0, 0, screen_width_less, screen_height_less);
+		}
+		else if (findparameter("-1gap"))
+		{
+			maisema->blit(-screen_width, 192, 0, 0, screen_width_less, screen_height_less);
+			maisema->blit(0, -4, 0, 0, screen_width_less, screen_height_less);
+		}
+		else
+		{
+			maisema->blit(-2 * screen_width, 388, 0, 0, screen_width_less, screen_height_less);
+			maisema->blit(-screen_width, 192, 0, 0, screen_width_less, screen_height_less);
+			maisema->blit(0, -4, 0, 0, screen_width_less, screen_height_less);
+		}
 
         for (l = 0; l < MAX_STRUCTURES; l++) {
             if (structures[l][0] != NULL) {
@@ -1801,9 +1818,14 @@ void main_engine(void) {
 
         if (solo_mode == -1)
             terrain_to_screen();
-        else {
-            solo_do_all();
-            solo_terrain_to_screen();
+        else {            
+			if (solo_vesa)
+				solo_vesa_terrain_to_screen();			
+			else
+			{
+				solo_do_all();
+				solo_terrain_to_screen();
+			}
         }
 
         hangarmenu_handle();
@@ -3614,11 +3636,15 @@ void handle_parameters(void) {
     }
 
 	if (findparameter("-nogap")) {
-		init_resolution(2400, 200);
+		init_resolution(2400, 208);
 	}
 
 	if (findparameter("-1gap")) {
-		init_resolution(1200, 400);
+		init_resolution(1200, 404);
+	}
+
+	if (findparameter("-solo_vesa")) {
+		solo_vesa = 1;
 	}
 
 	//if (findparameter("-3gap")) {		init_resolution(600, 800);	}

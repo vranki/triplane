@@ -22,7 +22,6 @@
 #include <assert.h>
 #include "gfx/gfx.h"
 #include "io/video.h"
-#include "triplane.h"
 
 static void do_isa_clear(void);
 
