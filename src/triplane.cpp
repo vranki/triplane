@@ -1104,7 +1104,8 @@ void controls(void) {
 
         if (!playing_solo && config.joystick[0] == l) {
             get_joystick_action(0, (hangarmenu_active[l] || in_closing[l]),
-                                &new_mc_down[l], &new_mc_up[l], &new_mc_power[l], &new_mc_roll[l], &new_mc_guns[l], &new_mc_bomb[l]);
+                                &new_mc_down[l], &new_mc_up[l], &new_mc_power[l], &new_mc_roll[l], &new_mc_guns[l], &new_mc_bomb[l]
+				, power_on_off, power_reverse, &controls_power2[l], in_closing[l], &power_break_active[l]);
             if (!joystick_has_roll_button(0) && !(hangarmenu_active[l] || in_closing[l])) {
                 // Autoroll code
                 new_mc_roll[l] = 0;
@@ -1117,7 +1118,8 @@ void controls(void) {
         } else {
             if (!playing_solo && config.joystick[1] == l) {
                 get_joystick_action(1, (hangarmenu_active[l] || in_closing[l]),
-                                    &new_mc_down[l], &new_mc_up[l], &new_mc_power[l], &new_mc_roll[l], &new_mc_guns[l], &new_mc_bomb[l]);
+                                    &new_mc_down[l], &new_mc_up[l], &new_mc_power[l], &new_mc_roll[l], &new_mc_guns[l], &new_mc_bomb[l]
+					, power_on_off, power_reverse, &controls_power2[l], in_closing[l], &power_break_active[l]);
                 if (!joystick_has_roll_button(1) && !(hangarmenu_active[l] || in_closing[l])) {
                     // Autoroll code
                     new_mc_roll[l] = 0;
@@ -1127,83 +1129,121 @@ void controls(void) {
                             if (!player_rolling[l])
                                 new_mc_roll[l] = 1;
                 }
-            } else {
-                if ((playing_solo ? key[roster[config.player_number[solo_country]].down] : key[player_keys[l].down]))
-                    new_mc_down[l] = 1;
-                else
-                    new_mc_down[l] = 0;
+            } 
+			else {
+				if (!playing_solo && config.joystick[2] == l) {
+					get_joystick_action(2, (hangarmenu_active[l] || in_closing[l]),
+						&new_mc_down[l], &new_mc_up[l], &new_mc_power[l], &new_mc_roll[l], &new_mc_guns[l], &new_mc_bomb[l]
+						, power_on_off, power_reverse, &controls_power2[l], in_closing[l], &power_break_active[l]);
+					if (!joystick_has_roll_button(2) && !(hangarmenu_active[l] || in_closing[l])) {
+						// Autoroll code                    
+						new_mc_roll[l] = 0;
+						if (new_mc_down[l] == new_mc_up[l]) /* not turning up/down */
+							if ((player_upsidedown[l] && (player_angle[l] < 23040 || player_angle[l] > 69120)) ||
+								(!player_upsidedown[l] && (player_angle[l] < 69120 && player_angle[l] > 23040)))
+								if (!player_rolling[l])
+									new_mc_roll[l] = 1;
+					}
+				}
+				else {
+					if (!playing_solo && config.joystick[3] == l) {
+						get_joystick_action(3, (hangarmenu_active[l] || in_closing[l]),
+							&new_mc_down[l], &new_mc_up[l], &new_mc_power[l], &new_mc_roll[l], &new_mc_guns[l], &new_mc_bomb[l]
+							, power_on_off, power_reverse, &controls_power2[l], in_closing[l], &power_break_active[l]);
+						if (!joystick_has_roll_button(3) && !(hangarmenu_active[l] || in_closing[l])) {
+							// Autoroll code                    
+							new_mc_roll[l] = 0;
+							if (new_mc_down[l] == new_mc_up[l]) /* not turning up/down */
+								if ((player_upsidedown[l] && (player_angle[l] < 23040 || player_angle[l] > 69120)) ||
+									(!player_upsidedown[l] && (player_angle[l] < 69120 && player_angle[l] > 23040)))
+									if (!player_rolling[l])
+										new_mc_roll[l] = 1;
+						}
+					}
+					else {
 
-                if ((playing_solo ? key[roster[config.player_number[solo_country]].up] : key[player_keys[l].up]))
-                    new_mc_up[l] = 1;
-                else
-                    new_mc_up[l] = 0;
+						if ((playing_solo ? key[roster[config.player_number[solo_country]].down] : key[player_keys[l].down]))
+							new_mc_down[l] = 1;
+						else
+							new_mc_down[l] = 0;
 
-                if (!power_on_off) {
-// Toggle power is off
-                    if (!power_reverse) {
-// ..and no reverse
-                        if ((playing_solo ? key[roster[config.player_number[solo_country]].power] : key[player_keys[l].power]))
-                            new_mc_power[l] = 1;
-                        else
-                            new_mc_power[l] = 0;
-                    } else {
-// Toggle off but reverse - we need to prevent takeoff with
-// power_break_active
-                        if ((playing_solo ? key[roster[config.player_number[solo_country]].power] : key[player_keys[l].power])) {
-// Power is pressed
-                            new_mc_power[l] = 0;
-                            if(power_break_active[l])
-                                power_break_active[l] = 0;
-                        } else {
-// Power is not pressed
-                            if(!power_break_active[l])
-                                new_mc_power[l] = 1;
-                            else
-                                new_mc_power[l] = 0;
-                        }
-                    }
-                } else {
-// Toggle power is on
-                    if ((playing_solo ? key[roster[config.player_number[solo_country]].power] : key[player_keys[l].power])) {
-                        if (!controls_power2[l]) {
-                            if (new_mc_power[l])
-                                new_mc_power[l] = 0;
-                            else
-                                new_mc_power[l] = 1;
-                        }
-                        controls_power2[l] = 1;
+						if ((playing_solo ? key[roster[config.player_number[solo_country]].up] : key[player_keys[l].up]))
+							new_mc_up[l] = 1;
+						else
+							new_mc_up[l] = 0;
 
-                    } else
-                        controls_power2[l] = 0;
+						if (!power_on_off) {
+							// Toggle power is off
+							if (!power_reverse) {
+								// ..and no reverse
+								if ((playing_solo ? key[roster[config.player_number[solo_country]].power] : key[player_keys[l].power]))
+									new_mc_power[l] = 1;
+								else
+									new_mc_power[l] = 0;
+							}
+							else {
+								// Toggle off but reverse - we need to prevent takeoff with
+								// power_break_active
+								if ((playing_solo ? key[roster[config.player_number[solo_country]].power] : key[player_keys[l].power])) {
+									// Power is pressed
+									new_mc_power[l] = 0;
+									if (power_break_active[l])
+										power_break_active[l] = 0;
+								}
+								else {
+									// Power is not pressed
+									if (!power_break_active[l])
+										new_mc_power[l] = 1;
+									else
+										new_mc_power[l] = 0;
+								}
+							}
+						}
+						else {
+							// Toggle power is on
+							if ((playing_solo ? key[roster[config.player_number[solo_country]].power] : key[player_keys[l].power])) {
+								if (!controls_power2[l]) {
+									if (new_mc_power[l])
+										new_mc_power[l] = 0;
+									else
+										new_mc_power[l] = 1;
+								}
+								controls_power2[l] = 1;
 
-                    if (in_closing[l])
-                        new_mc_power[l] = 0;
+							}
+							else
+								controls_power2[l] = 0;
 
-                }
+							if (in_closing[l])
+								new_mc_power[l] = 0;
 
-                new_mc_bomb[l] = 0;
+						}
 
-                if ((playing_solo ? key[roster[config.player_number[solo_country]].bombs] : key[player_keys[l].bombs])) {
-                    new_mc_bomb[l] = 1;
+						new_mc_bomb[l] = 0;
 
-                }
+						if ((playing_solo ? key[roster[config.player_number[solo_country]].bombs] : key[player_keys[l].bombs])) {
+							new_mc_bomb[l] = 1;
 
-                new_mc_roll[l] = 0;
-                if ((playing_solo ? key[roster[config.player_number[solo_country]].roll] : key[player_keys[l].roll])) {
+						}
 
-                    new_mc_roll[l] = 1;
+						new_mc_roll[l] = 0;
+						if ((playing_solo ? key[roster[config.player_number[solo_country]].roll] : key[player_keys[l].roll])) {
+
+							new_mc_roll[l] = 1;
 
 
-                }
+						}
 
 
-                new_mc_guns[l] = 0;
+						new_mc_guns[l] = 0;
 
-                if ((playing_solo ? key[roster[config.player_number[solo_country]].guns] : key[player_keys[l].guns])) {
-                    new_mc_guns[l] = 1;
+						if ((playing_solo ? key[roster[config.player_number[solo_country]].guns] : key[player_keys[l].guns])) {
+							new_mc_guns[l] = 1;
 
-                }
-            }
+						}
+					}
+				}
+			}
         }
 
 
@@ -1673,7 +1713,7 @@ void main_engine(void) {
     }
     //// Open joysticks
     if (!playing_solo) {
-        open_close_joysticks(config.joystick[0] != -1, config.joystick[1] != -1);
+		open_close_joysticks(config.joystick[0] != -1, config.joystick[1] != -1, config.joystick[2] != -1, config.joystick[3] != -1);
     }
     //// Record
 
@@ -1918,7 +1958,7 @@ void main_engine(void) {
     mission_re_fly = -1;
 
     //// Close joysticks
-    open_close_joysticks(0, 0);
+    open_close_joysticks(0, 0, 0, 0);
 
     //// Record
 
@@ -3710,17 +3750,19 @@ int main(int argc, char *argv[]) {
         loading_text("Joystick(s) not detected and thus not calibrated.");
     }
 
-    if (config.joystick_calibrated[1] || config.joystick_calibrated[0]) {
-        if (!load_joysticks_data(CALIBRATION_FILENAME)) {
-            config.joystick_calibrated[0] = 0;
-            config.joystick[0] = -1;
-            config.joystick_calibrated[1] = 0;
-            config.joystick[1] = -1;
-            loading_text("Unable to load calibration data.");
+	if (config.joystick_calibrated[1] || config.joystick_calibrated[0] ||
+		config.joystick_calibrated[2] || config.joystick_calibrated[3]) {
+		if (!load_joysticks_data(CALIBRATION_FILENAME)) {
+			for (int i = 0; i < 4; i++)
+			{
+				config.joystick_calibrated[i] = 0;
+				config.joystick[i] = -1;
+			}
 
-        }
+			loading_text("Unable to load calibration data.");
+		}
+	}
 
-    }
 
     loading_text("\nLoading keyset.");
 

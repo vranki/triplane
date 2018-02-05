@@ -1140,6 +1140,16 @@ void roster_menu(void) {
 
 }
 
+void check_other_joys(int num, int active)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		if (i == num) continue;
+		if (config.joystick[i] == active)
+			config.joystick[i] = -1;
+	}
+}
+
 void options_menu(void) {
     int exit_flag = 0;
     int x, y, n1, n2;
@@ -1988,10 +1998,14 @@ static void joystick_setup(int joy, Bitmap * controlme) {
         NULL, NULL}
     };
 
-    if (joy == 0)
-        open_close_joysticks(1, 0);
-    else
-        open_close_joysticks(0, 1);
+	if (joy == 0)
+		open_close_joysticks(1, 0, 0, 0);
+	else if (joy == 1)
+		open_close_joysticks(0, 1, 0, 0);
+	else if (joy == 2)
+		open_close_joysticks(0, 0, 1, 0);
+	else if (joy == 3)
+		open_close_joysticks(0, 0, 0, 1);
 
     idle = allocate_axis_state(joy);
     current = allocate_axis_state(joy);
@@ -2032,7 +2046,7 @@ static void joystick_setup(int joy, Bitmap * controlme) {
     wfree(idle);
     wfree(current);
 
-    open_close_joysticks(0, 0);
+	open_close_joysticks(0, 0, 0, 0);
 }
 
 void controls_menu(void) {
@@ -2113,25 +2127,44 @@ void controls_menu(void) {
             menuselect = 7;
         }
 
-        if ((x >= 108 && x <= 212 && y >= 0 && y <= 87)) {
-            frost->printf(61, 97, "Select Joystick 1");
-            menuselect = 8;
-        }
+		if ((x >= 108 && x <= 159 && y >= 0 && y <= 42)) {
+			frost->printf(61, 97, joystick_exists & JOY1 ? "Select Joystick 1" : "Joystick 1 not connected");
+			menuselect = 8;
+		}
 
-        if ((x >= 214 && x <= 318 && y >= 0 && y <= 87)) {
-            frost->printf(61, 97, "Select Joystick 2");
-            menuselect = 9;
-        }
+		if ((x >= 161 && x <= 212 && y >= 0 && y <= 42)) {
+			frost->printf(61, 97, joystick_exists & JOY2 ? "Select Joystick 2" : "Joystick 2 not connected");
+			menuselect = 9;
+		}
+
+		if ((x >= 108 && x <= 159 && y >= 44 && y <= 87)) {
+			frost->printf(61, 97, joystick_exists & JOY3 ? "Select Joystick 3" : "Joystick 3 not connected");
+			menuselect = 10;
+		}
+
+		if ((x >= 161 && x <= 212 && y >= 44 && y <= 87)) {
+			frost->printf(61, 97, joystick_exists & JOY4 ? "Select Joystick 4" : "Joystick 4 not connected");
+			menuselect = 11;
+		}
 
 
-        if (config.joystick[0] != active && config.joystick[1] != active) {
+		if (config.joystick[0] != active && config.joystick[1] != active &&
+			config.joystick[2] != active && config.joystick[3] != active) {
             frost->printf(170, 93, "Up [%s] Down [%s] Roll [%s]",
                           SDL_GetKeyName((SDLKey) player_keys[active].up), SDL_GetKeyName((SDLKey) player_keys[active].down),
                           SDL_GetKeyName((SDLKey) player_keys[active].roll));
             frost->printf(170, 100, "Power [%s] Bombs [%s] Guns [%s]", SDL_GetKeyName((SDLKey) player_keys[active].power),
                           SDL_GetKeyName((SDLKey) player_keys[active].bombs), SDL_GetKeyName((SDLKey) player_keys[active].guns));
         } else {
-            int joy = (config.joystick[0] == active) ? 0 : 1;
+			int joy = 0;
+			if (config.joystick[0] == active)
+				joy = 0;
+			else if (config.joystick[1] == active)
+				joy = 1;
+			else if (config.joystick[2] == active)
+				joy = 2;
+			else if (config.joystick[3] == active)
+				joy = 3;
             char *ups = get_joy_action_string(&joystick_config[joy].up);
             char *downs = get_joy_action_string(&joystick_config[joy].down);
             char *rolls = get_joy_action_string(&joystick_config[joy].roll);
@@ -2165,11 +2198,11 @@ void controls_menu(void) {
                 break;
 
             case 3:
-                if (config.joystick[0] == active)
-                    config.joystick[0] = -1;
-
-                if (config.joystick[1] == active)
-                    config.joystick[1] = -1;
+				for (int i = 0; i < 4; i++)
+				{
+					if (config.joystick[i] == active)
+						config.joystick[i] = -1;
+				}
 
 
                 controlme->blit(0, 0);
@@ -2218,10 +2251,9 @@ void controls_menu(void) {
                 break;
 
             case 8:
-                if (joystick_exists & (JOY1X + JOY1Y)) {
+				if (joystick_exists & JOY1) {
                     config.joystick[0] = active;
-                    if (config.joystick[1] == active)
-                        config.joystick[1] = -1;
+					check_other_joys(0, active);
                     joystick_setup(0, controlme);
                     save_joysticks_data(CALIBRATION_FILENAME);
                     config.joystick_calibrated[0] = 1;
@@ -2229,15 +2261,34 @@ void controls_menu(void) {
                 break;
 
             case 9:
-                if (joystick_exists & (JOY2X + JOY2Y)) {
+				if (joystick_exists & JOY2) {
                     config.joystick[1] = active;
-                    if (config.joystick[0] == active)
-                        config.joystick[0] = -1;
+					check_other_joys(1, active);
                     joystick_setup(1, controlme);
                     save_joysticks_data(CALIBRATION_FILENAME);
                     config.joystick_calibrated[1] = 1;
                 }
                 break;
+
+			case 10:
+				if (joystick_exists & JOY3) {
+					config.joystick[2] = active;
+					check_other_joys(2, active);
+					joystick_setup(2, controlme);
+					save_joysticks_data(CALIBRATION_FILENAME);
+					config.joystick_calibrated[2] = 1;
+				}
+				break;
+
+			case 11:
+				if (joystick_exists & JOY4) {
+					config.joystick[3] = active;
+					check_other_joys(3, active);
+					joystick_setup(3, controlme);
+					save_joysticks_data(CALIBRATION_FILENAME);
+					config.joystick_calibrated[3] = 1;
+				}
+				break;
             }
 
             if (menuselect >= 4 && menuselect <= 7) {

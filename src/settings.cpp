@@ -442,11 +442,11 @@ void swap_config_endianes(void) {
     config.unlimited_ammo = SDL_SwapLE32(config.unlimited_ammo);
     config.unlimited_gas = SDL_SwapLE32(config.unlimited_gas);
 
-    config.joystick[0] = SDL_SwapLE32(config.joystick[0]);
-    config.joystick_calibrated[0] = SDL_SwapLE32(config.joystick_calibrated[0]);
-
-    config.joystick[1] = SDL_SwapLE32(config.joystick[1]);
-    config.joystick_calibrated[1] = SDL_SwapLE32(config.joystick_calibrated[1]);
+	for (i = 0; i < 4; i++)
+	{
+		config.joystick[i] = SDL_SwapLE32(config.joystick[i]);
+		config.joystick_calibrated[i] = SDL_SwapLE32(config.joystick_calibrated[i]);
+	}
 }
 
 void load_config(void) {
@@ -497,11 +497,11 @@ void load_config(void) {
     config.unlimited_ammo = 0;
     config.unlimited_gas = 0;
 
-    config.joystick[0] = -1;
-    config.joystick_calibrated[0] = 0;
+	for (int i = 0; i < 4; i++) {
+		config.joystick[i] = -1;
+		config.joystick_calibrated[i] = 0;
+	}
 
-    config.joystick[1] = -1;
-    config.joystick_calibrated[1] = 0;
 
     faili = settings_open(CONFIGURATION_FILENAME, "rb");
 
