@@ -3454,16 +3454,9 @@ void main_menu(void) {
                         solo_mode = l;
                         break;
 
-                    case 2:
-                        if ((l == 1 || l == 2) && config.current_multilevel == 5) {
-                            player_exists[l] = 0;
-                            computer_active[l] = 0;
-                            config.player_type[l] = 0;
-
-                        } else {
-                            player_exists[l] = 1;
-                            computer_active[l] = 1;
-                        }
+                    case 2:                       
+                    	player_exists[l] = 1;
+                    	computer_active[l] = 1;                       
                         break;
 
                     case 3:

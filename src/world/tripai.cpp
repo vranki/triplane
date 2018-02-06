@@ -1197,25 +1197,30 @@ void ai_evade_terrain(int number) {
     if (x_kohta < 0)
         x_kohta = 0;
     if (y_kohta < 0)
-        y_kohta = 0;
+        y_kohta = 0;	
 
+	int cavern_fix = 0;
+	if ((number == 1 || number == 2) && config.current_multilevel == 5 &&
+		player_x[number] > 250000 && player_x[number] < 380000 &&
+		player_y[number] > 43000 && player_y[number] < 44600 &&
+		going_up > 0)
+	{
+		ai_turn_down(number);
+		cavern_fix = 1;
+	}
 
-    if (wide_terrain_level[x_kohta] < y_kohta && !player_on_airfield[number]) {
-        if (going_up > AI_GOING_UP_LIMIT - AI_ANGLE_MARGINAL)
-            ai_turn_down(number);
+	if (wide_terrain_level[x_kohta] < y_kohta && !player_on_airfield[number] && !cavern_fix) {
+		if (going_up > AI_GOING_UP_LIMIT - AI_ANGLE_MARGINAL)
+			ai_turn_down(number);
 
-        if (going_up < AI_GOING_UP_LIMIT)
-            ai_turn_up(number);
+		if (going_up < AI_GOING_UP_LIMIT)
+			ai_turn_up(number);
 
-        if (current_mission[number] != AIM_EVADE_TERRAIN) {
-            current_mission[number] = AIM_EVADE_TERRAIN;
-            mission_phase[number] = 0;
-
-        }
-
-    }
-
-
+		if (current_mission[number] != AIM_EVADE_TERRAIN) {
+			current_mission[number] = AIM_EVADE_TERRAIN;
+			mission_phase[number] = 0;
+		}
+	}
 }
 
 void ai_turnplus(int number) {
@@ -1289,11 +1294,11 @@ void do_ai(int number) {
 
 
     switch (current_mission[number]) {
-    case AIM_TAKEOFF:
-        if ((player_y_8[number]) + 40 > terrain_level[player_x_8[number]])
-            mission_phase[number] = 0;
-        else
-            current_mission[number] = AIM_NOMISSION;
+    case AIM_TAKEOFF:    	
+		if ((player_y_8[number]) + 40 > terrain_level[player_x_8[number]])		
+			mission_phase[number] = 0;			
+		else		
+			current_mission[number] = AIM_NOMISSION;			
 
         ai_evade_terrain(number);
         break;
