@@ -33,9 +33,9 @@
  */
 #define JOYSTICK_THRESHOLD_MULTIPLIER 0.8
 
-joystick_configuration joystick_config[2];
+joystick_configuration joystick_config[5];
 
-SDL_Joystick *joydev[2] = { NULL, NULL };
+SDL_Joystick *joydev[5] = { NULL, NULL, NULL, NULL, NULL };
 
 /**
  * Initializes joystick configuration.
@@ -73,11 +73,20 @@ short init_joysticks(void) {
      */
 
     memcpy(&joystick_config[1], &joystick_config[0], sizeof(joystick_configuration));
+	memcpy(&joystick_config[2], &joystick_config[0], sizeof(joystick_configuration));
+	memcpy(&joystick_config[3], &joystick_config[0], sizeof(joystick_configuration));
 
-    if (SDL_NumJoysticks() >= 2)
-        return JOY1X | JOY1Y | JOY2X | JOY2Y;
+	//for solo
+	memcpy(&joystick_config[4], &joystick_config[0], sizeof(joystick_configuration));
+
+	if (SDL_NumJoysticks() >= 4)
+        return JOY1 | JOY2 | JOY3 |JOY4;
+	else if (SDL_NumJoysticks() == 3)
+        return JOY1 | JOY2 | JOY3;
+    else if (SDL_NumJoysticks() == 2)
+        return JOY1 | JOY2 ;
     else if (SDL_NumJoysticks() == 1)
-        return JOY1X | JOY1Y;
+        return JOY1;
     else
         return 0;
 }
@@ -92,7 +101,7 @@ int load_joysticks_data(const char *filename) {
     fp = settings_open(filename, "rb");
 
     if (fp != NULL) {
-        fread(&joystick_config, sizeof(joystick_configuration), 2, fp);
+        fread(&joystick_config, sizeof(joystick_configuration), 5, fp);
         fclose(fp);
         return 1;
     }
@@ -106,7 +115,7 @@ int load_joysticks_data(const char *filename) {
 
 void save_joysticks_data(const char *filename) {
     FILE *fp = settings_open(filename, "wb");
-    fwrite(&joystick_config, sizeof(joystick_configuration), 2, fp);
+    fwrite(&joystick_config, sizeof(joystick_configuration), 5, fp);
     fclose(fp);
 }
 
@@ -115,14 +124,15 @@ void save_joysticks_data(const char *filename) {
  * @param joy1 = 1 if joystick 1 should be opened
  * @param joy2 = 1 if joystick 2 should be opened
  */
-void open_close_joysticks(int joy1, int joy2) {
+void open_close_joysticks(int joy1, int joy2, int joy3, int joy4) {
     if (SDL_NumJoysticks() >= 1) {
         if (!joy1 && SDL_JoystickOpened(0)) {
             SDL_JoystickClose(joydev[0]);
             joydev[0] = NULL;
+			joydev[4] = NULL;
         }
         if (joy1 && !SDL_JoystickOpened(0)) {
-            joydev[0] = SDL_JoystickOpen(0);
+            joydev[0] = joydev[4] = SDL_JoystickOpen(0);
         }
     }
     if (SDL_NumJoysticks() >= 2) {
@@ -132,6 +142,24 @@ void open_close_joysticks(int joy1, int joy2) {
         }
         if (joy2 && !SDL_JoystickOpened(1)) {
             joydev[1] = SDL_JoystickOpen(1);
+        }
+    }
+	if (SDL_NumJoysticks() >= 3) {
+        if (!joy3 && SDL_JoystickOpened(2)) {
+            SDL_JoystickClose(joydev[2]);
+            joydev[2] = NULL;
+        }
+        if (joy3 && !SDL_JoystickOpened(2)) {
+            joydev[2] = SDL_JoystickOpen(2);
+        }
+    }
+	if (SDL_NumJoysticks() >= 4) {
+        if (!joy4 && SDL_JoystickOpened(3)) {
+            SDL_JoystickClose(joydev[3]);
+            joydev[3] = NULL;
+        }
+        if (joy4 && !SDL_JoystickOpened(3)) {
+            joydev[3] = SDL_JoystickOpen(3);
         }
     }
 }
@@ -156,7 +184,10 @@ static int is_joystick_action_active(int t, const joystick_action * a) {
  * @param t index of joystick (0 or 1)
  * @param inmenu = 1 if the player is in a menu (e.g. hangar menu)
  */
-void get_joystick_action(int t, int inmenu, int *down, int *up, int *power, int *roll, int *guns, int *bombs) {
+void get_joystick_action(int t, int inmenu, int *down, int *up, int *power, int *roll, int *guns, int *bombs
+	,int power_on_off, int power_reverse, unsigned char *controls_power2, int in_closing
+	,int *power_break_active
+	) {
     /*
      * Special joystick actions for hangar menu are disabled here because
      * they are unintuitive on gamepads and other non-default joystick
@@ -180,9 +211,54 @@ void get_joystick_action(int t, int inmenu, int *down, int *up, int *power, int 
             *down = 1;
             *up = 1;
         } else {
-            *power = is_joystick_action_active(t, &joystick_config[t].power);
+            //*power = is_joystick_action_active(t, &joystick_config[t].power);
+			int joy_power = is_joystick_action_active(t, &joystick_config[t].power);
             *down = is_joystick_action_active(t, &joystick_config[t].down);
             *up = is_joystick_action_active(t, &joystick_config[t].up);
+
+			if (!power_on_off) {
+				// Toggle power is off
+                    if (!power_reverse) {
+						// ..and no reverse
+                        if (joy_power)
+                            *power = 1;
+                        else
+                            *power = 0;
+                    } else {
+						// Toggle off but reverse - we need to prevent takeoff with
+						// power_break_active
+						if (joy_power)
+						{
+							// Power is pressed
+							*power = 0;
+							if (*power_break_active)
+								*power_break_active = 0;
+						}
+						else
+						{
+							// Power is not pressed
+							if (!*power_break_active)
+								*power = 1;
+							else
+								*power = 0;
+						}						
+                    }
+                } else {
+                    if (joy_power) {
+                        if (!*controls_power2) {
+                            if (*power)
+                                *power = 0;
+                            else
+                                *power = 1;
+                        }
+                        *controls_power2 = 1;
+
+                    } else
+                        *controls_power2 = 0;
+
+                    if (in_closing)
+                        *power = 0;
+                }
         }
     }
 }
@@ -234,7 +310,7 @@ void find_changed_axis(struct joystick_action *act, Sint16 * idle, Sint16 * curr
     } else {
         act->threshold_dir = 1; /* upper bound */
     }
-    act->threshold = ((Sint16) (idle[max_index] + JOYSTICK_THRESHOLD_MULTIPLIER * ((double) current[max_index] - (double) idle[max_index])));
+    act->threshold = ((Sint16) (idle[max_index] + JOYSTICK_THRESHOLD_MULTIPLIER * ((double) current[max_index] - (double) idle[max_index])));	
 }
 
 /** Find button that is down. Returns 0 if no buttons are pressed. */

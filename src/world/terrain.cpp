@@ -72,6 +72,8 @@ void tboxi(int x1, int y1, int x2, int y2, unsigned char vari);
 
 
 void vesa_terrain_to_screen(void);
+void vesa_icons(int l);
+void vesa_solo_icons(int l);
 
 
 void tboxi(int x1, int y1, int x2, int y2, unsigned char vari) {
@@ -100,14 +102,6 @@ void terrain_to_screen(void) {
     int l, l2;
     int tempx, tempy;
     int temp;
-
-
-    if (current_mode == SVGA_MODE) {
-        vesa_terrain_to_screen();
-        return;
-    }
-
-
 
     for (l = 0; l < 16; l++) {
         if (!player_exists[l])
@@ -535,9 +529,9 @@ void terrain_to_screen(void) {
         }
 
 
-
-        fontti->printf(144 + x_muutos[l], 93 + (l / 2) * 98, "%3d", abs(player_points[l]));
-        if (player_points[l] < 0)
+		int points = get_player_points(l);
+        fontti->printf(144 + x_muutos[l], 93 + (l / 2) * 98, "%3d", abs(points));
+        if (points < 0)
             fontti->printf(144 + x_muutos[l], 93 + (l / 2) * 98, "-");
 
     }
@@ -1001,8 +995,6 @@ void kangas_terrain_to_screen(int left_x) {
 
 }
 
-
-
 void vesa_terrain_to_screen(void) {
     int l, l2, templevel;
 
@@ -1018,16 +1010,16 @@ void vesa_terrain_to_screen(void) {
         if (!hangar_x[l])
             continue;
 
-        templevel = (hangar_x[l] + 27) / 800;
-        ovi[hangar_door_frame[l]]->blit(hangar_x[l] + 27 - templevel * 800, hangar_y[l] + 3 + templevel * 196 - 4, 0, 0, 799, 599);
+        templevel = (hangar_x[l] + 27) / screen_width;
+        ovi[hangar_door_frame[l]]->blit(hangar_x[l] + 27 - templevel * screen_width, hangar_y[l] + 3 + templevel * 196 - 4, 0, 0, screen_width_less, screen_height_less);
 
     }
 
     if (config.flags)
         for (l = 0; l < MAX_FLAGS; l++) {
             if (flags_x[l]) {
-                templevel = flags_x[l] / 800;
-                flags[flags_owner[l]][flags_frame[l]]->blit(flags_x[l] - templevel * 800, flags_y[l] + templevel * 196 - 4, 0, 0, 799, 599);
+                templevel = flags_x[l] / screen_width;
+                flags[flags_owner[l]][flags_frame[l]]->blit(flags_x[l] - templevel * screen_width, flags_y[l] + templevel * 196 - 4, 0, 0, screen_width_less, screen_height_less);
 
             }
         }
@@ -1037,21 +1029,21 @@ void vesa_terrain_to_screen(void) {
         if (!kkbase_x[l])
             continue;
 
-        templevel = kkbase_x[l] / 800;
+        templevel = kkbase_x[l] / screen_width;
 
         if (kkbase_status[l] != 2)
-            kkbase[kkbase_type[l]][kkbase_status[l]][kkbase_frame[l]]->blit(kkbase_x[l] - templevel * 800, kkbase_y[l] + templevel * 196 - 4, 0, 0, 799, 599);
+            kkbase[kkbase_type[l]][kkbase_status[l]][kkbase_frame[l]]->blit(kkbase_x[l] - templevel * screen_width, kkbase_y[l] + templevel * 196 - 4, 0, 0, screen_width_less, screen_height_less);
         else
-            kkbase[kkbase_type[l]][kkbase_status[l]][kkbase_frame[l] >> 1]->blit(kkbase_x[l] - templevel * 800, kkbase_y[l] + templevel * 196 - 4, 0, 0, 799,
-                                                                                 599);
+            kkbase[kkbase_type[l]][kkbase_status[l]][kkbase_frame[l] >> 1]->blit(kkbase_x[l] - templevel * screen_width, kkbase_y[l] + templevel * 196 - 4, 0, 0, screen_width_less,
+                                                                                 screen_height_less);
 
-        if (kkbase_x[l] - templevel * 800 + 26 > 800) {
+        if (kkbase_x[l] - templevel * screen_width + 26 > screen_width) {
             if (kkbase_status[l] != 2)
-                kkbase[kkbase_type[l]][kkbase_status[l]][kkbase_frame[l]]->blit(kkbase_x[l] - templevel * 800 - 800, kkbase_y[l] + (templevel + 1) * 196 - 4, 0,
-                                                                                0, 799, 599);
+                kkbase[kkbase_type[l]][kkbase_status[l]][kkbase_frame[l]]->blit(kkbase_x[l] - templevel * screen_width - screen_width, kkbase_y[l] + (templevel + 1) * 196 - 4, 0,
+                                                                                0, screen_width_less, screen_height_less);
             else
-                kkbase[kkbase_type[l]][kkbase_status[l]][kkbase_frame[l] >> 1]->blit(kkbase_x[l] - templevel * 800 - 800,
-                                                                                     kkbase_y[l] + (templevel + 1) * 196 - 4, 0, 0, 799, 599);
+                kkbase[kkbase_type[l]][kkbase_status[l]][kkbase_frame[l] >> 1]->blit(kkbase_x[l] - templevel * screen_width - screen_width,
+                                                                                     kkbase_y[l] + (templevel + 1) * 196 - 4, 0, 0, screen_width_less, screen_height_less);
 
         }
 
@@ -1090,46 +1082,46 @@ void vesa_terrain_to_screen(void) {
         if (!infan_x[l])
             continue;
 
-        templevel = infan_x[l] / 800;
+        templevel = infan_x[l] / screen_width;
 
         switch (infan_state[l]) {
         case 0:
             if (infan_frame[l] < 12)
-                infantry_walking[infan_country[l]][infan_direction[l]][infan_frame[l]]->blit(infan_x[l] - templevel * 800, infan_y[l] + templevel * 196 - 4, 0,
-                                                                                             0, 799, 599);
+                infantry_walking[infan_country[l]][infan_direction[l]][infan_frame[l]]->blit(infan_x[l] - templevel * screen_width, infan_y[l] + templevel * 196 - 4, 0,
+                                                                                             0, screen_width_less, screen_height_less);
             else {
                 if (infan_frame[l] == 12)
-                    infantry_dropping[infan_country[l]][infan_direction[l]]->blit(infan_x[l] - templevel * 800, infan_y[l] + templevel * 196 - 4, 0, 0, 799,
-                                                                                  599);
+                    infantry_dropping[infan_country[l]][infan_direction[l]]->blit(infan_x[l] - templevel * screen_width, infan_y[l] + templevel * 196 - 4, 0, 0, screen_width_less,
+                                                                                  screen_height_less);
                 else
-                    infantry_after_drop[infan_country[l]][infan_direction[l]]->blit(infan_x[l] - templevel * 800, infan_y[l] + templevel * 196 - 4, 0, 0, 799,
-                                                                                    599);
+                    infantry_after_drop[infan_country[l]][infan_direction[l]]->blit(infan_x[l] - templevel * screen_width, infan_y[l] + templevel * 196 - 4, 0, 0, screen_width_less,
+                                                                                    screen_height_less);
             }
             break;
 
         case 1:
-            infantry_aiming[infan_country[l]][infan_direction[l]][infan_frame[l]]->blit(infan_x[l] - templevel * 800, infan_y[l] + templevel * 196 - 4, 0, 0,
-                                                                                        799, 599);
+            infantry_aiming[infan_country[l]][infan_direction[l]][infan_frame[l]]->blit(infan_x[l] - templevel * screen_width, infan_y[l] + templevel * 196 - 4, 0, 0,
+                                                                                        screen_width_less, screen_height_less);
             break;
 
         case 2:
-            infantry_shooting[infan_country[l]][infan_direction[l]][infan_frame[l]]->blit(infan_x[l] - templevel * 800, infan_y[l] + templevel * 196 - 4, 0, 0,
-                                                                                          799, 599);
+            infantry_shooting[infan_country[l]][infan_direction[l]][infan_frame[l]]->blit(infan_x[l] - templevel * screen_width, infan_y[l] + templevel * 196 - 4, 0, 0,
+                                                                                          screen_width_less, screen_height_less);
             break;
 
         case 3:
-            infantry_dying[infan_country[l]][infan_direction[l]][infan_frame[l] >> 1]->blit(infan_x[l] - templevel * 800, infan_y[l] + templevel * 196 - 4, 0,
-                                                                                            0, 799, 599);
+            infantry_dying[infan_country[l]][infan_direction[l]][infan_frame[l] >> 1]->blit(infan_x[l] - templevel * screen_width, infan_y[l] + templevel * 196 - 4, 0,
+                                                                                            0, screen_width_less, screen_height_less);
             break;
 
         case 4:
-            infantry_wavedeath[infan_country[l]][infan_direction[l]][infan_frame[l] >> 1]->blit(infan_x[l] - templevel * 800, infan_y[l] + templevel * 196 - 4,
-                                                                                                0, 0, 799, 599);
+            infantry_wavedeath[infan_country[l]][infan_direction[l]][infan_frame[l] >> 1]->blit(infan_x[l] - templevel * screen_width, infan_y[l] + templevel * 196 - 4,
+                                                                                                0, 0, screen_width_less, screen_height_less);
             break;
 
         case 5:
-            infantry_bdying[infan_country[l]][infan_direction[l]][infan_frame[l] >> 1]->blit(infan_x[l] - templevel * 800, infan_y[l] + templevel * 196 - 4, 0,
-                                                                                             0, 799, 599);
+            infantry_bdying[infan_country[l]][infan_direction[l]][infan_frame[l] >> 1]->blit(infan_x[l] - templevel * screen_width, infan_y[l] + templevel * 196 - 4, 0,
+                                                                                             0, screen_width_less, screen_height_less);
             break;
 
         }
@@ -1140,19 +1132,19 @@ void vesa_terrain_to_screen(void) {
         if (!mekan_x[l])
             continue;
 
-        templevel = mekan_x[l] / 800;
+        templevel = mekan_x[l] / screen_width;
 
         switch (mekan_status[l]) {
         case 1:
-            mekan_running[mekan_frame[l]][mekan_direction[l]]->blit(mekan_x[l] - templevel * 800, mekan_y[l] + templevel * 196 - 4, 0, 0, 799, 599);
+            mekan_running[mekan_frame[l]][mekan_direction[l]]->blit(mekan_x[l] - templevel * screen_width, mekan_y[l] + templevel * 196 - 4, 0, 0, screen_width_less, screen_height_less);
             break;
 
         case 2:
-            mekan_pushing[0][mekan_frame[l]][mekan_direction[l]]->blit(mekan_x[l] - templevel * 800, mekan_y[l] + templevel * 196 - 4, 0, 0, 799, 599);
+            mekan_pushing[0][mekan_frame[l]][mekan_direction[l]]->blit(mekan_x[l] - templevel * screen_width, mekan_y[l] + templevel * 196 - 4, 0, 0, screen_width_less, screen_height_less);
             break;
 
         case 3:
-            mekan_pushing[1][mekan_frame[l]][mekan_direction[l]]->blit(mekan_x[l] - templevel * 800, mekan_y[l] + templevel * 196 - 4, 0, 0, 799, 599);
+            mekan_pushing[1][mekan_frame[l]][mekan_direction[l]]->blit(mekan_x[l] - templevel * screen_width, mekan_y[l] + templevel * 196 - 4, 0, 0, screen_width_less, screen_height_less);
             break;
 
 
@@ -1161,7 +1153,7 @@ void vesa_terrain_to_screen(void) {
     }
 
     for (l2 = 0; l2 < 16; l2++) {
-        templevel = (((player_x_8[l2]) - 10) / 800);
+        templevel = (((player_x_8[l2]) - 10) / screen_width);
         if (!in_closing[l2] && player_exists[l2] && !plane_coming[l2]) {
             if (l2 < 4) {
                 if (hangarmenu_active[l2])
@@ -1169,30 +1161,30 @@ void vesa_terrain_to_screen(void) {
 
             }
 
-            planes[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]][player_upsidedown[l2]]->blit(((player_x_8[l2]) - 10) - templevel * 800,
+            planes[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]][player_upsidedown[l2]]->blit(((player_x_8[l2]) - 10) - templevel * screen_width,
                                                                                                      ((player_y_8[l2]) - 10) + templevel * 196 - 4, 0,
-                                                                                                     templevel * 196, 799, 599);
+                                                                                                     templevel * 196, screen_width_less, screen_height_less);
 
         } else {
             if (in_closing[l2] <= 12 && player_exists[l2] && !plane_coming[l2])
-                plane_crash[(in_closing[l2] >> 1) - 1]->blit(((player_x_8[l2]) - 10) - templevel * 800, ((player_y_8[l2]) - 10) + templevel * 196 - 4, 0,
-                                                             templevel * 196, 799, 599);
+                plane_crash[(in_closing[l2] >> 1) - 1]->blit(((player_x_8[l2]) - 10) - templevel * screen_width, ((player_y_8[l2]) - 10) + templevel * 196 - 4, 0,
+                                                             templevel * 196, screen_width_less, screen_height_less);
 
         }
     }
 
     for (l2 = 0; l2 < 16; l2++) {
-        templevel = (((player_x_8[l2]) - 10) / 800);
+        templevel = (((player_x_8[l2]) - 10) / screen_width);
 
-        if ((player_x_8[l2]) - 10 - templevel * 800 + 20 > 800) {
+        if ((player_x_8[l2]) - 10 - templevel * screen_width + 20 > screen_width) {
             if (!in_closing[l2] && player_exists[l2] && !plane_coming[l2])
-                planes[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]][player_upsidedown[l2]]->blit(((player_x_8[l2]) - 10) - templevel * 800 - 800,
+                planes[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]][player_upsidedown[l2]]->blit(((player_x_8[l2]) - 10) - templevel * screen_width - screen_width,
                                                                                                          ((player_y_8[l2]) - 10) + (templevel + 1) * 196 - 4, 0,
-                                                                                                         (templevel + 1) * 196, 799, 599);
+                                                                                                         (templevel + 1) * 196, screen_width_less, screen_height_less);
             else {
                 if (in_closing[l2] <= 12 && player_exists[l2] && !plane_coming[l2])
-                    plane_crash[(in_closing[l2] >> 1) - 1]->blit(((player_x_8[l2]) - 10) - (((player_x_8[l2]) - 10) / 800) * 800 - 800,
-                                                                 ((player_y_8[l2]) - 10) + (templevel + 1) * 196 - 4, 0, (templevel + 1) * 196, 799, 599);
+                    plane_crash[(in_closing[l2] >> 1) - 1]->blit(((player_x_8[l2]) - 10) - (((player_x_8[l2]) - 10) / screen_width) * screen_width - screen_width,
+                                                                 ((player_y_8[l2]) - 10) + (templevel + 1) * 196 - 4, 0, (templevel + 1) * 196, screen_width_less, screen_height_less);
             }
         }
     }
@@ -1200,82 +1192,82 @@ void vesa_terrain_to_screen(void) {
     if (config.shots_visible)
         for (l2 = 0; l2 < MAX_SHOTS; l2++) {
             if (shots_flying_x[l2])
-                putpix((shots_flying_x[l2] >> 8) - ((shots_flying_x[l2] >> 8) / 800) * 800,
-                       (shots_flying_y[l2] >> 8) + ((shots_flying_x[l2] >> 8) / 800) * 196 - 4, SHOTS_COLOR, 0, 0, 799, 599);
+                putpix((shots_flying_x[l2] >> 8) - ((shots_flying_x[l2] >> 8) / screen_width) * screen_width,
+                       (shots_flying_y[l2] >> 8) + ((shots_flying_x[l2] >> 8) / screen_width) * 196 - 4, SHOTS_COLOR, 0, 0, screen_width_less, screen_height_less);
 
         }
 
     if (config.it_shots_visible)
         for (l2 = 0; l2 < MAX_ITGUN_SHOTS; l2++) {
             if (itgun_shot_x[l2])
-                putpix((itgun_shot_x[l2] >> 8) - ((itgun_shot_x[l2] >> 8) / 800) * 800, (itgun_shot_y[l2] >> 8) + ((itgun_shot_x[l2] >> 8) / 800) * 196 - 4,
-                       ITGUN_SHOT_COLOR, 0, 0, 799, 599);
+                putpix((itgun_shot_x[l2] >> 8) - ((itgun_shot_x[l2] >> 8) / screen_width) * screen_width, (itgun_shot_y[l2] >> 8) + ((itgun_shot_x[l2] >> 8) / screen_width) * 196 - 4,
+                       ITGUN_SHOT_COLOR, 0, 0, screen_width_less, screen_height_less);
 
         }
 
     for (l2 = 0; l2 < MAX_BOMBS; l2++) {
         if (bomb_x[l2]) {
-            templevel = (((bomb_x[l2] >> 8) - (4)) / 800);
-            bomb[(bomb_angle[l2] >> 8) / 6]->blit(((bomb_x[l2] >> 8) - (4)) - templevel * 800,
-                                                  ((bomb_y[l2] >> 8) - (4)) + templevel * 196 - 4, 0, templevel * 196, 799, 599);
+            templevel = (((bomb_x[l2] >> 8) - (4)) / screen_width);
+            bomb[(bomb_angle[l2] >> 8) / 6]->blit(((bomb_x[l2] >> 8) - (4)) - templevel * screen_width,
+                                                  ((bomb_y[l2] >> 8) - (4)) + templevel * 196 - 4, 0, templevel * 196, screen_width_less, screen_height_less);
         }
     }
 
     for (l2 = 0; l2 < MAX_FLYING_OBJECTS; l2++) {
         if (fobjects[l2].x) {
-            templevel = (((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) / 800);
+            templevel = (((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) / screen_width);
             switch (fobjects[l2].type) {
             case FOBJECTS_SMOKE:
-                smoke[fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * 800,
-                                                ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0, templevel * 196, 799, 599);
+                smoke[fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * screen_width,
+                                                ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0, templevel * 196, screen_width_less, screen_height_less);
                 break;
 
             case FOBJECTS_SSMOKE:
-                ssmoke[fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * 800,
-                                                 ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0, templevel * 196, 799, 599);
+                ssmoke[fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * screen_width,
+                                                 ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0, templevel * 196, screen_width_less, screen_height_less);
                 break;
 
 
             case FOBJECTS_RIFLE:
-                rifle[fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * 800,
-                                                ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0, templevel * 196, 799, 599);
+                rifle[fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * screen_width,
+                                                ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0, templevel * 196, screen_width_less, screen_height_less);
                 break;
 
 
             case FOBJECTS_FLAME:
                 if (config.flames)
-                    flames[fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * 800,
-                                                     ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0, templevel * 196, 799, 599);
+                    flames[fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * screen_width,
+                                                     ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0, templevel * 196, screen_width_less, screen_height_less);
                 break;
 
             case FOBJECTS_WAVE1:
-                wave1[fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * 800,
-                                                ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0, templevel * 196, 799, 599);
+                wave1[fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * screen_width,
+                                                ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0, templevel * 196, screen_width_less, screen_height_less);
                 break;
 
             case FOBJECTS_WAVE2:
-                wave2[fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * 800,
-                                                ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0, templevel * 196, 799, 599);
+                wave2[fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * screen_width,
+                                                ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0, templevel * 196, screen_width_less, screen_height_less);
                 break;
 
 
             case FOBJECTS_ITEXPLOSION:
-                itexplosion[fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * 800,
-                                                      ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0, templevel * 196, 799, 599);
+                itexplosion[fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * screen_width,
+                                                      ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0, templevel * 196, screen_width_less, screen_height_less);
                 break;
 
 
             case FOBJECTS_EXPLOX:
                 if (fobjects[l2].phase < 0)
                     break;
-                explox[fobjects[l2].subtype][fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * 800,
+                explox[fobjects[l2].subtype][fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * screen_width,
                                                                        ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0,
-                                                                       templevel * 196, 799, 599);
+                                                                       templevel * 196, screen_width_less, screen_height_less);
                 break;
 
             case FOBJECTS_PARTS:
-                bites[fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * 800,
-                                                ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0, templevel * 196, 799, 599);
+                bites[fobjects[l2].phase]->blit(((fobjects[l2].x >> 8) - (fobjects[l2].width >> 1)) - templevel * screen_width,
+                                                ((fobjects[l2].y >> 8) - (fobjects[l2].height >> 1)) + templevel * 196 - 4, 0, templevel * 196, screen_width_less, screen_height_less);
                 break;
 
             }
@@ -1285,49 +1277,13 @@ void vesa_terrain_to_screen(void) {
 
     }
 
-    for (l = 0; l < 4; l++) {
-        boards[l]->blit(l * 160, 588, 0, 0, 799, 599);
-        for (l2 = 5; l2 >= 0; l2--) {
-            if ((player_bombs[l] - 1) >= l2)
-                break;
-
-            bomb_icon->blit(l * 160 + 57 + l2 * 6, 589, 0, 0, 799, 599);
-
-        }
-
-        for (l2 = 7; l2 >= 0; l2--) {
-            if (((player_ammo[l] >> 4) - 1) >= l2)
-                break;
-
-            big_ammo_icon->blit(l * 160 + 101 + l2 * 4, 589, 0, 0, 799, 599);
-        }
-
-        for (l2 = 15; l2 >= 0; l2--) {
-            if ((player_ammo[l] - ((player_ammo[l] >> 4) << 4) - 1) >= l2)
-                break;
-
-            small_ammo_icon->blit(l * 160 + 101 + l2 * 2, 595, 0, 0, 799, 599);
-        }
-
-        for (l2 = 7; l2 >= 0; l2--) {
-            if (((player_gas[l]) >> 8) == l2)
-                break;
-
-            gas_icon->blit(l * 160 + 1 + l2 * 3, 590, 0, 0, 799, 599);
-        }
-
-        gas_icon->blit(l * 160 + 1 + (player_gas[l] >> 8) * 3, 590 - ((player_gas[l] - ((player_gas[l] >> 8) << 8))) / 32, 0, 590, 799, 599);
-
-
-
-
-        fontti->printf(l * 160 + 142, 591, "%3d", abs(player_points[l]));
-        if (player_points[l] < 0)
-            fontti->printf(l * 160 + 142, 591, "-");
-
-
-
-    }
+	//Icons
+	if (playing_solo)
+		vesa_solo_icons(solo_mode);
+	else
+		for (l = 0; l < 4; l++)	{
+			vesa_icons(l);
+		}
 
     for (l = 0; l < 16; l++)
         if (in_closing[l] >= 88) {
@@ -1344,3 +1300,116 @@ void vesa_terrain_to_screen(void) {
     }
 #endif
 }
+
+void vesa_icons(int l) {
+	int l2;
+	boards[l]->blit(l * 160, screen_height - 12, 0, 0, screen_width_less, screen_height_less);
+	for (l2 = 5; l2 >= 0; l2--) {
+		if ((player_bombs[l] - 1) >= l2)
+			break;
+
+		bomb_icon->blit(l * 160 + 57 + l2 * 6, screen_height - 11, 0, 0, screen_width_less, screen_height_less);
+
+	}
+
+	for (l2 = 7; l2 >= 0; l2--) {
+		if (((player_ammo[l] >> 4) - 1) >= l2)
+			break;
+
+		big_ammo_icon->blit(l * 160 + 101 + l2 * 4, screen_height - 11, 0, 0, screen_width_less, screen_height_less);
+	}
+
+	for (l2 = 15; l2 >= 0; l2--) {
+		if ((player_ammo[l] - ((player_ammo[l] >> 4) << 4) - 1) >= l2)
+			break;
+
+		small_ammo_icon->blit(l * 160 + 101 + l2 * 2, screen_height - 5, 0, 0, screen_width_less, screen_height_less);
+	}
+
+	for (l2 = 7; l2 >= 0; l2--) {
+		if (((player_gas[l]) >> 8) == l2)
+			break;
+
+		gas_icon->blit(l * 160 + 1 + l2 * 3, screen_height - 10, 0, 0, screen_width_less, screen_height_less);
+	}
+
+	gas_icon->blit(l * 160 + 1 + (player_gas[l] >> 8) * 3, screen_height - 10 - ((player_gas[l] - ((player_gas[l] >> 8) << 8))) / 32, 0, screen_height - 10, screen_width_less, screen_height_less);
+	
+	int points = get_player_points(l);
+	fontti->printf(l * 160 + 142, screen_height - 9, "%3d", abs(points));
+	if (points < 0)
+		fontti->printf(l * 160 + 142, screen_height - 9, "-");
+
+	
+}
+
+void vesa_solo_icons(int l) {
+	int l2;
+
+	boards[l]->blit(0, screen_height - 12, 0, 0, screen_width_less, screen_height_less);
+	board2->blit(158, screen_height - 12, 0, 0, screen_width_less, screen_height_less);
+
+	for (l2 = 5; l2 >= 0; l2--) {
+		if ((player_bombs[l] - 1) >= l2)
+			break;
+
+		bomb_icon->blit(57 + l2 * 6, screen_height - 11, 0, 0, screen_width_less, screen_height_less);
+
+	}
+
+	for (l2 = 7; l2 >= 0; l2--) {
+		if (((player_ammo[l] >> 4) - 1) >= l2)
+			break;
+
+		big_ammo_icon->blit(101 + l2 * 4, screen_height - 11, 0, 0, screen_width_less, screen_height_less);
+	}
+
+	for (l2 = 15; l2 >= 0; l2--) {
+		if ((player_ammo[l] - ((player_ammo[l] >> 4) << 4) - 1) >= l2)
+			break;
+
+		small_ammo_icon->blit(101 + l2 * 2, screen_height - 5, 0, 0, screen_width_less, screen_height_less);
+	}
+
+	for (l2 = 7; l2 >= 0; l2--) {
+		if (((player_gas[l]) >> 8) == l2)
+			break;
+
+		gas_icon->blit(1 + l2 * 3, screen_height - 10, 0, 0, screen_width_less, screen_height_less);
+	}
+
+	gas_icon->blit(1 + (player_gas[l] >> 8) * 3, screen_height - 10 - ((player_gas[l] - ((player_gas[l] >> 8) << 8))) / 32, 0, screen_height - 10, screen_width_less, screen_height_less);
+
+	fontti->printf(142, screen_height - 9, "%3d", abs(player_points[l]));
+	if (player_points[l] < 0)
+		fontti->printf(142, screen_height - 9, "-");
+		
+	for (l2 = 0; l2 <= number_of_planes[solo_country]; l2++)
+		picons[solo_country]->blit(181 + l2 * 10, screen_height - 11);
+
+	if (controls_power[solo_country])
+		pwon->blit(163, screen_height - 10);
+	else
+		pwoff->blit(163, screen_height - 6);
+
+	if (++status_frames > STATUS_SPEED) {
+		status_frames = 0;
+		if (status_state)
+			status_state = 0;
+		else
+			status_state = 1;
+
+	}
+
+	if (solo_failed) {
+		status_icons[0][status_state]->blit(285, screen_height - 11);
+
+	}
+	else {
+		if (solo_success) {
+			status_icons[1][status_state]->blit(285, screen_height - 11);
+		}
+	}
+}
+
+

@@ -60,6 +60,7 @@ char rank_names[6][10] = {
 };
 
 /**************************** Functions ***************************************/
+void joystick_roster_setup(Bitmap* controlme);
 
 void show_feat5(void) {
     Bitmap *feat5;
@@ -804,12 +805,38 @@ void roster_menu(void) {
                 grid2->printf(152, 40, "Keys Info");
                 setk2->blit(286, 190);
                 setk1->blit(125, 172);
+								
+				frost->printf(125, 162, "Set Joystick");
 
-                frost->printf(125, 93, "Up [%s]\nDown [%s]\nRoll [%s]",
-                              SDL_GetKeyName((SDLKey) roster[number].up), SDL_GetKeyName((SDLKey) roster[number].down),
-                              SDL_GetKeyName((SDLKey) roster[number].roll));
-                frost->printf(170, 114, "Power [%s]\nBombs [%s]\nGuns [%s]\n", SDL_GetKeyName((SDLKey) roster[number].power),
-                              SDL_GetKeyName((SDLKey) roster[number].bombs), SDL_GetKeyName((SDLKey) roster[number].guns));
+				if (config.joystick[4] == -1)
+				{
+					frost->printf(125, 93, "Up [%s]\nDown [%s]\nRoll [%s]",
+						SDL_GetKeyName((SDLKey)roster[number].up), SDL_GetKeyName((SDLKey)roster[number].down),
+						SDL_GetKeyName((SDLKey)roster[number].roll));
+					frost->printf(170, 114, "Power [%s]\nBombs [%s]\nGuns [%s]\n", SDL_GetKeyName((SDLKey)roster[number].power),
+						SDL_GetKeyName((SDLKey)roster[number].bombs), SDL_GetKeyName((SDLKey)roster[number].guns));
+				}
+				else
+				{					
+					char *ups = get_joy_action_string(&joystick_config[4].up);
+					char *downs = get_joy_action_string(&joystick_config[4].down);
+					char *rolls = get_joy_action_string(&joystick_config[4].roll);
+					char *powers = get_joy_action_string(&joystick_config[4].power);
+					char *gunss = get_joy_action_string(&joystick_config[4].guns);
+					char *bombss = get_joy_action_string(&joystick_config[4].bombs);
+					char *brakes = get_joy_action_string(&joystick_config[4].brake);
+
+					frost->printf(125, 93, "J1: Up [%s]\nDown [%s]\nRoll [%s]", ups, downs, rolls);
+					frost->printf(170, 114, "Power [%s]\nBombs [%s]\nGuns [%s]\nBreak [%s]", powers, bombss, gunss, brakes);
+
+					wfree(ups);
+					wfree(downs);
+					wfree(rolls);
+					wfree(powers);
+					wfree(gunss);
+					wfree(bombss);
+					wfree(brakes);
+				}
 
             }
         } else {
@@ -906,6 +933,11 @@ void roster_menu(void) {
             frost->printf(15, 24, "Set Sologame\n Keys");
             menuselect = 7;
         }
+
+		if (keysetmode && x >= 125 && x <= 172 && y >= 161 && y <= 166) {
+			frost->printf(15, 24, "Set Sologame\n Joystick");
+			menuselect = 8;
+		}
 
         if (help_on)
             help->blit(0, 0);
@@ -1012,6 +1044,8 @@ void roster_menu(void) {
                 do_all();
                 wait_mouse_relase();
 
+				config.joystick[4] = -1;
+
                 rosteri->blit(0, 0);
 
                 frost->printf(125, 100, "Key for upward turn [%s]", SDL_GetKeyName((SDLKey) roster[number].up));
@@ -1052,6 +1086,22 @@ void roster_menu(void) {
 
                 roster[number].guns = select_key(number, roster[number].guns);
                 break;
+
+			case 8:
+				if (joystick_exists & JOY1) {
+					config.joystick[4] = 1;					
+					joystick_roster_setup(rosteri);
+					save_joysticks_data(CALIBRATION_FILENAME);
+					config.joystick_calibrated[4] = 1;
+				}
+				else 
+				{
+					rosteri->blit(0, 0);
+					frost->printf(125, 100, "Joystick 1 not connected");
+					do_all();
+					wait_mouse_relase();
+				}
+				break;
 
             case 5:
                 if (number == -1)
@@ -1140,6 +1190,16 @@ void roster_menu(void) {
 
 }
 
+void check_other_joys(int num, int active)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		if (i == num) continue;
+		if (config.joystick[i] == active)
+			config.joystick[i] = -1;
+	}
+}
+
 void options_menu(void) {
     int exit_flag = 0;
     int x, y, n1, n2;
@@ -1186,16 +1246,13 @@ void options_menu(void) {
             frost->printf(73, 80, "AA-MG shots visible?");
             frost->printf(73, 90, "Flags?");
             frost->printf(73, 100, "Structure flames?");
-            frost->printf(73, 110, "Use 800x600 window\nin multiplayergame?");
-            frost->printf(73, 130, "Structure smoke?");
+            frost->printf(73, 110, "Use 800x600 window?");
+            frost->printf(73, 120, "Structure smoke?");
 
-            for (l = 0; l < 6; l++) {
+            for (l = 0; l < 7; l++) {
                 boxi(214, 60 + l * 10, 221, 68 + l * 10, 0);
                 boxi(224, 60 + l * 10, 231, 68 + l * 10, 0);
-            }
-
-            boxi(214, 130, 221, 138, 0);
-            boxi(224, 130, 231, 138, 0);
+            }			           
 
             if (config.shots_visible)
                 right->blit(215, 60);
@@ -1220,18 +1277,17 @@ void options_menu(void) {
             if (config.flames)
                 right->blit(215, 100);
             else
-                wrong->blit(225, 100);
+                wrong->blit(225, 100);		           	           
 
-            if (config.structure_smoke)
-                right->blit(215, 130);
-            else
-                wrong->blit(225, 130);
+			if (config.structure_smoke)
+				right->blit(215, 120);
+			else
+				wrong->blit(225, 120);
 
-
-            if (config.svga)
-                right->blit(215, 110);
-            else
-                wrong->blit(225, 110);
+			if (config.svga)
+				right->blit(215, 110);
+			else
+				wrong->blit(225, 110);
 
             break;
 
@@ -1478,7 +1534,7 @@ void options_menu(void) {
 
                 }
 
-                if (y >= 130 && y <= 138) {
+                if (y >= 120 && y <= 128) {
                     // structure_smoke
                     menuselect = 64;
 
@@ -1992,10 +2048,14 @@ static void joystick_setup(int joy, Bitmap * controlme) {
         NULL, NULL}
     };
 
-    if (joy == 0)
-        open_close_joysticks(1, 0);
-    else
-        open_close_joysticks(0, 1);
+	if (joy == 0)
+		open_close_joysticks(1, 0, 0, 0);
+	else if (joy == 1)
+		open_close_joysticks(0, 1, 0, 0);
+	else if (joy == 2)
+		open_close_joysticks(0, 0, 1, 0);
+	else if (joy == 3)
+		open_close_joysticks(0, 0, 0, 1);
 
     idle = allocate_axis_state(joy);
     current = allocate_axis_state(joy);
@@ -2036,7 +2096,71 @@ static void joystick_setup(int joy, Bitmap * controlme) {
     wfree(idle);
     wfree(current);
 
-    open_close_joysticks(0, 0);
+	open_close_joysticks(0, 0, 0, 0);
+}
+
+void joystick_roster_setup(Bitmap* controlme) {
+	Sint16 *idle, *current;
+	int i, c;
+	struct {
+		const char *prompt;
+		joystick_action *act;
+	} acts[] = {
+		{
+			"Up", &joystick_config[4].up },{
+				"Down", &joystick_config[4].down },{
+					"Roll", &joystick_config[4].roll },{
+						"Power", &joystick_config[4].power },{
+							"Guns", &joystick_config[4].guns },{
+								"Bombs", &joystick_config[4].bombs },{
+									"Brake", &joystick_config[4].brake },{
+										NULL, NULL }
+	};
+
+	open_close_joysticks(1, 0, 0, 0);
+
+	idle = allocate_axis_state(4);
+	current = allocate_axis_state(4);
+
+	controlme->blit(0, 0);
+	frost->printf(125, 100, "Keep joystick idle and press");
+	frost->printf(125, 107, "Space (Esc=use old settings)");
+	do_all();
+	do {
+		c = getch();
+	} while (c != 27 && c != ' ');
+	if (c == 27)
+		goto joystick_setup_exit;
+
+	save_axis_state(idle, 4);
+
+	for (i = 0; acts[i].prompt != NULL; i++) {
+		controlme->blit(0, 0);
+		frost->printf(125, 100, "Do '%s' on joystick and", acts[i].prompt);
+		frost->printf(125, 107, "press Space or D=disable this");
+		do_all();
+		do {
+			c = getch();
+		} while (c != 27 && c != ' ' && c != 'd' && c != 'D');
+		if (c == 27) {
+			goto joystick_setup_exit;
+		}
+		else if (c == 'd' || c == 'D') {
+			set_disabled_action(acts[i].act);
+		}
+		else {
+			if (!find_changed_button(acts[i].act, 4)) {
+				save_axis_state(current, 4);
+				find_changed_axis(acts[i].act, idle, current, 4);
+			}
+		}
+	}
+
+joystick_setup_exit:
+	wfree(idle);
+	wfree(current);
+
+	open_close_joysticks(0, 0, 0, 0);
 }
 
 void controls_menu(void) {
@@ -2117,25 +2241,44 @@ void controls_menu(void) {
             menuselect = 7;
         }
 
-        if ((x >= 108 && x <= 212 && y >= 0 && y <= 87)) {
-            frost->printf(61, 97, "Select Joystick 1");
-            menuselect = 8;
-        }
+		if ((x >= 108 && x <= 159 && y >= 0 && y <= 42)) {
+			frost->printf(61, 97, joystick_exists & JOY1 ? "Select Joystick 1" : "Joystick 1 not connected");
+			menuselect = 8;
+		}
 
-        if ((x >= 214 && x <= 318 && y >= 0 && y <= 87)) {
-            frost->printf(61, 97, "Select Joystick 2");
-            menuselect = 9;
-        }
+		if ((x >= 161 && x <= 212 && y >= 0 && y <= 42)) {
+			frost->printf(61, 97, joystick_exists & JOY2 ? "Select Joystick 2" : "Joystick 2 not connected");
+			menuselect = 9;
+		}
+
+		if ((x >= 108 && x <= 159 && y >= 44 && y <= 87)) {
+			frost->printf(61, 97, joystick_exists & JOY3 ? "Select Joystick 3" : "Joystick 3 not connected");
+			menuselect = 10;
+		}
+
+		if ((x >= 161 && x <= 212 && y >= 44 && y <= 87)) {
+			frost->printf(61, 97, joystick_exists & JOY4 ? "Select Joystick 4" : "Joystick 4 not connected");
+			menuselect = 11;
+		}
 
 
-        if (config.joystick[0] != active && config.joystick[1] != active) {
+		if (config.joystick[0] != active && config.joystick[1] != active &&
+			config.joystick[2] != active && config.joystick[3] != active) {
             frost->printf(170, 93, "Up [%s] Down [%s] Roll [%s]",
                           SDL_GetKeyName((SDLKey) player_keys[active].up), SDL_GetKeyName((SDLKey) player_keys[active].down),
                           SDL_GetKeyName((SDLKey) player_keys[active].roll));
             frost->printf(170, 100, "Power [%s] Bombs [%s] Guns [%s]", SDL_GetKeyName((SDLKey) player_keys[active].power),
                           SDL_GetKeyName((SDLKey) player_keys[active].bombs), SDL_GetKeyName((SDLKey) player_keys[active].guns));
         } else {
-            int joy = (config.joystick[0] == active) ? 0 : 1;
+			int joy = 0;
+			if (config.joystick[0] == active)
+				joy = 0;
+			else if (config.joystick[1] == active)
+				joy = 1;
+			else if (config.joystick[2] == active)
+				joy = 2;
+			else if (config.joystick[3] == active)
+				joy = 3;
             char *ups = get_joy_action_string(&joystick_config[joy].up);
             char *downs = get_joy_action_string(&joystick_config[joy].down);
             char *rolls = get_joy_action_string(&joystick_config[joy].roll);
@@ -2169,11 +2312,11 @@ void controls_menu(void) {
                 break;
 
             case 3:
-                if (config.joystick[0] == active)
-                    config.joystick[0] = -1;
-
-                if (config.joystick[1] == active)
-                    config.joystick[1] = -1;
+				for (int i = 0; i < 4; i++)
+				{
+					if (config.joystick[i] == active)
+						config.joystick[i] = -1;
+				}
 
 
                 controlme->blit(0, 0);
@@ -2222,10 +2365,9 @@ void controls_menu(void) {
                 break;
 
             case 8:
-                if (joystick_exists & (JOY1X + JOY1Y)) {
+				if (joystick_exists & JOY1) {
                     config.joystick[0] = active;
-                    if (config.joystick[1] == active)
-                        config.joystick[1] = -1;
+					check_other_joys(0, active);
                     joystick_setup(0, controlme);
                     save_joysticks_data(CALIBRATION_FILENAME);
                     config.joystick_calibrated[0] = 1;
@@ -2233,15 +2375,34 @@ void controls_menu(void) {
                 break;
 
             case 9:
-                if (joystick_exists & (JOY2X + JOY2Y)) {
+				if (joystick_exists & JOY2) {
                     config.joystick[1] = active;
-                    if (config.joystick[0] == active)
-                        config.joystick[0] = -1;
+					check_other_joys(1, active);
                     joystick_setup(1, controlme);
                     save_joysticks_data(CALIBRATION_FILENAME);
                     config.joystick_calibrated[1] = 1;
                 }
                 break;
+
+			case 10:
+				if (joystick_exists & JOY3) {
+					config.joystick[2] = active;
+					check_other_joys(2, active);
+					joystick_setup(2, controlme);
+					save_joysticks_data(CALIBRATION_FILENAME);
+					config.joystick_calibrated[2] = 1;
+				}
+				break;
+
+			case 11:
+				if (joystick_exists & JOY4) {
+					config.joystick[3] = active;
+					check_other_joys(3, active);
+					joystick_setup(3, controlme);
+					save_joysticks_data(CALIBRATION_FILENAME);
+					config.joystick_calibrated[3] = 1;
+				}
+				break;
             }
 
             if (menuselect >= 4 && menuselect <= 7) {
@@ -2332,6 +2493,10 @@ void assign_menu(void) {
                 frost->printf(46 + lx, 82 + ly, roster[config.player_number[l]].pilotname);
 
             }
+        	
+			//for multiplayer - plane count
+			if (config.player_type[l] > 1)
+				frost->printf(46 + lx, 70 + ly, "%d plane%s", config.plane_count[l], config.plane_count[l] > 1? "s" : "");
 
             for (l2 = 0; l2 < 4; l2++) {
                 if (x >= (28 + lx) && x <= (35 + lx) && y >= (45 + lym[l2] + ly) && y <= (49 + lym[l2] + ly)) {
@@ -2355,6 +2520,20 @@ void assign_menu(void) {
                 //frost->printf(82,177,"Select previous pilot");        
 
             }
+
+			if (x >= (134 + lx) && x < (143 + lx) && y >= (67 + ly) && y <= (77 + ly)) {
+				menusubselect1 = l;
+				menuselect = 5;
+				//frost->printf(82,177,"Add plane");    
+
+			}
+
+			if (x >= (143 + lx) && x <= (151 + lx) && y >= (67 + ly) && y <= (77 + ly)) {
+				menusubselect1 = l;
+				menuselect = 6;
+				//frost->printf(82,177,"Remove plane");        
+
+			}
         }
 
         cursor->blit(x - 10, y - 10);
@@ -2544,7 +2723,17 @@ void assign_menu(void) {
 
                 break;
 
+			case 5:
+				if (config.plane_count[menusubselect1] < 3)
+					config.plane_count[menusubselect1]++;			
 
+				break;
+
+			case 6:
+				if (config.plane_count[menusubselect1] > 1)
+					config.plane_count[menusubselect1]--;
+
+				break;
             }
         }
 
@@ -3069,7 +3258,7 @@ void main_menu(void) {
         }
 
         koords(&x, &y, &n1, &n2);
-        menu1->blit(0, 0);      // 0,0,799,599
+        menu1->blit(0, 0);      // 0,0,screen_width_less,screen_height_less
         grid2->printf(34, 156, "Press F1\nfor Help");
 
         for (l = 0; l < 4; l++)
@@ -3293,24 +3482,24 @@ void main_menu(void) {
                         solo_mode = l;
                         break;
 
-                    case 2:
-                        if ((l == 1 || l == 2) && config.current_multilevel == 5) {
-                            player_exists[l] = 0;
-                            computer_active[l] = 0;
-                            config.player_type[l] = 0;
-
-                        } else {
-                            player_exists[l] = 1;
-                            computer_active[l] = 1;
-                        }
+                    case 2:                       
+                    	for (l2 = 0; l2 < config.plane_count[l]; l2++)
+						{
+							player_exists[l + l2 * 4] = 1;
+							computer_active[l + l2 * 4] = 1;
+						}
+						
                         break;
 
                     case 3:
-                        player_exists[l] = 1;
-                        computer_active[l] = 0;
+						for (l2 = 0; l2 < config.plane_count[l]; l2++)
+						{
+							player_exists[l + l2 * 4] = 1;
+							computer_active[l + l2 * 4] = 1;
+						}                        
+                        computer_active[l] = 0;						
+						
                         break;
-
-
                     }
 
                 }

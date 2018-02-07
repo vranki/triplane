@@ -293,14 +293,14 @@ void Bitmap::blit(int xx, int yy, int rx, int ry, int rx2, int ry2) {
 
     if (current_mode == SVGA_MODE) {
         if (rx == 0 && ry == 0 && rx2 == 319 && ry2 == 199) {
-            rx2 = 799;
-            ry2 = 599;
+            rx2 = screen_width_less;
+            ry2 = screen_height_less;
         }
-        if (rx2 > 799)
-            rx2 = 799;
-        if (ry2 > 599)
-            ry2 = 599;
-        bwidth = 800;
+        if (rx2 > screen_width_less)
+            rx2 = screen_width_less;
+        if (ry2 > screen_height_less)
+            ry2 = screen_height_less;
+        bwidth = screen_width;
     } else {
         if (rx2 > 319)
             rx2 = 319;
@@ -400,7 +400,7 @@ Bitmap::Bitmap(int x1, int y1, int xl, int yl, Bitmap * source_image) {
 
 /* Create a new Bitmap from the contents of vircr at (x,y) to (x+w,y+h) */
 Bitmap::Bitmap(int x, int y, int w, int h) {
-    int vircrw = (current_mode == VGA_MODE) ? 320 : 800;
+    int vircrw = (current_mode == VGA_MODE) ? 320 : screen_width;
     int fromy, toy;
 
     assert(update_vircr_mode);  /* otherwise vircr may not be valid */

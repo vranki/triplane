@@ -195,7 +195,6 @@ int y2_raja[4] = { 89, 89, 187, 187 };
 
 //\ Airfields
 
-
 int player_on_airfield[16];
 
 //\ General
@@ -379,6 +378,7 @@ void init_data(void);
 void do_aftermath(int show_it_all);
 void airfield_checks(void);
 void handle_parameters(void);
+void init_resolution(int width, int height);
 void load_level(void);
 void clear_level(void);
 void do_flags(void);
@@ -400,6 +400,9 @@ void clear_music(void);
 void init_sounds(void);
 void uninit_sounds(void);
 
+int get_player_fired(int player);
+int get_player_hits(int player);
+int get_player_shots_down(int player, int player2);
 
 extern void do_infan(void);
 extern void do_kkbase(void);
@@ -808,7 +811,11 @@ void init_player(int l, int pommit) {
     plane_wants_in[l] = 0;
     player_x_speed[l] = 0;
     player_y_speed[l] = 0;
-    power_break_active[l] = 1;
+	//no need fix in 2nd Solo mission of England
+	if (playing_solo && solo_country == 2 && solo_mission == 1)
+		power_break_active[l] = 0;	
+	else
+		power_break_active[l] = 1;
 
 
 
@@ -924,10 +931,7 @@ void controls(void) {
     int l;
 
 
-
-
-
-    for (l = 0; l < 16; l++) {
+	for (l = 0; l < 16; l++) {
         mc_up[l] = new_mc_up[l];
         mc_down[l] = new_mc_down[l];
         mc_roll[l] = new_mc_roll[l];
@@ -1101,112 +1105,130 @@ void controls(void) {
         if (l > 3)
             continue;
 
+		int is_joy = 0;		   	
+		
+		if (playing_solo && config.joystick[4] != -1)
+		{
+			get_joystick_action(4, (hangarmenu_active[l] || in_closing[l]),
+				&new_mc_down[l], &new_mc_up[l], &new_mc_power[l], &new_mc_roll[l], &new_mc_guns[l], &new_mc_bomb[l]
+				, power_on_off, power_reverse, &controls_power2[l], in_closing[l], &power_break_active[l]);
+			if (!joystick_has_roll_button(4) && !(hangarmenu_active[l] || in_closing[l])) {
+				// Autoroll code
+				new_mc_roll[l] = 0;
+				if (new_mc_down[l] == new_mc_up[l])     /* not turning up/down */
+					if ((player_upsidedown[l] && (player_angle[l] < 23040 || player_angle[l] > 69120)) ||
+						(!player_upsidedown[l] && (player_angle[l] < 69120 && player_angle[l] > 23040)))
+						if (!player_rolling[l])
+							new_mc_roll[l] = 1;
+			}
+			is_joy = 1;			
+		}
 
-        if (!playing_solo && config.joystick[0] == l) {
-            get_joystick_action(0, (hangarmenu_active[l] || in_closing[l]),
-                                &new_mc_down[l], &new_mc_up[l], &new_mc_power[l], &new_mc_roll[l], &new_mc_guns[l], &new_mc_bomb[l]);
-            if (!joystick_has_roll_button(0) && !(hangarmenu_active[l] || in_closing[l])) {
-                // Autoroll code
-                new_mc_roll[l] = 0;
-                if (new_mc_down[l] == new_mc_up[l])     /* not turning up/down */
-                    if ((player_upsidedown[l] && (player_angle[l] < 23040 || player_angle[l] > 69120)) ||
-                            (!player_upsidedown[l] && (player_angle[l] < 69120 && player_angle[l] > 23040)))
-                        if (!player_rolling[l])
-                            new_mc_roll[l] = 1;
-            }
-        } else {
-            if (!playing_solo && config.joystick[1] == l) {
-                get_joystick_action(1, (hangarmenu_active[l] || in_closing[l]),
-                                    &new_mc_down[l], &new_mc_up[l], &new_mc_power[l], &new_mc_roll[l], &new_mc_guns[l], &new_mc_bomb[l]);
-                if (!joystick_has_roll_button(1) && !(hangarmenu_active[l] || in_closing[l])) {
-                    // Autoroll code
-                    new_mc_roll[l] = 0;
-                    if (new_mc_down[l] == new_mc_up[l]) /* not turning up/down */
-                        if ((player_upsidedown[l] && (player_angle[l] < 23040 || player_angle[l] > 69120)) ||
-                                (!player_upsidedown[l] && (player_angle[l] < 69120 && player_angle[l] > 23040)))
-                            if (!player_rolling[l])
-                                new_mc_roll[l] = 1;
-                }
-            } else {
-                if ((playing_solo ? key[roster[config.player_number[solo_country]].down] : key[player_keys[l].down]))
-                    new_mc_down[l] = 1;
-                else
-                    new_mc_down[l] = 0;
+		if (is_joy == 0) {
+			for (int i = 0; i < 4; i++)
+			{
+				if (config.joystick[i] == l)
+				{
+					get_joystick_action(i, (hangarmenu_active[l] || in_closing[l]),
+						&new_mc_down[l], &new_mc_up[l], &new_mc_power[l], &new_mc_roll[l], &new_mc_guns[l], &new_mc_bomb[l]
+						, power_on_off, power_reverse, &controls_power2[l], in_closing[l], &power_break_active[l]);
+					if (!joystick_has_roll_button(i) && !(hangarmenu_active[l] || in_closing[l])) {
+						// Autoroll code
+						new_mc_roll[l] = 0;
+						if (new_mc_down[l] == new_mc_up[l])     /* not turning up/down */
+							if ((player_upsidedown[l] && (player_angle[l] < 23040 || player_angle[l] > 69120)) ||
+								(!player_upsidedown[l] && (player_angle[l] < 69120 && player_angle[l] > 23040)))
+								if (!player_rolling[l])
+									new_mc_roll[l] = 1;
+					}
+					is_joy = 1;
+					break;
+				}
+			}
+		}
 
-                if ((playing_solo ? key[roster[config.player_number[solo_country]].up] : key[player_keys[l].up]))
-                    new_mc_up[l] = 1;
-                else
-                    new_mc_up[l] = 0;
+		if (is_joy == 0) {
 
-                if (!power_on_off) {
-// Toggle power is off
-                    if (!power_reverse) {
-// ..and no reverse
-                        if ((playing_solo ? key[roster[config.player_number[solo_country]].power] : key[player_keys[l].power]))
-                            new_mc_power[l] = 1;
-                        else
-                            new_mc_power[l] = 0;
-                    } else {
-// Toggle off but reverse - we need to prevent takeoff with
-// power_break_active
-                        if ((playing_solo ? key[roster[config.player_number[solo_country]].power] : key[player_keys[l].power])) {
-// Power is pressed
-                            new_mc_power[l] = 0;
-                            if(power_break_active[l])
-                                power_break_active[l] = 0;
-                        } else {
-// Power is not pressed
-                            if(!power_break_active[l])
-                                new_mc_power[l] = 1;
-                            else
-                                new_mc_power[l] = 0;
-                        }
-                    }
-                } else {
-// Toggle power is on
-                    if ((playing_solo ? key[roster[config.player_number[solo_country]].power] : key[player_keys[l].power])) {
-                        if (!controls_power2[l]) {
-                            if (new_mc_power[l])
-                                new_mc_power[l] = 0;
-                            else
-                                new_mc_power[l] = 1;
-                        }
-                        controls_power2[l] = 1;
+			if ((playing_solo ? key[roster[config.player_number[solo_country]].down] : key[player_keys[l].down]))
+				new_mc_down[l] = 1;
+			else
+				new_mc_down[l] = 0;
 
-                    } else
-                        controls_power2[l] = 0;
+			if ((playing_solo ? key[roster[config.player_number[solo_country]].up] : key[player_keys[l].up]))
+				new_mc_up[l] = 1;
+			else
+				new_mc_up[l] = 0;
 
-                    if (in_closing[l])
-                        new_mc_power[l] = 0;
+			if (!power_on_off) {
+				// Toggle power is off
+				if (!power_reverse) {
+					// ..and no reverse
+					if ((playing_solo ? key[roster[config.player_number[solo_country]].power] : key[player_keys[l].power]))
+						new_mc_power[l] = 1;
+					else
+						new_mc_power[l] = 0;
+				}
+				else {
+					// Toggle off but reverse - we need to prevent takeoff with
+					// power_break_active
+					if ((playing_solo ? key[roster[config.player_number[solo_country]].power] : key[player_keys[l].power])) {
+						// Power is pressed
+						new_mc_power[l] = 0;
+						if (power_break_active[l])
+							power_break_active[l] = 0;
+					}
+					else {
+						// Power is not pressed
+						if (!power_break_active[l])
+							new_mc_power[l] = 1;
+						else
+							new_mc_power[l] = 0;						
+					}
+				}
+			}
+			else {
+				// Toggle power is on
+				if ((playing_solo ? key[roster[config.player_number[solo_country]].power] : key[player_keys[l].power])) {
+					if (!controls_power2[l]) {
+						if (new_mc_power[l])
+							new_mc_power[l] = 0;
+						else
+							new_mc_power[l] = 1;
+					}
+					controls_power2[l] = 1;
 
-                }
+				}
+				else
+					controls_power2[l] = 0;
 
-                new_mc_bomb[l] = 0;
+				if (in_closing[l])
+					new_mc_power[l] = 0;
 
-                if ((playing_solo ? key[roster[config.player_number[solo_country]].bombs] : key[player_keys[l].bombs])) {
-                    new_mc_bomb[l] = 1;
+			}
 
-                }
+			new_mc_bomb[l] = 0;
 
-                new_mc_roll[l] = 0;
-                if ((playing_solo ? key[roster[config.player_number[solo_country]].roll] : key[player_keys[l].roll])) {
+			if ((playing_solo ? key[roster[config.player_number[solo_country]].bombs] : key[player_keys[l].bombs])) {
+				new_mc_bomb[l] = 1;
 
-                    new_mc_roll[l] = 1;
+			}
 
+			new_mc_roll[l] = 0;
+			if ((playing_solo ? key[roster[config.player_number[solo_country]].roll] : key[player_keys[l].roll])) {
 
-                }
-
-
-                new_mc_guns[l] = 0;
-
-                if ((playing_solo ? key[roster[config.player_number[solo_country]].guns] : key[player_keys[l].guns])) {
-                    new_mc_guns[l] = 1;
-
-                }
-            }
-        }
+				new_mc_roll[l] = 1;
 
 
+			}
+
+
+			new_mc_guns[l] = 0;
+
+			if ((playing_solo ? key[roster[config.player_number[solo_country]].guns] : key[player_keys[l].guns])) {
+				new_mc_guns[l] = 1;
+
+			}
+		}
 
         if (player_spinning[l]) {
             if (!player_rolling[l])
@@ -1220,7 +1242,6 @@ void controls(void) {
                 player_rolling[l] = 1;
 
         }
-
     }
 }
 
@@ -1450,7 +1471,7 @@ void do_debug_trace(void) {
         if (current_mode == VGA_MODE) {
             len = 320 * 200;
         } else {
-            len = 800 * 600;
+            len = screen_width * screen_height;
         }
 
         vircr_checksum = crc32_le(~0, vircr, len);
@@ -1542,6 +1563,17 @@ void main_engine(void) {
     }
 
     if (playing_solo) {
+
+		if (config.svga)
+		{
+			if (!findparameter("-debugnographics")) {
+				if (findparameter("-black"))
+					init_vesa("PALET3");
+				else
+					init_vesa("PALET5");
+			}
+		}
+
         solo_failed = 0;
         solo_success = 0;
         solo_dest_remaining = 0;
@@ -1560,30 +1592,43 @@ void main_engine(void) {
     if (current_mode == SVGA_MODE) {
 
         tyhjaa_vircr();
-        maisema->blit(-1600, 388, 0, 0, 799, 599);
-        maisema->blit(-800, 192, 0, 0, 799, 599);
-        maisema->blit(0, -4, 0, 0, 799, 599);
+
+		if (split_num == 0)
+		{
+			maisema->blit(0, -4, 0, 0, screen_width_less, screen_height_less);
+		}
+		else if (split_num == 1)
+		{
+			maisema->blit(-screen_width, 192, 0, 0, screen_width_less, screen_height_less);
+			maisema->blit(0, -4, 0, 0, screen_width_less, screen_height_less);
+		}
+		else
+		{
+			maisema->blit(-2 * screen_width, 388, 0, 0, screen_width_less, screen_height_less);
+			maisema->blit(-screen_width, 192, 0, 0, screen_width_less, screen_height_less);
+			maisema->blit(0, -4, 0, 0, screen_width_less, screen_height_less);
+		}
 
         for (l = 0; l < MAX_STRUCTURES; l++) {
             if (structures[l][0] != NULL) {
                 if (leveldata.struct_hit[l])
                     continue;
 
-                structures[l][0]->blit(leveldata.struct_x[l] - (leveldata.struct_x[l] / 800) * 800,
-                                       leveldata.struct_y[l] + (leveldata.struct_x[l] / 800) * 196 - 4);
+                structures[l][0]->blit(leveldata.struct_x[l] - (leveldata.struct_x[l] / screen_width) * screen_width,
+                                       leveldata.struct_y[l] + (leveldata.struct_x[l] / screen_width) * 196 - 4);
 
                 structures[l][0]->info(&xx, &yy);
 
-                if ((leveldata.struct_x[l] - (leveldata.struct_x[l] / 800) * 800) + xx > 800)
-                    structures[l][0]->blit(leveldata.struct_x[l] - (leveldata.struct_x[l] / 800) * 800 - 800,
-                                           leveldata.struct_y[l] + (leveldata.struct_x[l] / 800 + 1) * 196 - 4);
+                if ((leveldata.struct_x[l] - (leveldata.struct_x[l] / screen_width) * screen_width) + xx > screen_width)
+                    structures[l][0]->blit(leveldata.struct_x[l] - (leveldata.struct_x[l] / screen_width) * screen_width - screen_width,
+                                           leveldata.struct_y[l] + (leveldata.struct_x[l] / screen_width + 1) * 196 - 4);
 
             }
 
         }
 
-        standard_background = new Bitmap(0, 0, 800, 600);
-        standard_background->blit(0, 0, 0, 0, 799, 599);
+        standard_background = new Bitmap(0, 0, screen_width, screen_height);
+        standard_background->blit(0, 0, 0, 0, screen_width_less, screen_height_less);
 
 
     } else {
@@ -1648,9 +1693,13 @@ void main_engine(void) {
         tyhjaa_vircr();
     }
     //// Open joysticks
-    if (!playing_solo) {
-        open_close_joysticks(config.joystick[0] != -1, config.joystick[1] != -1);
+    if (playing_solo) {		
+	    open_close_joysticks(config.joystick[4] != -1, 0, 0, 0);
     }
+	else {
+	    open_close_joysticks(config.joystick[0] != -1, config.joystick[1] != -1, config.joystick[2] != -1, config.joystick[3] != -1);
+    }
+
     //// Record
 
 
@@ -1792,12 +1841,18 @@ void main_engine(void) {
             do_mekan();
         }
 
-        if (solo_mode == -1)
-            terrain_to_screen();
-        else {
-            solo_do_all();
-            solo_terrain_to_screen();
-        }
+		if (config.svga)
+			vesa_terrain_to_screen();
+		else
+		{
+			if (solo_mode == -1)
+				terrain_to_screen();
+			else
+			{
+				solo_do_all();
+				solo_terrain_to_screen();
+			}
+		}		       
 
         hangarmenu_handle();
 
@@ -1810,7 +1865,7 @@ void main_engine(void) {
 
                 player_last_shot[l]++;
                 if (!playing_solo && config.stop)
-                    if (player_points[l] >= config.stop)
+                    if (get_player_points(l) >= config.stop)
                         flag = 0;
 
                 if (in_closing[l])
@@ -1888,7 +1943,7 @@ void main_engine(void) {
     mission_re_fly = -1;
 
     //// Close joysticks
-    open_close_joysticks(0, 0);
+    open_close_joysticks(0, 0, 0, 0);
 
     //// Record
 
@@ -1958,20 +2013,22 @@ void do_aftermath(int show_it_all) {
 
         for (l = 0; l < 4; l++) {
             for (l2 = 0; l2 < 4; l2++) {
-                fontti->printf(69 + l2 * 30, 80 + l * 21, "%4d", player_shots_down[l][l2]);
+                fontti->printf(69 + l2 * 30, 80 + l * 21, "%4d", get_player_shots_down(l, l2));
             }
-            fontti->printf(194, 80 + l * 21, "%3d", abs(player_points[l]));
-            if (player_points[l] < 0)
+			int points = get_player_points(l);
+            fontti->printf(194, 80 + l * 21, "%3d", abs(points));
+            if (points < 0)
                 fontti->printf(194, 80 + l * 21, "-");
 
-            fontti->printf(224, 80 + l * 21, "%5d", player_fired[l]);
+			int fired = get_player_fired(l);
+            fontti->printf(224, 80 + l * 21, "%5d", fired);
 
-            if (player_fired[l] == 0)
+            if (fired == 0)
                 firedi = 1;
             else
-                firedi = player_fired[l];
+                firedi = fired;
 
-            fontti->printf(254, 80 + l * 21, "%4d%%", (player_hits[l] * 1000) / (firedi));
+            fontti->printf(254, 80 + l * 21, "%4d%%", (get_player_hits(l) * 1000) / (firedi));
         }
 
         do_all();
@@ -3454,7 +3511,7 @@ void init_data(void) {
         }
     } else {
         if (config.all_planes_are) {
-            for (l = 0; l < 4; l++) {
+            for (l = 0; l < 16; l++) {
                 plane_power[l] = t_plane_power[config.all_planes_are - 1];
                 plane_manover[l] = t_plane_manover[config.all_planes_are - 1];
                 plane_mass[l] = t_plane_mass[config.all_planes_are - 1];
@@ -3465,7 +3522,7 @@ void init_data(void) {
 
 
         } else {
-            for (l = 0; l < 4; l++) {
+            for (l = 0; l < 16; l++) {
                 plane_power[l] = t_plane_power[l];
                 plane_manover[l] = t_plane_manover[l];
                 plane_mass[l] = t_plane_mass[l];
@@ -3481,8 +3538,24 @@ void init_data(void) {
             case 1:
                 player_sides[0] = 0;
                 player_sides[1] = 0;
-                player_sides[2] = 1;
-                player_sides[3] = 1;
+				player_sides[2] = 1;
+				player_sides[3] = 1;
+
+				player_sides[4] = 0;
+				player_sides[5] = 0;
+				player_sides[6] = 1;
+				player_sides[7] = 1;
+
+				player_sides[8] = 0;
+				player_sides[9] = 0;
+				player_sides[10] = 1;
+				player_sides[11] = 1;
+
+				player_sides[12] = 0;
+				player_sides[13] = 0;
+				player_sides[14] = 1;
+				player_sides[15] = 1;
+                
                 break;
 
             case 2:
@@ -3490,6 +3563,21 @@ void init_data(void) {
                 player_sides[1] = 1;
                 player_sides[2] = 0;
                 player_sides[3] = 1;
+
+				player_sides[4] = 0;
+				player_sides[5] = 1;
+				player_sides[6] = 0;
+				player_sides[7] = 1;
+
+				player_sides[8] = 0;
+				player_sides[9] = 1;
+				player_sides[10] = 0;
+				player_sides[11] = 1;
+
+				player_sides[12] = 0;
+				player_sides[13] = 1;
+				player_sides[14] = 0;
+				player_sides[15] = 1;
                 break;
 
             case 3:
@@ -3497,9 +3585,22 @@ void init_data(void) {
                 player_sides[1] = 1;
                 player_sides[2] = 1;
                 player_sides[3] = 0;
+
+				player_sides[4] = 0;
+				player_sides[5] = 1;
+				player_sides[6] = 1;
+				player_sides[7] = 0;
+
+				player_sides[8] = 0;
+				player_sides[9] = 1;
+				player_sides[10] = 1;
+				player_sides[11] = 0;
+
+				player_sides[12] = 0;
+				player_sides[13] = 1;
+				player_sides[14] = 1;
+				player_sides[15] = 0;
                 break;
-
-
 
             }
 
@@ -3600,11 +3701,28 @@ void handle_parameters(void) {
 
     if (findparameter("-nofullscreen")) {
         wantfullscreen = 0;
-    }
+    }	
 
     if (findparameter("-sdldraw")) {
         draw_with_vircr_mode = 0;
     }
+
+	if (findparameter("-nosplit")) {
+		split_num = 0;
+		init_resolution(2400, 208);
+	}
+
+	if (findparameter("-1split")) {
+		split_num = 1;
+		init_resolution(1200, 404);
+	}		
+}
+
+void init_resolution(int width, int height){	
+	screen_width = width;
+	screen_height = height;
+	screen_width_less = screen_width - 1;
+	screen_height_less = screen_height - 1;
 }
 
 int main(int argc, char *argv[]) {
@@ -3663,17 +3781,20 @@ int main(int argc, char *argv[]) {
         loading_text("Joystick(s) not detected and thus not calibrated.");
     }
 
-    if (config.joystick_calibrated[1] || config.joystick_calibrated[0]) {
-        if (!load_joysticks_data(CALIBRATION_FILENAME)) {
-            config.joystick_calibrated[0] = 0;
-            config.joystick[0] = -1;
-            config.joystick_calibrated[1] = 0;
-            config.joystick[1] = -1;
-            loading_text("Unable to load calibration data.");
+	if (config.joystick_calibrated[1] || config.joystick_calibrated[0] ||
+		config.joystick_calibrated[2] || config.joystick_calibrated[3] ||
+		config.joystick_calibrated[4]) {
+		if (!load_joysticks_data(CALIBRATION_FILENAME)) {
+			for (int i = 0; i < 5; i++)
+			{
+				config.joystick_calibrated[i] = 0;
+				config.joystick[i] = -1;
+			}
 
-        }
+			loading_text("Unable to load calibration data.");
+		}
+	}
 
-    }
 
     loading_text("\nLoading keyset.");
 
@@ -3842,4 +3963,26 @@ void loading_text(const char *teksti) {
         printf("%s\n", teksti);
 
     }
+}
+
+int get_player_fired(int player)
+{
+	return playing_solo || player > 3
+		? player_fired[player]
+		: player_fired[player] + player_fired[player + 4] + player_fired[player + 8];
+}
+
+int get_player_hits(int player)
+{
+	return playing_solo || player > 3
+		? player_hits[player]
+		: player_hits[player] + player_hits[player + 4] + player_hits[player + 8];
+}
+int get_player_shots_down(int player, int player2)
+{
+	return playing_solo || player > 3 || player2 > 3
+		? player_shots_down[player][player2]
+		: player_shots_down[player][player2] + player_shots_down[player][player2 + 4] + player_shots_down[player][player2 + 8]
+		+ player_shots_down[player + 4][player2] + player_shots_down[player + 4][player2 + 4] + player_shots_down[player + 4][player2 + 8]
+		+ player_shots_down[player + 8][player2] + player_shots_down[player + 8][player2 + 4] + player_shots_down[player + 8][player2 + 8] ;
 }
