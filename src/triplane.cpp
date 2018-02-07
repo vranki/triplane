@@ -808,7 +808,11 @@ void init_player(int l, int pommit) {
     plane_wants_in[l] = 0;
     player_x_speed[l] = 0;
     player_y_speed[l] = 0;
-    power_break_active[l] = 1;
+	//no need fix in 2nd Solo mission of England
+	if (playing_solo && solo_country == 2 && solo_mission == 1)
+		power_break_active[l] = 0;	
+	else
+		power_break_active[l] = 1;
 
 
 
@@ -1175,7 +1179,7 @@ void controls(void) {
 						if (!power_break_active[l])
 							new_mc_power[l] = 1;
 						else
-							new_mc_power[l] = 0;
+							new_mc_power[l] = 0;						
 					}
 				}
 			}
