@@ -1246,7 +1246,7 @@ void options_menu(void) {
             frost->printf(73, 80, "AA-MG shots visible?");
             frost->printf(73, 90, "Flags?");
             frost->printf(73, 100, "Structure flames?");
-            frost->printf(73, 110, "Use 800x600 window?");
+            frost->printf(73, 110, "Use %s window?", split_num == 2? "800x600" : (split_num == 1 ? "1200x400" : "2400:200"));
             frost->printf(73, 120, "Structure smoke?");
 
             for (l = 0; l < 7; l++) {
