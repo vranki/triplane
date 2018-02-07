@@ -2496,7 +2496,7 @@ void assign_menu(void) {
         	
 			//for multiplayer - plane count
 			if (config.player_type[l] > 1)
-				frost->printf(46 + lx, 70 + ly, "%d plane(s)", config.plane_count[l]);
+				frost->printf(46 + lx, 70 + ly, "%d plane%s", config.plane_count[l], config.plane_count[l] > 1? "s" : "");
 
             for (l2 = 0; l2 < 4; l2++) {
                 if (x >= (28 + lx) && x <= (35 + lx) && y >= (45 + lym[l2] + ly) && y <= (49 + lym[l2] + ly)) {
