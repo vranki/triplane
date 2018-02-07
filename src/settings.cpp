@@ -404,6 +404,7 @@ void swap_config_endianes(void) {
     for (i = 0; i < 4; i++) {
         config.player_type[i] = SDL_SwapLE32(config.player_type[i]);
         config.player_number[i] = SDL_SwapLE32(config.player_number[i]);
+		config.plane_count[i] = SDL_SwapLE32(config.plane_count[i]);
     }
 
     // Graphics
@@ -458,7 +459,7 @@ void load_config(void) {
     for (laskuri = 0; laskuri < 4; laskuri++) {
         config.player_type[laskuri] = 0;
         config.player_number[laskuri] = -1;
-
+		config.plane_count[laskuri] = 1;
     }
 
     // Graphics

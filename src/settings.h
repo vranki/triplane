@@ -117,6 +117,7 @@ struct configuration {
     int32_t current_multilevel;
     int32_t player_type[4];
     int32_t player_number[4];
+	int32_t plane_count[4];
 
     // Graphics
     int32_t shots_visible;

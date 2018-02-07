@@ -2493,6 +2493,10 @@ void assign_menu(void) {
                 frost->printf(46 + lx, 82 + ly, roster[config.player_number[l]].pilotname);
 
             }
+        	
+			//for multiplayer - plane count
+			if (config.player_type[l] > 1)
+				frost->printf(46 + lx, 70 + ly, "%d plane(s)", config.plane_count[l]);
 
             for (l2 = 0; l2 < 4; l2++) {
                 if (x >= (28 + lx) && x <= (35 + lx) && y >= (45 + lym[l2] + ly) && y <= (49 + lym[l2] + ly)) {
@@ -2516,6 +2520,20 @@ void assign_menu(void) {
                 //frost->printf(82,177,"Select previous pilot");        
 
             }
+
+			if (x >= (134 + lx) && x < (143 + lx) && y >= (67 + ly) && y <= (77 + ly)) {
+				menusubselect1 = l;
+				menuselect = 5;
+				//frost->printf(82,177,"Add plane");    
+
+			}
+
+			if (x >= (143 + lx) && x <= (151 + lx) && y >= (67 + ly) && y <= (77 + ly)) {
+				menusubselect1 = l;
+				menuselect = 6;
+				//frost->printf(82,177,"Remove plane");        
+
+			}
         }
 
         cursor->blit(x - 10, y - 10);
@@ -2705,7 +2723,17 @@ void assign_menu(void) {
 
                 break;
 
+			case 5:
+				if (config.plane_count[menusubselect1] < 3)
+					config.plane_count[menusubselect1]++;			
 
+				break;
+
+			case 6:
+				if (config.plane_count[menusubselect1] > 1)
+					config.plane_count[menusubselect1]--;
+
+				break;
             }
         }
 
@@ -3455,28 +3483,23 @@ void main_menu(void) {
                         break;
 
                     case 2:                       
-                    	player_exists[l] = 1;
-                    	computer_active[l] = 1;  
-
-						player_exists[l + 4] = 1;
-						computer_active[l + 4] = 1;
-						player_exists[l + 8] = 1;
-						computer_active[l + 8] = 1;
-						//player_exists[l + 12] = 1;
-						//computer_active[l + 12] = 1;
+                    	for (l2 = 0; l2 < config.plane_count[l]; l2++)
+						{
+							player_exists[l + l2 * 4] = 1;
+							computer_active[l + l2 * 4] = 1;
+						}
+						
                         break;
 
                     case 3:
-                        player_exists[l] = 1;
-                        computer_active[l] = 0;
+						for (l2 = 0; l2 < config.plane_count[l]; l2++)
+						{
+							player_exists[l + l2 * 4] = 1;
+							computer_active[l + l2 * 4] = 1;
+						}                        
+                        computer_active[l] = 0;						
 						
-						player_exists[l + 4] = 1;
-						computer_active[l + 4] = 1;
-						player_exists[l + 8] = 1;
-						computer_active[l + 8] = 1;
                         break;
-
-
                     }
 
                 }
