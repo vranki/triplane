@@ -400,6 +400,9 @@ void clear_music(void);
 void init_sounds(void);
 void uninit_sounds(void);
 
+int get_player_fired(int player);
+int get_player_hits(int player);
+int get_player_shots_down(int player, int player2);
 
 extern void do_infan(void);
 extern void do_kkbase(void);
@@ -1862,7 +1865,7 @@ void main_engine(void) {
 
                 player_last_shot[l]++;
                 if (!playing_solo && config.stop)
-                    if (player_points[l] >= config.stop)
+                    if (get_player_points(l) >= config.stop)
                         flag = 0;
 
                 if (in_closing[l])
@@ -2010,20 +2013,22 @@ void do_aftermath(int show_it_all) {
 
         for (l = 0; l < 4; l++) {
             for (l2 = 0; l2 < 4; l2++) {
-                fontti->printf(69 + l2 * 30, 80 + l * 21, "%4d", player_shots_down[l][l2]);
+                fontti->printf(69 + l2 * 30, 80 + l * 21, "%4d", get_player_shots_down(l, l2));
             }
-            fontti->printf(194, 80 + l * 21, "%3d", abs(player_points[l]));
-            if (player_points[l] < 0)
+			int points = get_player_points(l);
+            fontti->printf(194, 80 + l * 21, "%3d", abs(points));
+            if (points < 0)
                 fontti->printf(194, 80 + l * 21, "-");
 
-            fontti->printf(224, 80 + l * 21, "%5d", player_fired[l]);
+			int fired = get_player_fired(l);
+            fontti->printf(224, 80 + l * 21, "%5d", fired);
 
-            if (player_fired[l] == 0)
+            if (fired == 0)
                 firedi = 1;
             else
-                firedi = player_fired[l];
+                firedi = fired;
 
-            fontti->printf(254, 80 + l * 21, "%4d%%", (player_hits[l] * 1000) / (firedi));
+            fontti->printf(254, 80 + l * 21, "%4d%%", (get_player_hits(l) * 1000) / (firedi));
         }
 
         do_all();
@@ -3506,7 +3511,7 @@ void init_data(void) {
         }
     } else {
         if (config.all_planes_are) {
-            for (l = 0; l < 4; l++) {
+            for (l = 0; l < 16; l++) {
                 plane_power[l] = t_plane_power[config.all_planes_are - 1];
                 plane_manover[l] = t_plane_manover[config.all_planes_are - 1];
                 plane_mass[l] = t_plane_mass[config.all_planes_are - 1];
@@ -3517,7 +3522,7 @@ void init_data(void) {
 
 
         } else {
-            for (l = 0; l < 4; l++) {
+            for (l = 0; l < 16; l++) {
                 plane_power[l] = t_plane_power[l];
                 plane_manover[l] = t_plane_manover[l];
                 plane_mass[l] = t_plane_mass[l];
@@ -3533,8 +3538,24 @@ void init_data(void) {
             case 1:
                 player_sides[0] = 0;
                 player_sides[1] = 0;
-                player_sides[2] = 1;
-                player_sides[3] = 1;
+				player_sides[2] = 1;
+				player_sides[3] = 1;
+
+				player_sides[4] = 0;
+				player_sides[5] = 0;
+				player_sides[6] = 1;
+				player_sides[7] = 1;
+
+				player_sides[8] = 0;
+				player_sides[9] = 0;
+				player_sides[10] = 1;
+				player_sides[11] = 1;
+
+				player_sides[12] = 0;
+				player_sides[13] = 0;
+				player_sides[14] = 1;
+				player_sides[15] = 1;
+                
                 break;
 
             case 2:
@@ -3542,6 +3563,21 @@ void init_data(void) {
                 player_sides[1] = 1;
                 player_sides[2] = 0;
                 player_sides[3] = 1;
+
+				player_sides[4] = 0;
+				player_sides[5] = 1;
+				player_sides[6] = 0;
+				player_sides[7] = 1;
+
+				player_sides[8] = 0;
+				player_sides[9] = 1;
+				player_sides[10] = 0;
+				player_sides[11] = 1;
+
+				player_sides[12] = 0;
+				player_sides[13] = 1;
+				player_sides[14] = 0;
+				player_sides[15] = 1;
                 break;
 
             case 3:
@@ -3549,9 +3585,22 @@ void init_data(void) {
                 player_sides[1] = 1;
                 player_sides[2] = 1;
                 player_sides[3] = 0;
+
+				player_sides[4] = 0;
+				player_sides[5] = 1;
+				player_sides[6] = 1;
+				player_sides[7] = 0;
+
+				player_sides[8] = 0;
+				player_sides[9] = 1;
+				player_sides[10] = 1;
+				player_sides[11] = 0;
+
+				player_sides[12] = 0;
+				player_sides[13] = 1;
+				player_sides[14] = 1;
+				player_sides[15] = 0;
                 break;
-
-
 
             }
 
@@ -3914,4 +3963,26 @@ void loading_text(const char *teksti) {
         printf("%s\n", teksti);
 
     }
+}
+
+int get_player_fired(int player)
+{
+	return playing_solo || player > 3
+		? player_fired[player]
+		: player_fired[player] + player_fired[player + 4] + player_fired[player + 8];
+}
+
+int get_player_hits(int player)
+{
+	return playing_solo || player > 3
+		? player_hits[player]
+		: player_hits[player] + player_hits[player + 4] + player_hits[player + 8];
+}
+int get_player_shots_down(int player, int player2)
+{
+	return playing_solo || player > 3 || player2 > 3
+		? player_shots_down[player][player2]
+		: player_shots_down[player][player2] + player_shots_down[player][player2 + 4] + player_shots_down[player][player2 + 8]
+		+ player_shots_down[player + 4][player2] + player_shots_down[player + 4][player2 + 4] + player_shots_down[player + 4][player2 + 8]
+		+ player_shots_down[player + 8][player2] + player_shots_down[player + 8][player2 + 4] + player_shots_down[player + 8][player2 + 8] ;
 }

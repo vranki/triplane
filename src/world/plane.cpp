@@ -355,3 +355,10 @@ void model_planes(void) {
 
 
 }
+
+int get_player_points(int player)
+{
+	return playing_solo || player > 3
+		? player_points[player]
+		: (player_points[player] + player_points[player + 4] + player_points[player + 8]);	
+}

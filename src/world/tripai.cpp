@@ -1200,12 +1200,13 @@ void ai_evade_terrain(int number) {
         y_kohta = 0;	
 
 	int cavern_fix = 0;
-	if ((number == 1 || number == 2) && config.current_multilevel == 5 &&
+	if ((number % 4 == 1 || number % 4 == 2) && config.current_multilevel == 5 &&
 		player_x[number] > 250000 && player_x[number] < 380000 &&
-		player_y[number] > 43000 && player_y[number] < 44600 &&
+		player_y[number] > 43000 &&
 		going_up > 0)
 	{
-		ai_turn_down(number);
+		if (player_y[number] < 44600)
+			ai_turn_down(number);
 		cavern_fix = 1;
 	}
 

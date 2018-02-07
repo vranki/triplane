@@ -3456,12 +3456,24 @@ void main_menu(void) {
 
                     case 2:                       
                     	player_exists[l] = 1;
-                    	computer_active[l] = 1;                       
+                    	computer_active[l] = 1;  
+
+						player_exists[l + 4] = 1;
+						computer_active[l + 4] = 1;
+						player_exists[l + 8] = 1;
+						computer_active[l + 8] = 1;
+						//player_exists[l + 12] = 1;
+						//computer_active[l + 12] = 1;
                         break;
 
                     case 3:
                         player_exists[l] = 1;
                         computer_active[l] = 0;
+						
+						player_exists[l + 4] = 1;
+						computer_active[l + 4] = 1;
+						player_exists[l + 8] = 1;
+						computer_active[l + 8] = 1;
                         break;
 
 

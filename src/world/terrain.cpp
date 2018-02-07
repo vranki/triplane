@@ -529,9 +529,9 @@ void terrain_to_screen(void) {
         }
 
 
-
-        fontti->printf(144 + x_muutos[l], 93 + (l / 2) * 98, "%3d", abs(player_points[l]));
-        if (player_points[l] < 0)
+		int points = get_player_points(l);
+        fontti->printf(144 + x_muutos[l], 93 + (l / 2) * 98, "%3d", abs(points));
+        if (points < 0)
             fontti->printf(144 + x_muutos[l], 93 + (l / 2) * 98, "-");
 
     }
@@ -1335,8 +1335,9 @@ void vesa_icons(int l) {
 
 	gas_icon->blit(l * 160 + 1 + (player_gas[l] >> 8) * 3, screen_height - 10 - ((player_gas[l] - ((player_gas[l] >> 8) << 8))) / 32, 0, screen_height - 10, screen_width_less, screen_height_less);
 	
-	fontti->printf(l * 160 + 142, screen_height - 9, "%3d", abs(player_points[l]));
-	if (player_points[l] < 0)
+	int points = get_player_points(l);
+	fontti->printf(l * 160 + 142, screen_height - 9, "%3d", abs(points));
+	if (points < 0)
 		fontti->printf(l * 160 + 142, screen_height - 9, "-");
 
 	
