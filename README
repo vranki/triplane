@@ -22,7 +22,7 @@ Changes in this version located in https://github.com/d1maxa/triplane:
 -4 joysticks support in multiplayer
 -5-12 planes support in multiplayer
 -1200x400 and 2400x200 resolutions support (start game with '-1split' or '-nosplit' command line option)
--fixed ai for finland and england on Cavern map in multiplayer
+-fixed ai for Finland and England on Cavern map in multiplayer
 
 My version is based on vranki version. Changes of his version located in https://github.com/vranki/triplane:
 
