@@ -15,16 +15,7 @@ Please read the manual page for information on how to actually play
 the game. Also see README.install if you want to build the game from
 source code.
 
-Changes in this version located in https://github.com/d1maxa/triplane:
-
--800x600 resolution support in single player mode
--Joystick support in single player mode
--4 joysticks support in multiplayer
--5-12 planes support in multiplayer
--1200x400 and 2400x200 resolutions support (start game with '-1split' or '-nosplit' command line option)
--fixed ai for finland and england on Cavern map in multiplayer
-
-My version is based on vranki version. Changes of his version located in https://github.com/vranki/triplane:
+Changes in this "new version" located in https://github.com/vranki/triplane:
 
  - Bullets fly a bit further
  - Bullets get some randomness in their velocity causing a small 
@@ -42,6 +33,13 @@ hit aeroplanes during it
  - If throttle is reversed, plane does not take off automatically
    when button is not held. Player needs to press throttle button
    to take off.
+ - 800x600 resolution support in single player mode
+ - Joystick support in single player mode
+ - 4 joysticks support in multiplayer
+ - Joystick supports correctly 'power reverse option' now (like keyboard)
+ - 5-12 planes support in multiplayer (additional planes are controlled by ai)
+ - 1200x400 and 2400x200 resolutions support (start game with '-1split' or '-nosplit' command line option)
+ - Fixed ai for Finland and England on Cavern map in multiplayer
 
 
 These changes have been extensively play-tested in four player
