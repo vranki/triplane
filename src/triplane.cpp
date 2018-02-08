@@ -3749,6 +3749,8 @@ int main(int argc, char *argv[]) {
         printf("-nosound      Start game without sounds\n");
         printf("-2, -3, -4    Zoom the 320x200-pixel game window 2x, 3x or 4x\n");
         printf("-2svga        Zoom the 800x600-pixel window 2x to produce 1600x1200-pixel window\n");
+		printf("-nosplit      Use the 2400x200-pixel window instead of 800x600 to have window with no splits\n");
+		printf("-1split       Use the 1200x400-pixel window instead of 800x600 to have window with 1 split only\n");
         printf("\n");
         exit(0);
     }
