@@ -60,4 +60,12 @@ extern int draw_with_vircr_mode;
 extern int pixel_multiplier_vga, pixel_multiplier_svga;
 extern int wantfullscreen;
 
+//Screen resolution
+extern int screen_width;
+extern int screen_height;
+extern int screen_width_less;
+extern int screen_height_less;
+
+extern int split_num;
+
 #endif

@@ -22,10 +22,10 @@
 #define JOYSTICK_H
 
 // Vakiom„„rittelyt eri tietojen bittimaskeille
-#define JOY1X 0x01              // Akselibitit ovat aina 1 jos joystick
-#define JOY1Y 0x02              // ei ole kytkettyn„.
-#define JOY2X 0x04
-#define JOY2Y 0x08
+#define JOY1 0x01              // Akselibitit ovat aina 1 jos joystick
+#define JOY2 0x02              // ei ole kytkettyn„.
+#define JOY3 0x04
+#define JOY4 0x08
 
 struct joystick_action {
     char type;                  /* 0 = none, 1 = button, 2 = axis */
@@ -39,14 +39,14 @@ struct joystick_configuration {
     /* if roll.type = 0, use autoroll */
     joystick_action up, down, roll, power, guns, bombs, brake;
 };
-extern joystick_configuration joystick_config[2];
+extern joystick_configuration joystick_config[5];
 
 short init_joysticks(void);
 int load_joysticks_data(const char *filename);
 void save_joysticks_data(const char *filename);
-void open_close_joysticks(int joy1, int joy2);
+void open_close_joysticks(int joy1, int joy2, int joy3, int joy4);
 int joystick_has_roll_button(int t);
-void get_joystick_action(int t, int inmenu, int *down, int *up, int *power, int *roll, int *guns, int *bombs);
+void get_joystick_action(int t, int inmenu, int *down, int *up, int *power, int *roll, int *guns, int *bombs, int power_on_off, int power_reverse, unsigned char *controls_power2, int in_closing, int *power_break_active);
 Sint16 *allocate_axis_state(int joy);
 void save_axis_state(Sint16 * axes, int joy);
 void find_changed_axis(struct joystick_action *act, Sint16 * idle, Sint16 * current, int joy);

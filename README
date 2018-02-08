@@ -33,6 +33,13 @@ hit aeroplanes during it
  - If throttle is reversed, plane does not take off automatically
    when button is not held. Player needs to press throttle button
    to take off.
+ - 800x600 resolution support in single player mode
+ - Joystick support in single player mode
+ - 4 joysticks support in multiplayer
+ - Joystick supports correctly 'power reverse option' now (like keyboard)
+ - 5-12 planes support in multiplayer (additional planes are controlled by ai)
+ - 1200x400 and 2400x200 resolutions support (start game with '-1split' or '-nosplit' command line option)
+ - Fixed ai for Finland and England on Cavern map in multiplayer
 
 
 These changes have been extensively play-tested in four player

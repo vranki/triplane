@@ -117,6 +117,7 @@ struct configuration {
     int32_t current_multilevel;
     int32_t player_type[4];
     int32_t player_number[4];
+	int32_t plane_count[4];
 
     // Graphics
     int32_t shots_visible;
@@ -153,8 +154,8 @@ struct configuration {
     int32_t unlimited_ammo;
     int32_t unlimited_gas;
 
-    int32_t joystick[2];
-    int32_t joystick_calibrated[2];
+    int32_t joystick[5];
+    int32_t joystick_calibrated[5];
 
 
 };

@@ -76,7 +76,11 @@ static void find_settings_directory(char *dir) {
         strncat(dir, "/.triplane", FILENAME_MAX - 1);
         ret = stat(dir, &st);
         if (ret) {
-            ret = mkdir(dir, 0755);
+        	#ifdef WIN
+        	ret = mkdir(dir);//, 0755);
+        	#else
+        	ret = mkdir(dir, 0755);
+        	#endif
             if (ret) {
                 fprintf(stderr, "Failed to create settings directory \"%s\".\n", dir);
                 exit(1);
@@ -400,6 +404,7 @@ void swap_config_endianes(void) {
     for (i = 0; i < 4; i++) {
         config.player_type[i] = SDL_SwapLE32(config.player_type[i]);
         config.player_number[i] = SDL_SwapLE32(config.player_number[i]);
+		config.plane_count[i] = SDL_SwapLE32(config.plane_count[i]);
     }
 
     // Graphics
@@ -438,11 +443,11 @@ void swap_config_endianes(void) {
     config.unlimited_ammo = SDL_SwapLE32(config.unlimited_ammo);
     config.unlimited_gas = SDL_SwapLE32(config.unlimited_gas);
 
-    config.joystick[0] = SDL_SwapLE32(config.joystick[0]);
-    config.joystick_calibrated[0] = SDL_SwapLE32(config.joystick_calibrated[0]);
-
-    config.joystick[1] = SDL_SwapLE32(config.joystick[1]);
-    config.joystick_calibrated[1] = SDL_SwapLE32(config.joystick_calibrated[1]);
+	for (i = 0; i < 5; i++)
+	{
+		config.joystick[i] = SDL_SwapLE32(config.joystick[i]);
+		config.joystick_calibrated[i] = SDL_SwapLE32(config.joystick_calibrated[i]);
+	}
 }
 
 void load_config(void) {
@@ -454,7 +459,7 @@ void load_config(void) {
     for (laskuri = 0; laskuri < 4; laskuri++) {
         config.player_type[laskuri] = 0;
         config.player_number[laskuri] = -1;
-
+		config.plane_count[laskuri] = 1;
     }
 
     // Graphics
@@ -493,11 +498,11 @@ void load_config(void) {
     config.unlimited_ammo = 0;
     config.unlimited_gas = 0;
 
-    config.joystick[0] = -1;
-    config.joystick_calibrated[0] = 0;
+	for (int i = 0; i < 5; i++) {
+		config.joystick[i] = -1;
+		config.joystick_calibrated[i] = 0;
+	}
 
-    config.joystick[1] = -1;
-    config.joystick_calibrated[1] = 0;
 
     faili = settings_open(CONFIGURATION_FILENAME, "rb");
 

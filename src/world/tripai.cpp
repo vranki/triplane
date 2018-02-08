@@ -875,15 +875,15 @@ void infan_to_struct(int l) {
 
                 if (current_mode == SVGA_MODE) {
 
-                    structures[l2][1]->blit_to_bitmap(standard_background, leveldata.struct_x[l2] - (leveldata.struct_x[l2] / 800) * 800,
-                                                      leveldata.struct_y[l2] + (leveldata.struct_x[l2] / 800) * 196 - 4);
+                    structures[l2][1]->blit_to_bitmap(standard_background, leveldata.struct_x[l2] - (leveldata.struct_x[l2] / screen_width) * screen_width,
+                                                      leveldata.struct_y[l2] + (leveldata.struct_x[l2] / screen_width) * 196 - 4);
 
-                    structures[l2][1]->blit(leveldata.struct_x[l2] - (leveldata.struct_x[l2] / 800) * 800,
-                                            leveldata.struct_y[l2] + (leveldata.struct_x[l2] / 800) * 196 - 4);
+                    structures[l2][1]->blit(leveldata.struct_x[l2] - (leveldata.struct_x[l2] / screen_width) * screen_width,
+                                            leveldata.struct_y[l2] + (leveldata.struct_x[l2] / screen_width) * 196 - 4);
 
-                    if ((leveldata.struct_x[l2] - (leveldata.struct_x[l2] / 800) * 800) + struct_width[l2] > 800)
-                        structures[l2][1]->blit(leveldata.struct_x[l2] - (leveldata.struct_x[l2] / 800) * 800 - 800,
-                                                leveldata.struct_y[l2] + (leveldata.struct_x[l2] / 800 + 1) * 196 - 4);
+                    if ((leveldata.struct_x[l2] - (leveldata.struct_x[l2] / screen_width) * screen_width) + struct_width[l2] > screen_width)
+                        structures[l2][1]->blit(leveldata.struct_x[l2] - (leveldata.struct_x[l2] / screen_width) * screen_width - screen_width,
+                                                leveldata.struct_y[l2] + (leveldata.struct_x[l2] / screen_width + 1) * 196 - 4);
                 }
 
                 if (leveldata.struct_hit[l2]) {
@@ -1197,25 +1197,31 @@ void ai_evade_terrain(int number) {
     if (x_kohta < 0)
         x_kohta = 0;
     if (y_kohta < 0)
-        y_kohta = 0;
+        y_kohta = 0;	
 
+	int cavern_fix = 0;
+	if ((number % 4 == 1 || number % 4 == 2) && config.current_multilevel == 5 &&
+		player_x[number] > 250000 && player_x[number] < 380000 &&
+		player_y[number] > 43000 &&
+		going_up > 0)
+	{
+		if (player_y[number] < 44600)
+			ai_turn_down(number);
+		cavern_fix = 1;
+	}
 
-    if (wide_terrain_level[x_kohta] < y_kohta && !player_on_airfield[number]) {
-        if (going_up > AI_GOING_UP_LIMIT - AI_ANGLE_MARGINAL)
-            ai_turn_down(number);
+	if (wide_terrain_level[x_kohta] < y_kohta && !player_on_airfield[number] && !cavern_fix) {
+		if (going_up > AI_GOING_UP_LIMIT - AI_ANGLE_MARGINAL)
+			ai_turn_down(number);
 
-        if (going_up < AI_GOING_UP_LIMIT)
-            ai_turn_up(number);
+		if (going_up < AI_GOING_UP_LIMIT)
+			ai_turn_up(number);
 
-        if (current_mission[number] != AIM_EVADE_TERRAIN) {
-            current_mission[number] = AIM_EVADE_TERRAIN;
-            mission_phase[number] = 0;
-
-        }
-
-    }
-
-
+		if (current_mission[number] != AIM_EVADE_TERRAIN) {
+			current_mission[number] = AIM_EVADE_TERRAIN;
+			mission_phase[number] = 0;
+		}
+	}
 }
 
 void ai_turnplus(int number) {
@@ -1289,11 +1295,11 @@ void do_ai(int number) {
 
 
     switch (current_mission[number]) {
-    case AIM_TAKEOFF:
-        if ((player_y_8[number]) + 40 > terrain_level[player_x_8[number]])
-            mission_phase[number] = 0;
-        else
-            current_mission[number] = AIM_NOMISSION;
+    case AIM_TAKEOFF:    	
+		if ((player_y_8[number]) + 40 > terrain_level[player_x_8[number]])		
+			mission_phase[number] = 0;			
+		else		
+			current_mission[number] = AIM_NOMISSION;			
 
         ai_evade_terrain(number);
         break;
