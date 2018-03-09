@@ -3673,7 +3673,13 @@ void handle_parameters(void) {
     if (findparameter("-reverse"))
         reverbed_channels = 1;
 
-    if (findparameter("-nosound")) {
+    if ((findparameter("-sound"))||(findparameter("-l"))) {
+        is_there_sound = 1;
+        config.sound_on = 1;
+        loading_text("Sounds enabled.");
+    }
+    
+    if ((findparameter("-nosound"))||(findparameter("-s"))) {
         is_there_sound = 0;
         config.sound_on = 0;
         loading_text("Sounds disabled.");
@@ -3695,11 +3701,11 @@ void handle_parameters(void) {
         pixel_multiplier_svga = 2;
     }
 
-    if (findparameter("-fullscreen")) {
+    if ((findparameter("-fullscreen"))||(findparameter("-f"))) {
         wantfullscreen = 1;
     }
 
-    if (findparameter("-nofullscreen")) {
+    if ((findparameter("-nofullscreen"))||(findparameter("-w")))  {
         wantfullscreen = 0;
     }	
 
@@ -3743,15 +3749,15 @@ int main(int argc, char *argv[]) {
         printf("This program is free software; you may redistribute it under the terms of\n");
         printf("the GNU General Public License version 3 or (at your option) a later version.\n");
         printf("This program has absolutely no warranty.\n\n");
-        printf("-help         Help on options\n");
-        printf("-fullscreen   Start game in fullscreen mode (default)\n");
-        printf("-nofullscreen Start game in windowed mode\n");
-        printf("-nosound      Start game without sounds\n");
-        printf("-2, -3, -4    Zoom the 320x200-pixel game window 2x, 3x or 4x\n");
-        printf("-2svga        Zoom the 800x600-pixel window 2x to produce 1600x1200-pixel window\n");
-		printf("-nosplit      Use the 2400x200-pixel window instead of 800x600 to have window with no splits\n");
-		printf("-1split       Use the 1200x400-pixel window instead of 800x600 to have window with 1 split only\n");
-        printf("\n");
+        printf("-help,-h         Help on options\n");
+        printf("-fullscreen,-f   Start game in fullscreen mode (default)\n");
+        printf("-nofullscreen,-w Start game in windowed mode\n");
+        printf("-nosound,-s      Start game without sounds and it will be saved in the setting\n");
+        printf("-sound,-l        Start game with sounds and it will be saved in the setting\n");
+        printf("-2, -3, -4       Zoom the 320x200-pixel game window 2x, 3x or 4x\n");
+        printf("-2svga           Zoom the 800x600-pixel window 2x to produce 1600x1200-pixel window\n");
+	printf("-nosplit         Use the 2400x200-pixel window instead of 800x600 to have window with no splits\n");
+	printf("-1split          Use the 1200x400-pixel window instead of 800x600 to have window with 1 split only\n\n");
         exit(0);
     }
 
