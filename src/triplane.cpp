@@ -3752,8 +3752,8 @@ int main(int argc, char *argv[]) {
         printf("-help,-h         Help on options\n");
         printf("-fullscreen,-f   Start game in fullscreen mode (default)\n");
         printf("-nofullscreen,-w Start game in windowed mode\n");
-        printf("-nosound,-s      Start game without sounds\n");
-        printf("-sound,-l        Start game with sounds\n");
+        printf("-nosound,-s      Start game without sounds and it will be saved in the setting\n");
+        printf("-sound,-l        Start game with sounds and it will be saved in the setting\n");
         printf("-2, -3, -4       Zoom the 320x200-pixel game window 2x, 3x or 4x\n");
         printf("-2svga           Zoom the 800x600-pixel window 2x to produce 1600x1200-pixel window\n");
 	printf("-nosplit         Use the 2400x200-pixel window instead of 800x600 to have window with no splits\n");
