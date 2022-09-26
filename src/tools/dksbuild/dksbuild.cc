@@ -130,6 +130,7 @@ int main(int argc,char **argv)
     exit(1);
   }
  
+  memset(tekstia+16, 0, sizeof(tekstia)-16);
   strcpy(tekstia,"DKS Datafile\n\032\n"); 
 
   printf("\nReading file %s\n",argv[1]);
