@@ -21,9 +21,9 @@
 #ifndef JOYSTICK_H
 #define JOYSTICK_H
 
-// Vakiom„„rittelyt eri tietojen bittimaskeille
+// Vakiomï¿½ï¿½rittelyt eri tietojen bittimaskeille
 #define JOY1 0x01              // Akselibitit ovat aina 1 jos joystick
-#define JOY2 0x02              // ei ole kytkettyn„.
+#define JOY2 0x02              // ei ole kytkettynï¿½.
 #define JOY3 0x04
 #define JOY4 0x08
 
@@ -41,7 +41,7 @@ struct joystick_configuration {
 };
 extern joystick_configuration joystick_config[5];
 
-short init_joysticks(void);
+short init_joysticks();
 int load_joysticks_data(const char *filename);
 void save_joysticks_data(const char *filename);
 void open_close_joysticks(int joy1, int joy2, int joy3, int joy4);

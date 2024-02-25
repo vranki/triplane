@@ -26,7 +26,7 @@
 #include <unistd.h>
 #include <assert.h>
 
-struct video_state_t video_state = { NULL, 0, 0 };
+struct video_state_t video_state = { nullptr, 0, 0 };
 
 struct naytto ruutu;
 
@@ -51,7 +51,7 @@ SDL_Color curpal[256];
 /**
  * Sets palette entries firstcolor to firstcolor+n-1
  * from pal[0] to pal[n-1].
- * @param pal the palette, specify NULL to set all colors to black=(0,0,0)
+ * @param pal the palette, specify nullptr to set all colors to black=(0,0,0)
  * @param reverse = 1 to read colors in reverse order (pal[n-1] to pal[0])
  */
 void setpal_range(const char pal[][3], int firstcolor, int n, int reverse) {
@@ -59,7 +59,7 @@ void setpal_range(const char pal[][3], int firstcolor, int n, int reverse) {
     int i, from = (reverse ? n - 1 : 0);
 
     for (i = 0; i < n; i++) {
-        if (pal == NULL) {
+        if (pal == nullptr) {
             cc[i].r = cc[i].g = cc[i].b = 0;
         } else {
             cc[i].r = 4 * pal[from][0];
@@ -169,7 +169,7 @@ static void sigint_handler(int dummy) {
     _exit(1);
 }
 
-void init_video(void) {
+void init_video() {
     int ret;	
 
     if (!video_state.init_done) {
@@ -224,7 +224,7 @@ static int init_mode(int new_mode, const char *paletname) {
     }
     /* else vircr is preallocated in init_video */
     vi = SDL_GetVideoInfo();
-    video_state.haverealpalette = (vi->vfmt->palette != NULL);
+    video_state.haverealpalette = (vi->vfmt->palette != nullptr);
 
     dksopen(paletname);
 

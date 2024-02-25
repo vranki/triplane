@@ -20,11 +20,11 @@
 
 #include "gfx/gfx.h"
 #include "io/trip_io.h"
-#include <stdio.h>
+#include <cstdio>
 #include "io/sdl_compat.h"
 #include <SDL.h>
 #include <SDL_endian.h>
-#include <string.h>
+#include <cstring>
 
 #define MAX_STRUCTURES 100
 #define MAX_TYPES 3
@@ -49,7 +49,7 @@ struct level_struct {
 
 Bitmap *pb_picture;
 Bitmap *struct_picture[MAX_STRUCTURES];
-Bitmap *hiirikursori = NULL;
+Bitmap *hiirikursori = nullptr;
 Bitmap *hiirik;
 Bitmap *lappu1;
 Bitmap *lappu2;
@@ -77,7 +77,7 @@ const char type_names[MAX_TYPES][16] = {
     "Survi"
 };
 
-void swap_byte_order(void) {
+void swap_byte_order() {
     int i;
 
     for (i = 0; i < MAX_STRUCTURES; i++) {
@@ -118,7 +118,7 @@ void omaline(int x1, int y1, int x2, int y2, unsigned char c) {
     draw_line(x1, y1, x2, y2, c);
 }
 
-void edit_level(void) {
+void edit_level() {
     int ch = 0;
     int kohta = 0;
     int c;
@@ -488,7 +488,7 @@ int main(int argc, char **argv) {
 
     strcpy(filename, argv[1]);
 
-    if ((faili = fopen(filename, "rb")) == NULL) {
+    if ((faili = fopen(filename, "rb")) == nullptr) {
         printf("Creating new level.\n\r");
 
         strcpy(leveldata.pb_name, "MAISDT");

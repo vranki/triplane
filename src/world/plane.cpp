@@ -133,7 +133,7 @@ int t_plane_ammo[16] = { 96, 96, 127, 80,
 
 int player_was_on_airfield[16];
 
-void model_planes(void) {
+void model_planes() {
     int c;
     int mass;
     int initial_turn;

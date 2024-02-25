@@ -30,7 +30,7 @@ void triplane_srandom(uint64_t seed) {
     state = seed & ((1LL << 48) - 1);
 }
 
-uint32_t triplane_random(void) {
+uint32_t triplane_random() {
     state = (a * state + c) & ((1LL << 48) - 1);
     return state >> 16;
 }

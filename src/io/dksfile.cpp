@@ -21,17 +21,17 @@
 /*******************************************************************************
 
    Purpose: 
-   	DKS-datafile handling routines for Wsystem 2.0 for DJGPP v.2.0á5
+   	DKS-datafile handling routines for Wsystem 2.0 for DJGPP v.2.0ï¿½5
 
 *******************************************************************************/
 
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include "util/wutil.h"
 #include "io/dksfile.h"
 
@@ -50,12 +50,12 @@ main_directory_entry *dirri;
 
 class Dirrikka {
   public:
-    Dirrikka(void);
+    Dirrikka();
      ~Dirrikka();
 
 };
 
-Dirrikka::Dirrikka(void) {
+Dirrikka::Dirrikka() {
     dirri = (main_directory_entry *)
         walloc(MAX_ENTRIES * sizeof(main_directory_entry));
 }
@@ -115,7 +115,7 @@ int dksinit(const char *tiedosto) {
 
     get_datafile_path(tiedosto, dks_tiedosto);
 
-    if ((dks_faili = fopen(dks_tiedosto, "rb")) == NULL)
+    if ((dks_faili = fopen(dks_tiedosto, "rb")) == nullptr)
         return (0);
 
     fread(tekstia, sizeof(tekstia), 1, dks_faili);
@@ -143,7 +143,7 @@ int dksopen(const char *nimi) {
     }
 
 
-    if ((dks_faili = fopen(dks_tiedosto, "rb")) == NULL)
+    if ((dks_faili = fopen(dks_tiedosto, "rb")) == nullptr)
         return (0);
 
     fseek(dks_faili, dirri[kohta].offset, SEEK_SET);
@@ -168,10 +168,10 @@ int extdksopen(const char *nimi) {
     if (kohta == -1) {
         dks_faili = fopen(nimi, "rb");
         faili = 1;
-        if (dks_faili == NULL)
+        if (dks_faili == nullptr)
             return (0);
     } else {
-        if ((dks_faili = fopen(dks_tiedosto, "rb")) == NULL)
+        if ((dks_faili = fopen(dks_tiedosto, "rb")) == nullptr)
             return (0);
 
         fseek(dks_faili, dirri[kohta].offset, SEEK_SET);
@@ -184,12 +184,12 @@ int extdksopen(const char *nimi) {
 
 
 
-void dksclose(void) {
+void dksclose() {
     fclose(dks_faili);
 
 }
 
-int dkssize(void) {
+int dkssize() {
     return dirri[nykyinen_faili].koko;
 }
 
@@ -221,10 +221,10 @@ int dksseek(int offset, int mode) {
     return 1;
 }
 
-int dksgetc(void) {
+int dksgetc() {
     return (fgetc(dks_faili));
 }
 
-long dkstell(void) {
+long dkstell() {
     return (ftell(dks_faili) - dirri[nykyinen_faili].offset);
 }

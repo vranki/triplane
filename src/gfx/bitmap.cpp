@@ -26,9 +26,9 @@
 *******************************************************************************/
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include "gfx/bitmap.h"
 #include "gfx/gfx.h"
 #include "io/trip_io.h"
@@ -66,7 +66,7 @@ static void all_bitmaps_delete(Bitmap * b) {
         all_bitmaps[i] = all_bitmaps[--all_bitmaps_n];
 }
 
-void all_bitmaps_refresh(void) {
+void all_bitmaps_refresh() {
     int i;
 
     if (draw_with_vircr_mode)
@@ -137,12 +137,12 @@ static unsigned char *duplicate_enlarged(const unsigned char *source, int width,
 }
 
 void Bitmap::refresh_sdlsurface() {
-    unsigned char *imgmult = NULL;
+    unsigned char *imgmult = nullptr;
     SDL_Surface *tmps;
 
-    if (sdlsurface != NULL) {
+    if (sdlsurface != nullptr) {
         SDL_FreeSurface(sdlsurface);
-        sdlsurface = NULL;
+        sdlsurface = nullptr;
     }
 
     if (draw_with_vircr_mode)
@@ -155,7 +155,7 @@ void Bitmap::refresh_sdlsurface() {
         tmps = SDL_CreateRGBSurfaceFrom(image_data, width, height, 8, width, 0, 0, 0, 0);
     }
 
-    if (tmps == NULL) {
+    if (tmps == nullptr) {
         fprintf(stderr, "SDL_CreateRGBSurfaceFrom: %s\n", SDL_GetError());
         exit(1);
     }
@@ -163,7 +163,7 @@ void Bitmap::refresh_sdlsurface() {
     if (hastransparency)
         SDL_SetColorKey(tmps, SDL_SRCCOLORKEY | SDL_RLEACCEL, 0xff);
     sdlsurface = SDL_DisplayFormat(tmps);
-    if (sdlsurface == NULL) {
+    if (sdlsurface == nullptr) {
         fprintf(stderr, "SDL_DisplayFormat: %s\n", SDL_GetError());
         exit(1);
     }
@@ -188,7 +188,7 @@ Bitmap::Bitmap(const char *image_name, int transparent) {
         strcat(longname, ".pgd");
         dks_faili = fopen(longname, "rb");
 
-        if (dks_faili == NULL) {
+        if (dks_faili == nullptr) {
             printf("Error opening data %s\n", image_name);
             exit(1);
         }
@@ -241,7 +241,7 @@ Bitmap::Bitmap(const char *image_name, int transparent) {
 
     name = image_name;
     hastransparency = transparent;
-    sdlsurface = NULL;
+    sdlsurface = nullptr;
     refresh_sdlsurface();
     all_bitmaps_add(this);
 }
@@ -254,7 +254,7 @@ Bitmap::Bitmap(int width, int height, unsigned char *image_data, const char *nam
     this->external_image_data = 1;
     this->name = name;
     this->hastransparency = 1;
-    this->sdlsurface = NULL;
+    this->sdlsurface = nullptr;
     refresh_sdlsurface();
     all_bitmaps_add(this);
 }
@@ -262,15 +262,15 @@ Bitmap::Bitmap(int width, int height, unsigned char *image_data, const char *nam
 
 Bitmap::~Bitmap() {
     all_bitmaps_delete(this);
-    if (sdlsurface != NULL) {
+    if (sdlsurface != nullptr) {
         SDL_FreeSurface(sdlsurface);
-        sdlsurface = NULL;
+        sdlsurface = nullptr;
     }
     if (!external_image_data)
         free(image_data);
 }
 
-void Bitmap::blit_fullscreen(void) {
+void Bitmap::blit_fullscreen() {
     assert(current_mode == VGA_MODE);
     assert(!hastransparency);
     pointti = image_data;
@@ -279,7 +279,7 @@ void Bitmap::blit_fullscreen(void) {
         memcpy(vircr, image_data, 320 * 200);
 
     if (!draw_with_vircr_mode)
-        SDL_BlitSurface(sdlsurface, NULL, video_state.surface, NULL);
+        SDL_BlitSurface(sdlsurface, nullptr, video_state.surface, nullptr);
 }
 
 /*
@@ -356,16 +356,16 @@ void Bitmap::blit(int xx, int yy, int rx, int ry, int rx2, int ry2) {
             pos.y *= pixel_multiplier;
         }
         SDL_SetClipRect(video_state.surface, &clip);
-        if (SDL_BlitSurface(sdlsurface, NULL, video_state.surface, &pos) != 0) {
+        if (SDL_BlitSurface(sdlsurface, nullptr, video_state.surface, &pos) != 0) {
             fprintf(stderr, "SDL_BlitSurface: %s\n", SDL_GetError());
             exit(1);
         }
-        SDL_SetClipRect(video_state.surface, NULL);
+        SDL_SetClipRect(video_state.surface, nullptr);
     }
 }
 
 unsigned char *Bitmap::info(int *width, int *height) {
-    if (width != NULL && height != NULL) {
+    if (width != nullptr && height != nullptr) {
         *width = this->width;
         *height = this->height;
     }
@@ -393,7 +393,7 @@ Bitmap::Bitmap(int x1, int y1, int xl, int yl, Bitmap * source_image) {
 
     name = source_image->name;
     hastransparency = source_image->hastransparency;
-    sdlsurface = NULL;
+    sdlsurface = nullptr;
     refresh_sdlsurface();
     all_bitmaps_add(this);
 }
@@ -415,7 +415,7 @@ Bitmap::Bitmap(int x, int y, int w, int h) {
 
     name = "from_vircr";
     hastransparency = 0;
-    sdlsurface = NULL;
+    sdlsurface = nullptr;
     refresh_sdlsurface();
     all_bitmaps_add(this);
 }
@@ -494,7 +494,7 @@ int bitmap_exists(const char *name) {
     strcpy(longname, name);
     strcat(longname, ".pgd");
     dks_faili = fopen(longname, "rb");
-    if (dks_faili == NULL) {
+    if (dks_faili == nullptr) {
         return 0;
     } else {
         dksclose();

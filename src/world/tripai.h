@@ -34,4 +34,4 @@ extern int itgun_shot_x_speed[MAX_ITGUN_SHOTS];
 extern int itgun_shot_y_speed[MAX_ITGUN_SHOTS];
 extern int itgun_shot_age[MAX_ITGUN_SHOTS];
 
-extern void do_mekan(void);
+extern void do_mekan();

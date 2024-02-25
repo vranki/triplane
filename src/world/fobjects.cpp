@@ -28,23 +28,23 @@
 #include "io/sound.h"
 #include "world/tripaudio.h"
 
-void do_shots(void);
+void do_shots();
 void start_shot(int player);
 void start_shot(int x, int y, int angle, int speed, int infan = -1);
-void do_fobjects(void);
+void do_fobjects();
 void start_smoke(int player);
 void start_ssmoke(int x, int y);
-void detect_damage(void);
+void detect_damage();
 void start_parts(int player);
 void start_rifle(int x, int y);
 void start_gun_wave(int x);
 void drop_bomb(int player, int target = -1);
-void do_bombs(void);
+void do_bombs();
 void start_bomb_explo(int l, int hitted = 0);
 void start_explox(int x, int y);
 void start_wave(int x);
 void start_flame(int x, int y, int width);
-void do_flames(void);
+void do_flames();
 void start_one_flame(int x, int y);
 
 int flame_x[MAX_FLAMES];
@@ -70,7 +70,7 @@ void start_flame(int x, int y, int width) {
     flame_age[l] = FLAME_AGE;
 }
 
-void do_flames(void) {
+void do_flames() {
     int l;
 
     for (l = 0; l < MAX_FLAMES; l++) {
@@ -113,7 +113,7 @@ void start_one_flame(int x, int y) {
 }
 
 
-void do_shots(void) {
+void do_shots() {
     int l, l2;
     unsigned char kohta;
 
@@ -246,7 +246,7 @@ void start_shot(int player) {
     }
 }
 
-void do_fobjects(void) {
+void do_fobjects() {
     int l, l2;
 
     for (l = 0; l < MAX_FLYING_OBJECTS; l++) {
@@ -486,7 +486,7 @@ void start_explox(int x, int y) {
     }
 }
 
-void detect_damage(void) {
+void detect_damage() {
     int l;
 
     for (l = 0; l < 16; l++) {
@@ -581,7 +581,7 @@ void drop_bomb(int player, int target) {
     bomb_owner[l] = player;
 }
 
-void do_bombs(void) {
+void do_bombs() {
     int l2, l, tempero;
 
     for (l = 0; l < MAX_BOMBS; l++) {
@@ -758,7 +758,7 @@ void start_bomb_explo(int bb, int hitted) {
         }
 
     for (l = 0; l < MAX_STRUCTURES; l++)
-        if ((structures[l][1] != NULL) && (!struct_state[l])) {
+        if ((structures[l][1] != nullptr) && (!struct_state[l])) {
             if ((bomb_x[bb] >> 8) >= leveldata.struct_x[l] && (bomb_x[bb] >> 8) <= (leveldata.struct_x[l] + struct_width[l]) &&
                     (bomb_y[bb] >> 8) >= (leveldata.struct_y[l] - 5) && (bomb_y[bb] >> 8) <= (leveldata.struct_y[l] + 5 + struct_heigth[l])) {
                 if (config.flames)

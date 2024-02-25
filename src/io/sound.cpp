@@ -20,8 +20,8 @@
 
 #include "io/sound.h"
 #include "triplane.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 int is_there_sound = 1;
 int reverbed_channels = 0;
@@ -78,7 +78,7 @@ int play_2d_sample(sb_sample * sample_ptr, int player, int target) {
     return 0;
 }
 
-void init_sounds(void) {
+void init_sounds() {
     soundcard_type = SOUNDCARD_NONE;
 
     if (sdl_init_sounds() != 0) {
@@ -93,7 +93,7 @@ void init_sounds(void) {
     return;
 }
 
-void uninit_sounds(void) {
+void uninit_sounds() {
     is_there_sound = 0;
     sdl_uninit_sounds();
 }
@@ -103,7 +103,7 @@ sb_sample *sample_load(const char *samplename) {
 
     sample = sdl_sample_load(samplename);
 
-    if (sample == NULL) {
+    if (sample == nullptr) {
         printf("Cannon't locate data %s\n", samplename);
         exit(1);
     }

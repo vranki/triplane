@@ -20,8 +20,8 @@
 
 #include "wutil.h"
 #include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include "triplane.h"
 #include "io/dksfile.h"
 #include "random.h"
@@ -80,7 +80,7 @@ static int wrandom_test_data[] = {
     0x79bbd8ad
 };
 
-void wrandom_sanity_check(void) {
+void wrandom_sanity_check() {
     int i;
 
     setwrandom(7);
@@ -98,7 +98,7 @@ void *walloc(size_t size) {
     void *ptr;
     ptr = malloc(size);
 
-    if (ptr == NULL) {
+    if (ptr == nullptr) {
         printf("\nError in memory allocation: %d bytes.\n", (int) size);
         exit(1);
 
@@ -109,7 +109,7 @@ void *walloc(size_t size) {
 
 
 void wfree(void *ptr) {
-    assert(ptr != NULL);
+    assert(ptr != nullptr);
     free(ptr);
 }
 
@@ -121,7 +121,7 @@ void wtoggle(int *what) {
 
 }
 
-void init_trigs(void) {
+void init_trigs() {
     int i;
 
     dksopen("trigdt");
@@ -167,7 +167,7 @@ void calculate_difference(int x1, int y1, int x2, int y2, int *distance, int *an
     if (!xdiff) {
         *distance = abs(ydiff);
 
-        if (angle == NULL)
+        if (angle == nullptr)
             return;
         if (ydiff > 0)
             *angle = 90;
@@ -180,7 +180,7 @@ void calculate_difference(int x1, int y1, int x2, int y2, int *distance, int *an
     if (!ydiff) {
         *distance = abs(xdiff);
 
-        if (angle == NULL)
+        if (angle == nullptr)
             return;
         if (xdiff > 0)
             *angle = 0;
@@ -195,7 +195,7 @@ void calculate_difference(int x1, int y1, int x2, int y2, int *distance, int *an
         *angle = 0;
         *distance = 1;
     }
-    if (angle == NULL)
+    if (angle == nullptr)
         return;
 
     if (xdiff > 0 && ydiff > 0) {

@@ -24,7 +24,7 @@
   
 *******************************************************************************/
 
-#include <stdio.h>
+#include <cstdio>
 #include <io.h>
 #include <mem.h>
 #include "../wsystem.h"

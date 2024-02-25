@@ -18,14 +18,14 @@
  * tjt@users.sourceforge.net
  */
 
-#include <string.h>
+#include <cstring>
 #include <assert.h>
 #include "gfx/gfx.h"
 #include "io/video.h"
 
-static void do_isa_clear(void);
+static void do_isa_clear();
 
-Bitmap *standard_background = NULL;
+Bitmap *standard_background = nullptr;
 
 void putpix(int x, int y, unsigned char c, int x1, int y1, int x2, int y2) {
     if (x < x1)
@@ -89,8 +89,8 @@ void fill_vircr(int x1, int y1, int x2, int y2, unsigned char vari) {
         fillrect(x1, y1, x2 - x1 + 1, y2 - y1 + 1, vari);
 }
 
-void tyhjaa_vircr(void) {
-    if (standard_background == NULL) {
+void tyhjaa_vircr() {
+    if (standard_background == nullptr) {
         if (current_mode == VGA_MODE) {
             fill_vircr(0, 0, 319, 199, 0);
         } else {
@@ -102,7 +102,7 @@ void tyhjaa_vircr(void) {
     }
 }
 
-static void do_isa_clear(void) {
+static void do_isa_clear() {
     if (!standard_background) {
         return;
     }

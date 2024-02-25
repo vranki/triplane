@@ -65,13 +65,13 @@ extern int player_x_8[16];
 extern int player_y_8[16];
 extern int number_of_planes[16];
 
-void terrain_to_screen(void);
-void solo_terrain_to_screen(void);
+void terrain_to_screen();
+void solo_terrain_to_screen();
 void kangas_terrain_to_screen(int leftx);
 void tboxi(int x1, int y1, int x2, int y2, unsigned char vari);
 
 
-void vesa_terrain_to_screen(void);
+void vesa_terrain_to_screen();
 void vesa_icons(int l);
 void vesa_solo_icons(int l);
 
@@ -98,7 +98,7 @@ void tboxi(int x1, int y1, int x2, int y2, unsigned char vari) {
     draw_line(x2, y2, x1, y2, vari);
 }
 
-void terrain_to_screen(void) {
+void terrain_to_screen() {
     int l, l2;
     int tempx, tempy;
     int temp;
@@ -139,7 +139,7 @@ void terrain_to_screen(void) {
                           y1_raja[l] + in_closing[l], x2_raja[l], y2_raja[l]);
 
             for (l2 = 0; l2 < MAX_STRUCTURES; l2++) {
-                if ((structures[l2][struct_state[l2]] != NULL) && (!leveldata.struct_hit[l2]))
+                if ((structures[l2][struct_state[l2]] != nullptr) && (!leveldata.struct_hit[l2]))
                     structures[l2][struct_state[l2]]->blit((leveldata.struct_x[l2]) + player_shown_x[l] - (player_x_8[l]) + x_muutos[l],
                                                            (leveldata.struct_y[l2]) + player_shown_y[l] - (player_y_8[l]) + y_muutos[l], x1_raja[l], y1_raja[l],
                                                            x2_raja[l], y2_raja[l]);
@@ -545,7 +545,7 @@ void terrain_to_screen(void) {
 }
 
 
-void solo_terrain_to_screen(void) {
+void solo_terrain_to_screen() {
     int l, l2;
     int temp;
 
@@ -635,7 +635,7 @@ void solo_terrain_to_screen(void) {
         fontti->printf(142, 3, "-");
 
     for (l2 = 0; l2 < MAX_STRUCTURES; l2++) {
-        if ((structures[l2][struct_state[l2]] != NULL) && (!leveldata.struct_hit[l2]))
+        if ((structures[l2][struct_state[l2]] != nullptr) && (!leveldata.struct_hit[l2]))
             structures[l2][struct_state[l2]]->blit((leveldata.struct_x[l2]) + player_shown_x[l] - (player_x_8[l]), leveldata.struct_y[l2]);
 
     }
@@ -910,7 +910,7 @@ void kangas_terrain_to_screen(int left_x) {
 
     for (l2 = 0; l2 < MAX_STRUCTURES; l2++) {
 
-        if ((structures[l2][struct_state[l2]] != NULL) && (!leveldata.struct_hit[l2])) {
+        if ((structures[l2][struct_state[l2]] != nullptr) && (!leveldata.struct_hit[l2])) {
             structures[l2][0]->blit((leveldata.struct_x[l2]) + left_x, leveldata.struct_y[l2] - PROJECTOR_Y_ADJUSTMENT, PROJECTOR_X1, PROJECTOR_Y1,
                                     PROJECTOR_X2, PROJECTOR_Y2);
 
@@ -970,7 +970,7 @@ void kangas_terrain_to_screen(int left_x) {
 
     for (l2 = 0; l2 < MAX_STRUCTURES; l2++) {
 
-        if ((structures[l2][struct_state[l2]] != NULL) && (!leveldata.struct_hit[l2])) {
+        if ((structures[l2][struct_state[l2]] != nullptr) && (!leveldata.struct_hit[l2])) {
 
             if (leveldata.struct_type[l2]) {
                 l3 = 2;
@@ -995,7 +995,7 @@ void kangas_terrain_to_screen(int left_x) {
 
 }
 
-void vesa_terrain_to_screen(void) {
+void vesa_terrain_to_screen() {
     int l, l2, templevel;
 
     for (l = 0; l < 16; l++) {

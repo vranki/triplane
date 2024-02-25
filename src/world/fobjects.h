@@ -20,22 +20,22 @@
 
 /* Triplane Turmoil flying objects header */
 
-extern void do_shots(void);
+extern void do_shots();
 extern void start_shot(int player);
 extern void start_shot(int x, int y, int angle, int speed, int infan = -1);
-extern void do_fobjects(void);
+extern void do_fobjects();
 extern void start_smoke(int player);
-extern void detect_damage(void);
+extern void detect_damage();
 extern void start_parts(int player);
 extern void start_rifle(int x, int y);
 extern void start_gun_wave(int x);
 extern void drop_bomb(int player, int target = -1);
-extern void do_bombs(void);
+extern void do_bombs();
 extern void start_bomb_explo(int l, int hitted = 0);
 extern void start_explox(int x, int y);
 extern void start_wave(int x);
 extern void start_flame(int x, int y, int width);
-extern void do_flames(void);
+extern void do_flames();
 
 extern int flame_x[MAX_FLAMES];
 extern int flame_y[MAX_FLAMES];

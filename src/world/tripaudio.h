@@ -45,9 +45,9 @@ extern int music_loaded;
 
 extern void kkbase_sound(int type, int kkbase_x);
 extern void itgun_sound(int itgun_x);
-extern void load_sfx(void);
-extern void load_music(void);
-extern void clear_sfx(void);
-extern void clear_music(void);
+extern void load_sfx();
+extern void load_music();
+extern void clear_sfx();
+extern void clear_music();
 
 #endif

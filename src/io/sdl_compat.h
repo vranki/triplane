@@ -34,8 +34,8 @@
 #define SOUNDCARD_SB   2
 #define SOUNDCARD_SDL  3
 
-int kbhit(void);
-int getch(void);
+int kbhit();
+int getch();
 
 extern unsigned char *key;
 
@@ -52,17 +52,17 @@ typedef struct {
 #endif
 } sb_mod_file;
 
-void update_key_state(void);
-int sdl_init_sounds(void);
-void sdl_uninit_sounds(void);
+void update_key_state();
+int sdl_init_sounds();
+void sdl_uninit_sounds();
 void sdl_play_sample(sb_sample * sample, int looping = 0);
-void sdl_stop_all_samples(void);
+void sdl_stop_all_samples();
 sb_sample *sdl_sample_load(const char *name);
 void sdl_free_sample(sb_sample * sample);
 
 sb_mod_file *sdl_load_mod_file(const char *name);
 void sdl_free_mod_file(sb_mod_file * mod);
 void sdl_play_music(sb_mod_file * mod);
-void sdl_stop_music(void);
+void sdl_stop_music();
 
 #endif

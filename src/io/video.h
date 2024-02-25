@@ -49,7 +49,7 @@ void fillrect(int x, int y, int w, int h, int c);
 void do_all(int do_retrace = 0);
 int init_vesa(const char *paletname);
 void init_vga(const char *paletname);
-void init_video(void);
+void init_video();
 
 extern unsigned char *vircr;
 extern Bitmap *standard_background;

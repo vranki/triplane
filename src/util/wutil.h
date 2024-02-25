@@ -21,20 +21,20 @@
 #ifndef WUTIL_H
 #define WUTIL_H
 
-#include <stdlib.h>
+#include <cstdlib>
 
 void setwrandom(int seed);
 int wrandom(int limit);
-void wrandom_sanity_check(void);
+void wrandom_sanity_check();
 
 void *walloc(size_t size);
 void wfree(void *);
 
 void wtoggle(int *);
 
-void init_trigs(void);
+void init_trigs();
 int arcsinit(int luku);
-void calculate_difference(int x1, int y1, int x2, int y2, int *distance, int *angle = NULL);
+void calculate_difference(int x1, int y1, int x2, int y2, int *distance, int *angle = nullptr);
 int squareroot(int number);
 
 extern int cosinit[361];

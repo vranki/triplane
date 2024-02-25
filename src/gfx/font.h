@@ -37,9 +37,9 @@ class Font {
      ~Font();
     int printf(int x, int y, const char *fmt, ...);
     int scanf(int x, int y, char *str, int max_len);
-    void scale(void);
-    void unscale(void);
-    void count_scale(void);
+    void scale();
+    void unscale();
+    void count_scale();
     void set_space(int space);
 };
 
