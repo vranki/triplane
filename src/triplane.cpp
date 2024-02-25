@@ -23,7 +23,7 @@
 
 
 //\\\\ Includes
-
+//poista tama kommentti
 #include "triplane.h"
 #include "io/joystick.h"
 #include "gfx/gfx.h"
