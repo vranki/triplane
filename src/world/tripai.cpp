@@ -48,16 +48,16 @@ int itgun_shot_age[MAX_ITGUN_SHOTS];
 
 int bomb_target;
 
-void do_infan(void);
+void do_infan();
 
 void infan_to_plane(int l);
 void infan_to_infan(int l);
 void infan_to_struct(int l);
 void infan_take_hits(int l);
 
-void do_kkbase(void);
+void do_kkbase();
 void start_it_shot(int x, int y, int angle);
-void do_it_shots(void);
+void do_it_shots();
 void start_itgun_explosion(int number);
 
 void do_ai(int number);
@@ -68,8 +68,8 @@ void ai_turnplus(int number);
 void ai_turnminus(int number);
 void ai_do_bombing(int number);
 int check_structs(int x, int y, int number);
-void do_mekan(void);
-void do_doors(void);
+void do_mekan();
+void do_doors();
 
 #define MEKAN_DIRECTION_LEFT 0
 #define MEKAN_DIRECTION_RIGHT 1
@@ -98,7 +98,7 @@ void do_doors(void);
 
 /******************************************************************************/
 
-void do_doors(void) {
+void do_doors() {
     int l;
 
     for (l = 0; l < 4; l++) {
@@ -130,7 +130,7 @@ void do_doors(void) {
 
 }
 
-void do_mekan(void) {
+void do_mekan() {
     int l, l2;
 
 
@@ -504,7 +504,7 @@ int check_structs(int x, int y, int number) {
 
     for (l = 0; l < MAX_STRUCTURES; l++)
         if (leveldata.struct_owner[l] != 4)
-            if ((structures[l][1] != NULL) && (!struct_state[l]) && (player_sides[leveldata.struct_owner[l]] == number) && (bombs_going[l] == -1)) {
+            if ((structures[l][1] != nullptr) && (!struct_state[l]) && (player_sides[leveldata.struct_owner[l]] == number) && (bombs_going[l] == -1)) {
                 if (x >= leveldata.struct_x[l] && x <= (leveldata.struct_x[l] + struct_width[l]) &&
                     y >= (leveldata.struct_y[l] - 5) && y <= (leveldata.struct_y[l] + 5 + struct_heigth[l])) {
                     bomb_target = l;
@@ -532,7 +532,7 @@ int check_multi_structs(int x, int y, int number) {
 
     for (l = 0; l < MAX_STRUCTURES; l++)
         if (leveldata.struct_owner[l] != 4)
-            if ((structures[l][1] != NULL) && (!struct_state[l]) && (player_sides[leveldata.struct_owner[l]] != player_sides[number]) && (bombs_going[l] == -1)) {
+            if ((structures[l][1] != nullptr) && (!struct_state[l]) && (player_sides[leveldata.struct_owner[l]] != player_sides[number]) && (bombs_going[l] == -1)) {
                 if (x >= leveldata.struct_x[l] && x <= (leveldata.struct_x[l] + struct_width[l]) &&
                     y >= (leveldata.struct_y[l] - 5) && y <= (leveldata.struct_y[l] + 5 + struct_heigth[l])) {
                     bomb_target = l;
@@ -661,7 +661,7 @@ void start_it_shot(int x, int y, int angle) {
 
 }
 
-void do_it_shots(void) {
+void do_it_shots() {
     int l, l2;
 
     for (l = 0; l < MAX_ITGUN_SHOTS; l++) {
@@ -856,7 +856,7 @@ void infan_to_struct(int l) {
         }
 
     for (l2 = 0; l2 < MAX_STRUCTURES; l2++)
-        if ((structures[l2][1] != NULL) && (leveldata.struct_owner[l2] != 4) && (player_sides[leveldata.struct_owner[l2]] != player_sides[infan_country[l]])
+        if ((structures[l2][1] != nullptr) && (leveldata.struct_owner[l2] != 4) && (player_sides[leveldata.struct_owner[l2]] != player_sides[infan_country[l]])
             && (!struct_state[l2])) {
             if (infan_x[l] + 15 >= leveldata.struct_x[l2] && infan_x[l] <= (leveldata.struct_x[l2] + struct_width[l2])) {
                 if (config.flames)
@@ -952,7 +952,7 @@ void infan_take_hits(int l) {
 }
 
 
-void do_infan(void) {
+void do_infan() {
     int l, l2;
     int angle;
     int distance;
@@ -1064,7 +1064,7 @@ void do_infan(void) {
     }
 }
 
-void do_kkbase(void) {
+void do_kkbase() {
     int l, l2;
     int angle, distance, tdistance;
     int tempframe;
@@ -1601,7 +1601,7 @@ void do_ai(int number) {
                 ai_turnplus(number);
             }
         }
-        /// nysv„yslause
+        /// nysvï¿½yslause
 
         if (controls_up[number] && player_speed[number] < (1800)) {
 

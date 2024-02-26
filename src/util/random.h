@@ -22,7 +22,7 @@
 #define RANDOM_H
 #include <stdint.h>
 
-uint32_t triplane_random(void);
+uint32_t triplane_random();
 void triplane_srandom(uint64_t x);
 
 #endif

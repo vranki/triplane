@@ -19,9 +19,9 @@
  */
 
 #include <assert.h>
-#include <stdio.h>
+#include <cstdio>
 #include <SDL.h>
-#include <string.h>
+#include <cstring>
 #include "sdl_compat.h"
 #include "io/joystick.h"
 #include "settings.h"
@@ -35,14 +35,14 @@
 
 joystick_configuration joystick_config[5];
 
-SDL_Joystick *joydev[5] = { NULL, NULL, NULL, NULL, NULL };
+SDL_Joystick *joydev[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };
 
 /**
  * Initializes joystick configuration.
  * @return Bitwise or of JOY1X, JOY1Y, JOY2X and JOY2Y as
  * appropriate. 1 bit means that a device providing the axis is available
  */
-short init_joysticks(void) {
+short init_joysticks() {
     /* set default config, used if the configuration file does not exist */
     joystick_config[0].up.type = 2;
     joystick_config[0].up.n = 1;
@@ -100,7 +100,7 @@ int load_joysticks_data(const char *filename) {
 
     fp = settings_open(filename, "rb");
 
-    if (fp != NULL) {
+    if (fp != nullptr) {
         fread(&joystick_config, sizeof(joystick_configuration), 5, fp);
         fclose(fp);
         return 1;
@@ -128,8 +128,8 @@ void open_close_joysticks(int joy1, int joy2, int joy3, int joy4) {
     if (SDL_NumJoysticks() >= 1) {
         if (!joy1 && SDL_JoystickOpened(0)) {
             SDL_JoystickClose(joydev[0]);
-            joydev[0] = NULL;
-			joydev[4] = NULL;
+            joydev[0] = nullptr;
+			joydev[4] = nullptr;
         }
         if (joy1 && !SDL_JoystickOpened(0)) {
             joydev[0] = joydev[4] = SDL_JoystickOpen(0);
@@ -138,7 +138,7 @@ void open_close_joysticks(int joy1, int joy2, int joy3, int joy4) {
     if (SDL_NumJoysticks() >= 2) {
         if (!joy2 && SDL_JoystickOpened(1)) {
             SDL_JoystickClose(joydev[1]);
-            joydev[1] = NULL;
+            joydev[1] = nullptr;
         }
         if (joy2 && !SDL_JoystickOpened(1)) {
             joydev[1] = SDL_JoystickOpen(1);
@@ -147,7 +147,7 @@ void open_close_joysticks(int joy1, int joy2, int joy3, int joy4) {
 	if (SDL_NumJoysticks() >= 3) {
         if (!joy3 && SDL_JoystickOpened(2)) {
             SDL_JoystickClose(joydev[2]);
-            joydev[2] = NULL;
+            joydev[2] = nullptr;
         }
         if (joy3 && !SDL_JoystickOpened(2)) {
             joydev[2] = SDL_JoystickOpen(2);
@@ -156,7 +156,7 @@ void open_close_joysticks(int joy1, int joy2, int joy3, int joy4) {
 	if (SDL_NumJoysticks() >= 4) {
         if (!joy4 && SDL_JoystickOpened(3)) {
             SDL_JoystickClose(joydev[3]);
-            joydev[3] = NULL;
+            joydev[3] = nullptr;
         }
         if (joy4 && !SDL_JoystickOpened(3)) {
             joydev[3] = SDL_JoystickOpen(3);

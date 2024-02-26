@@ -24,16 +24,16 @@
 #include "io/sound.h"
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <string.h>
+#include <cstring>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 
 //\\ Keys
 
-Uint8 *key = SDL_GetKeyState(NULL);
+Uint8 *key = SDL_GetKeyState(nullptr);
 struct keymap player_keys[4];
 
 //\\ Rosterdata
@@ -110,7 +110,7 @@ FILE *settings_open(const char *filename, const char *mode) {
     return fp;
 }
 
-void wait_relase(void) {
+void wait_relase() {
     int c = 0;
 
     while (c != SDLK_LAST) {
@@ -150,7 +150,7 @@ int select_key(int player, int old) {
 
 }
 
-void swap_roster_endianes(void) {
+void swap_roster_endianes() {
     int l, l2, l3;
 
     for (l = 0; l < MAX_PLAYERS_IN_ROSTER; l++) {
@@ -227,7 +227,7 @@ void convert_dos_roster(struct dos_roster *droster) {
     }
 }
 
-void swap_keyset_endianes(void) {
+void swap_keyset_endianes() {
     int i;
 
     for (i = 0; i < 4; i++) {
@@ -240,11 +240,11 @@ void swap_keyset_endianes(void) {
     }
 }
 
-void save_keyset(void) {
+void save_keyset() {
     FILE *faili;
 
     faili = settings_open("keyset.dta", "wb");
-    if (faili == NULL) {
+    if (faili == nullptr) {
         printf("Unable to write keyboard data\n");
     } else {
         swap_keyset_endianes();
@@ -254,10 +254,10 @@ void save_keyset(void) {
     }
 }
 
-void load_keyset(void) {
+void load_keyset() {
     FILE *faili;
 
-    if ((faili = settings_open("keyset.dta", "rb")) == NULL) {
+    if ((faili = settings_open("keyset.dta", "rb")) == nullptr) {
         player_keys[0].up = SDLK_x;
         player_keys[0].down = SDLK_w;
         player_keys[0].roll = SDLK_s;
@@ -294,12 +294,12 @@ void load_keyset(void) {
     }
 }
 
-void load_roster(void) {
+void load_roster() {
     int l, l2, l3;
     FILE *faili;
 
-    if ((faili = settings_open(ROSTER_FILENAME, "rb")) == NULL) {
-        if ((faili = settings_open(ROSTER_FILENAME, "wb")) == NULL) {
+    if ((faili = settings_open(ROSTER_FILENAME, "rb")) == nullptr) {
+        if ((faili = settings_open(ROSTER_FILENAME, "wb")) == nullptr) {
             printf("\n\nError writing file: %s\n", ROSTER_FILENAME);
             exit(1);
         }
@@ -378,10 +378,10 @@ void load_roster(void) {
     }
 }
 
-void save_roster(void) {
+void save_roster() {
     FILE *faili;
 
-    if ((faili = settings_open(ROSTER_FILENAME, "wb")) == NULL) {
+    if ((faili = settings_open(ROSTER_FILENAME, "wb")) == nullptr) {
         printf("\n\nError writing file: %s\n", ROSTER_FILENAME);
         exit(1);
     }
@@ -398,7 +398,7 @@ void save_roster(void) {
     swap_roster_endianes();
 }
 
-void swap_config_endianes(void) {
+void swap_config_endianes() {
     int i;
     config.current_multilevel = SDL_SwapLE32(config.current_multilevel);
     for (i = 0; i < 4; i++) {
@@ -450,7 +450,7 @@ void swap_config_endianes(void) {
 	}
 }
 
-void load_config(void) {
+void load_config() {
     int laskuri;
     FILE *faili;
 
@@ -506,7 +506,7 @@ void load_config(void) {
 
     faili = settings_open(CONFIGURATION_FILENAME, "rb");
 
-    if (faili != NULL) {
+    if (faili != nullptr) {
         fread(&config, sizeof(config), 1, faili);
         fclose(faili);
         swap_config_endianes();
@@ -515,7 +515,7 @@ void load_config(void) {
     is_there_sound = config.sound_on;
 }
 
-void save_config(void) {
+void save_config() {
     FILE *faili;
 
     swap_config_endianes();

@@ -23,7 +23,7 @@
 
 
 //\\\\ Includes
-
+//poista tama kommentti 2
 #include "triplane.h"
 #include "io/joystick.h"
 #include "gfx/gfx.h"
@@ -38,7 +38,7 @@
 #include <SDL_endian.h>
 #include "util/wutil.h"
 #include <time.h>
-#include <string.h>
+#include <cstring>
 #include "io/trip_io.h"
 #include "io/sdl_compat.h"
 #include "settings.h"
@@ -313,9 +313,9 @@ int mission_duration;
 int mission_interrupted;
 int mission_re_fly = -1;
 
-FILE *record_file = NULL;
-char *record_data = NULL;
-int *record_random = NULL;
+FILE *record_file = nullptr;
+char *record_data = nullptr;
+int *record_random = nullptr;
 int record_counter = 0;
 
 int main_engine_random_seed;
@@ -367,49 +367,49 @@ extern char mission_names[24][30];
 
 //\\\\ Prototypes
 
-void hangarmenu_handle(void);
+void hangarmenu_handle();
 int findparameter(const char *jono);
-void controls(void);
-void detect_collision(void);
-void main_engine(void);
-void load_up(void);
-void clean_memory(void);
-void init_data(void);
+void controls();
+void detect_collision();
+void main_engine();
+void load_up();
+void clean_memory();
+void init_data();
 void do_aftermath(int show_it_all);
-void airfield_checks(void);
-void handle_parameters(void);
+void airfield_checks();
+void handle_parameters();
 void init_resolution(int width, int height);
-void load_level(void);
-void clear_level(void);
-void do_flags(void);
+void load_level();
+void clear_level();
+void do_flags();
 sb_sample *sample_load(const char *name);
 void kkbase_sound(int type, int kkbase_x);
 void itgun_sound(int itgun_x);
-void rotate_water_palet(void);
+void rotate_water_palet();
 void cause_damage(int amount, int plane);
 int small_warning(const char *message);
 int big_warning(const char *message);
-void load_all_samples(void);
-void init_sologame(void);
-void write_files(void);
+void load_all_samples();
+void init_sologame();
+void write_files();
 
-void load_sfx(void);
-void load_music(void);
-void clear_sfx(void);
-void clear_music(void);
-void init_sounds(void);
-void uninit_sounds(void);
+void load_sfx();
+void load_music();
+void clear_sfx();
+void clear_music();
+void init_sounds();
+void uninit_sounds();
 
 int get_player_fired(int player);
 int get_player_hits(int player);
 int get_player_shots_down(int player, int player2);
 
-extern void do_infan(void);
-extern void do_kkbase(void);
+extern void do_infan();
+extern void do_kkbase();
 extern void start_it_shot(int x, int y, int angle);
-extern void do_it_shots(void);
+extern void do_it_shots();
 extern void init_mission(int country, int number);
-extern void do_mekan(void);
+extern void do_mekan();
 
 extern void do_ai(int number);
 extern void ai_turn_down(int number);
@@ -419,7 +419,7 @@ extern void ai_turnplus(int number);
 extern void ai_turnminus(int number);
 
 extern "C" {
-extern void init_alkucallback(void);
+extern void init_alkucallback();
 }
 
 #define NUMBER_OF_STRUCT_NAMES 35
@@ -465,7 +465,7 @@ char struct_names[NUMBER_OF_STRUCT_NAMES * 2][7] = {
 
 //\\\\ Functions
 
-static void record_random_swap_endianess(void) {
+static void record_random_swap_endianess() {
     int i;
     for (i = 0; i < 24 * 1280; i++) {
         record_random[i] = SDL_SwapLE32(record_random[i]);
@@ -473,7 +473,7 @@ static void record_random_swap_endianess(void) {
 }
 
 
-void hangarmenu_handle(void) {
+void hangarmenu_handle() {
 
     int l;
 
@@ -615,7 +615,7 @@ void hangarmenu_handle(void) {
     }
 }
 
-void init_sologame(void) {
+void init_sologame() {
     init_mission(solo_country, solo_mission);
 }
 
@@ -664,7 +664,7 @@ int small_warning(const char *message) {
 }
 
 int big_warning(const char *message) {
-    if (message == NULL)
+    if (message == nullptr)
         return 0;
     else
         return 0;
@@ -692,7 +692,7 @@ void cause_damage(int amount, int plane) {
 
 }
 
-void rotate_water_palet(void) {
+void rotate_water_palet() {
     int l, l2;
     int seivi;
     static int nytko = 0;
@@ -713,7 +713,7 @@ void rotate_water_palet(void) {
     setpal_range(&ruutu.normaalipaletti[224], 224, 8, 1);
 }
 
-void do_flags(void) {
+void do_flags() {
     int l;
 
     for (l = 0; l < MAX_FLAGS; l++)
@@ -729,7 +729,7 @@ void do_flags(void) {
 
 
 
-void airfield_checks(void) {
+void airfield_checks() {
     int l, l2;
     int yyy, xxx;
 
@@ -927,7 +927,7 @@ int findparameter(const char *jono) {
 
 
 
-void controls(void) {
+void controls() {
     int l;
 
 
@@ -1248,7 +1248,7 @@ void controls(void) {
 
 
 
-void detect_collision(void) {
+void detect_collision() {
     int xl, yl, xa, ya, sx, sy;
     int l, l2;
     int laskx, lasky;
@@ -1407,7 +1407,7 @@ void detect_collision(void) {
     }
 }
 
-static void solo_do_all(void) {
+static void solo_do_all() {
     int x_offset = 160;
 
     // Compute player's plane location on screen and corresponding
@@ -1453,7 +1453,7 @@ static uint32_t crc32_le(uint32_t crc, unsigned char const *p, size_t len) {
     return crc;
 }
 
-void do_debug_trace(void) {
+void do_debug_trace() {
     static int first_call = 1;
     static int enabled = 0;
 
@@ -1481,7 +1481,7 @@ void do_debug_trace(void) {
     }
 }
 
-void main_engine(void) {
+void main_engine() {
     int preview_mode = 0;
     int l, l2, flag = 1;
     int xx, yy;
@@ -1543,7 +1543,7 @@ void main_engine(void) {
         if (!leveldata.struct_hit[l])
             continue;
 
-        if (structures[l][0] == NULL)
+        if (structures[l][0] == nullptr)
             continue;
 
         structures[l][0]->blit_to_bitmap(maisema, leveldata.struct_x[l], leveldata.struct_y[l]);
@@ -1610,7 +1610,7 @@ void main_engine(void) {
 		}
 
         for (l = 0; l < MAX_STRUCTURES; l++) {
-            if (structures[l][0] != NULL) {
+            if (structures[l][0] != nullptr) {
                 if (leveldata.struct_hit[l])
                     continue;
 
@@ -1683,7 +1683,7 @@ void main_engine(void) {
     }
 
     if (findparameter("-pixelhunt"))
-        setpal_range(NULL, 112, 8);
+        setpal_range(nullptr, 112, 8);
 
     mission_duration = 0;
     mission_interrupted = 0;
@@ -1968,7 +1968,7 @@ void main_engine(void) {
     if (current_mode == SVGA_MODE) {
 
         delete standard_background;
-        standard_background = NULL;
+        standard_background = nullptr;
     }
 
 
@@ -2090,7 +2090,7 @@ void do_aftermath(int show_it_all) {
                 }
 
             } else {
-                if (structures[l][1] == NULL)
+                if (structures[l][1] == nullptr)
                     continue;
 
                 if (leveldata.struct_type[l] == 1) {
@@ -2420,7 +2420,7 @@ void do_aftermath(int show_it_all) {
         }
 
         delete standard_background;
-        standard_background = NULL;
+        standard_background = nullptr;
 
         if (!findparameter("-debugnoaftermathfadeout") && l == 0)
             random_fade_out();
@@ -2433,7 +2433,7 @@ void do_aftermath(int show_it_all) {
         letter_menu();
 }
 
-void load_up(void) {
+void load_up() {
     int l, l1, l2, l3;
     int xxx, yyy;
     unsigned char *point1, *point2;
@@ -2977,7 +2977,7 @@ void load_up(void) {
 
 
 
-void clean_memory(void) {
+void clean_memory() {
     int l, l2, l3, l4;
 
     for (l = 0; l < 13; l++)
@@ -3108,7 +3108,7 @@ void clean_memory(void) {
 
 }
 
-void load_level(void) {
+void load_level() {
     int l, l2, i;
     int xx, yy;
     int c_flag;
@@ -3206,8 +3206,8 @@ void load_level(void) {
 
     for (l = 0; l < MAX_STRUCTURES; l++) {
         struct_state[l] = 0;
-        structures[l][1] = NULL;
-        structures[l][0] = NULL;
+        structures[l][1] = nullptr;
+        structures[l][0] = nullptr;
 
         if (leveldata.struct_x[l]) {
             if (!strncmp(leveldata.pd_name[l], "FLAGS", 5)) {
@@ -3396,13 +3396,13 @@ void load_level(void) {
 
 }
 
-void clear_level(void) {
+void clear_level() {
     int l, l2;
 
 
     for (l2 = 0; l2 < 2; l2++)
         for (l = 0; l < MAX_STRUCTURES; l++) {
-            if (structures[l][l2] != NULL)
+            if (structures[l][l2] != nullptr)
                 delete structures[l][l2];
         }
 
@@ -3411,7 +3411,7 @@ void clear_level(void) {
 }
 
 
-void init_data(void) {
+void init_data() {
     int l, l2;
 
     record_counter = 0;
@@ -3669,7 +3669,7 @@ void init_data(void) {
     }
 }
 
-void handle_parameters(void) {
+void handle_parameters() {
     if (findparameter("-reverse"))
         reverbed_channels = 1;
 

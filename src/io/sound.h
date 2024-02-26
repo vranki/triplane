@@ -26,8 +26,8 @@
 int play_sample(sb_sample *);
 int play_2d_sample(sb_sample *, int player, int target);
 
-void init_sounds(void);
-void uninit_sounds(void);
+void init_sounds();
+void uninit_sounds();
 sb_sample *sample_load(const char *sample_name);
 
 extern int is_there_sound;

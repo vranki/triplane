@@ -20,11 +20,11 @@
 
 /* Terrain drawing code header */
 
-extern void terrain_to_screen(void);
-extern void solo_terrain_to_screen(void);
-extern void vesa_terrain_to_screen(void);
+extern void terrain_to_screen();
+extern void solo_terrain_to_screen();
+extern void vesa_terrain_to_screen();
 extern void kangas_terrain_to_screen(int leftx);
 
 #ifdef REGISTERED
-extern void vesa_terrain_to_screen(void);
+extern void vesa_terrain_to_screen();
 #endif

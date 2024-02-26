@@ -25,7 +25,7 @@
 #include "tripmenu.h"
 #include <SDL.h>
 #include <time.h>
-#include <string.h>
+#include <cstring>
 #include "io/joystick.h"
 #include "io/sdl_compat.h"
 #include "util/wutil.h"
@@ -48,7 +48,7 @@ int aces_score[MAX_PLAYERS_IN_ROSTER];
 #define CHARS_PER_LINE 70
 #define LINELENGHT 100
 
-sb_mod_file *national_mod = NULL;
+sb_mod_file *national_mod = nullptr;
 
 char rank_names[6][10] = {
     "2nd Lt.",
@@ -62,7 +62,7 @@ char rank_names[6][10] = {
 /**************************** Functions ***************************************/
 void joystick_roster_setup(Bitmap* controlme);
 
-void show_feat5(void) {
+void show_feat5() {
     Bitmap *feat5;
     feat5 = new Bitmap("FEAT5");
     int n1 = 0, n2 = 0;
@@ -187,7 +187,7 @@ void sort_and_show(int percent) {
     }
 }
 
-void aces_grand_total(void) {
+void aces_grand_total() {
     int c;
 
 
@@ -210,7 +210,7 @@ void aces_grand_total(void) {
 
 }
 
-void aces_multi_total(void) {
+void aces_multi_total() {
     int c;
 
     frost->printf(90, 45, "Multiplayer TOP10");
@@ -234,7 +234,7 @@ void aces_multi_total(void) {
 
 }
 
-void aces_solo_total(void) {
+void aces_solo_total() {
     int c;
 
     frost->printf(90, 45, "Sologame TOP10");
@@ -258,7 +258,7 @@ void aces_solo_total(void) {
 
 }
 
-void aces_triggerhappy(void) {
+void aces_triggerhappy() {
     int c;
 
     frost->printf(90, 45, "The most triggerhappy pilots");
@@ -282,7 +282,7 @@ void aces_triggerhappy(void) {
 
 }
 
-void aces_bombdropper(void) {
+void aces_bombdropper() {
     int c;
 
     frost->printf(90, 45, "Bombusers TOP10");
@@ -306,7 +306,7 @@ void aces_bombdropper(void) {
 
 }
 
-void aces_shotaccuracy(void) {
+void aces_shotaccuracy() {
     int c;
 
     frost->printf(90, 45, "The most accurate shooters");
@@ -333,7 +333,7 @@ void aces_shotaccuracy(void) {
 
 }
 
-void aces_bombaccuracy(void) {
+void aces_bombaccuracy() {
     int c;
 
     frost->printf(90, 45, "The most accurate bombers");
@@ -360,7 +360,7 @@ void aces_bombaccuracy(void) {
 
 }
 
-void aces_mostkills(void) {
+void aces_mostkills() {
     int c;
 
     frost->printf(90, 45, "Drops TOP10");
@@ -384,7 +384,7 @@ void aces_mostkills(void) {
 
 }
 
-void aces_decoy(void) {
+void aces_decoy() {
     int c;
 
     frost->printf(90, 45, "The most active decoys");
@@ -408,7 +408,7 @@ void aces_decoy(void) {
 
 }
 
-void aces_totalmissions(void) {
+void aces_totalmissions() {
     int c;
 
     frost->printf(90, 45, "The most missions flown");
@@ -580,7 +580,7 @@ void load_descriptions(int number) {
 
 }
 
-int solo_player_menu(void) {
+int solo_player_menu() {
     char facenames[4][7] = { "GERFAC", "FINFAC", "ENGFAC", "JAPFAC" };
     char missionnames[4][7] = { "MISSI0", "MISSI1", "MISSI2", "MISSI3" };
     char modnames[4][7] = { "mgerma", "mfinla", "mengla", "mjapan" };
@@ -633,7 +633,7 @@ int solo_player_menu(void) {
     if ((mission_re_fly == -1) && is_there_sound && config.music_on && !findparameter("-nomusic")) {
         sdl_stop_music();
         national_mod = sdl_load_mod_file(modnames[solo_country]);
-        if (national_mod == NULL) {
+        if (national_mod == nullptr) {
             printf("Error locating music.\n");
             exit(1);
 
@@ -683,7 +683,7 @@ int solo_player_menu(void) {
         delete face;
         delete mission;
         delete standard_background;
-        standard_background = NULL;
+        standard_background = nullptr;
     }
 
     if (flag == 1)
@@ -727,7 +727,7 @@ int solo_player_menu(void) {
 
 }
 
-void roster_menu(void) {
+void roster_menu() {
     int exit_flag = 0;
     int x, y, n1, n2;
     int menuselect;
@@ -1200,7 +1200,7 @@ void check_other_joys(int num, int active)
 	}
 }
 
-void options_menu(void) {
+void options_menu() {
     int exit_flag = 0;
     int x, y, n1, n2;
     int menuselect;
@@ -1935,7 +1935,7 @@ void options_menu(void) {
 
 }
 
-void transfer_menu(void) {
+void transfer_menu() {
     int exit_flag = 0;
     int x, y, n1, n2;
     int menuselect;
@@ -2045,7 +2045,7 @@ static void joystick_setup(int joy, Bitmap * controlme) {
         "Guns", &joystick_config[joy].guns}, {
         "Bombs", &joystick_config[joy].bombs}, {
         "Brake", &joystick_config[joy].brake}, {
-        NULL, NULL}
+        nullptr, nullptr}
     };
 
 	if (joy == 0)
@@ -2072,7 +2072,7 @@ static void joystick_setup(int joy, Bitmap * controlme) {
 
     save_axis_state(idle, joy);
 
-    for (i = 0; acts[i].prompt != NULL; i++) {
+    for (i = 0; acts[i].prompt != nullptr; i++) {
         controlme->blit(0, 0);
         frost->printf(54, 93, "Do '%s' on joystick and", acts[i].prompt);
         frost->printf(54, 100, "press Space or D=disable this");
@@ -2114,7 +2114,7 @@ void joystick_roster_setup(Bitmap* controlme) {
 							"Guns", &joystick_config[4].guns },{
 								"Bombs", &joystick_config[4].bombs },{
 									"Brake", &joystick_config[4].brake },{
-										NULL, NULL }
+										nullptr, nullptr }
 	};
 
 	open_close_joysticks(1, 0, 0, 0);
@@ -2134,7 +2134,7 @@ void joystick_roster_setup(Bitmap* controlme) {
 
 	save_axis_state(idle, 4);
 
-	for (i = 0; acts[i].prompt != NULL; i++) {
+	for (i = 0; acts[i].prompt != nullptr; i++) {
 		controlme->blit(0, 0);
 		frost->printf(125, 100, "Do '%s' on joystick and", acts[i].prompt);
 		frost->printf(125, 107, "press Space or D=disable this");
@@ -2163,7 +2163,7 @@ joystick_setup_exit:
 	open_close_joysticks(0, 0, 0, 0);
 }
 
-void controls_menu(void) {
+void controls_menu() {
     char ch;
     int help_on = 0;
     int exit_flag = 0;
@@ -2424,7 +2424,7 @@ void controls_menu(void) {
 }
 
 
-void assign_menu(void) {
+void assign_menu() {
     int exit_flag = 0;
     int x, y, n1, n2;
     int menuselect;
@@ -2758,7 +2758,7 @@ void assign_menu(void) {
 }
 
 
-void aces_menu(void) {
+void aces_menu() {
     int exit_flag = 0;
     int x, y, n1, n2;
     int menuselect;
@@ -2909,7 +2909,7 @@ void aces_menu(void) {
     }
 
     delete standard_background;
-    standard_background = NULL;
+    standard_background = nullptr;
     if (n1)
         random_fade_out();
     delete help;
@@ -2922,7 +2922,7 @@ void aces_menu(void) {
 
 }
 
-int kangas_menu(void) {
+int kangas_menu() {
     int exit_flag = 0;
     int x, y, n1, n2;
     int menuselect;
@@ -3081,7 +3081,7 @@ int kangas_menu(void) {
 }
 
 
-void credits_menu(void) {
+void credits_menu() {
     int exit_flag = 0;
     int x, y, n1, n2;
     int kohta1, kohta2;
@@ -3119,7 +3119,7 @@ void credits_menu(void) {
         grid3->printf(205, 110, "Code & Project management:\nTeemu J. Takanen");
         grid3->printf(kohta2, 140, "Special Thanks:");
         grid3->printf(45, 160, "Mikko Kinnunen\nNiko Salminen\nPekka Pulli");
-        grid3->printf(205, 160, "Antti Lehtoranta\nJuha Rytk”nen\nJoonas Joensuu");
+        grid3->printf(205, 160, "Antti Lehtoranta\nJuha Rytkï¿½nen\nJoonas Joensuu");
 
 
 
@@ -3150,7 +3150,7 @@ void credits_menu(void) {
 
 }
 
-void letter_menu(void) {
+void letter_menu() {
     int exit_flag = 0;
     int x, y, n1, n2;
     char country_names[4][10] = { "German", "Finnish", "English", "Japanese" };
@@ -3166,7 +3166,7 @@ void letter_menu(void) {
 
     if (is_there_sound && config.music_on && !findparameter("-nomusic")) {
         national_mod = sdl_load_mod_file(modnames[solo_country]);
-        if (national_mod == NULL) {
+        if (national_mod == nullptr) {
             printf("Error locating music.\n");
             exit(1);
 
@@ -3226,7 +3226,7 @@ void letter_menu(void) {
 
 
 
-void main_menu(void) {
+void main_menu() {
     int exit_flag = 0;
     int x, y, n1, n2;
     int menuselect;

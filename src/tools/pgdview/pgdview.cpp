@@ -21,16 +21,16 @@
 /*******************************************************************************
 
    Purpose: 
-   	DKS-datafile viewer for Wsystem 2.0 for DJGPP v.2.0á5
+   	DKS-datafile viewer for Wsystem 2.0 for DJGPP v.2.0ï¿½5
 
 *******************************************************************************/
 
 
 #include "io/trip_io.h"
 #include "gfx/gfx.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 
 #define MAX_ENTRIES 8192
 

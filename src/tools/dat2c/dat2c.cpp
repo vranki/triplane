@@ -24,7 +24,7 @@
 
 *******************************************************************************/
 
-#include <stdio.h>
+#include <cstdio>
 #include <io.h>
 #include <mem.h>
 
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
         exit(0);
     }
 
-    if ((faili = fopen(argv[1], "rb")) == NULL) {
+    if ((faili = fopen(argv[1], "rb")) == nullptr) {
         printf("Unable to open file %s\n", argv[1]);
         exit(1);
 
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     size = filelength(fileno(faili));
 
     data = (unsigned char *) malloc(size);
-    if (data == NULL) {
+    if (data == nullptr) {
         printf("Out of memory\n");
         fclose(faili);
         exit(1);

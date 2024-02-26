@@ -26,10 +26,10 @@
 *******************************************************************************/
 
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <time.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 #define MAX_ENTRIES 8192
 
@@ -86,19 +86,19 @@ int main(int argc,char **argv)
   int key_counter;
   int reg_number=5324434;
 
-  if( (info=(buildaus_info *) malloc (MAX_ENTRIES*sizeof(buildaus_info))) ==NULL)
+  if( (info=(buildaus_info *) malloc (MAX_ENTRIES*sizeof(buildaus_info))) ==nullptr)
   { 
     printf("Out of memory");
     exit(1);
   }
 
-  if( (dirri=(main_directory_entry *) malloc (MAX_ENTRIES*sizeof(main_directory_entry))) ==NULL)
+  if( (dirri=(main_directory_entry *) malloc (MAX_ENTRIES*sizeof(main_directory_entry))) ==nullptr)
   { 
     printf("Out of memory");
     exit(1);
   }
 
-  if( (tila=(unsigned char* ) malloc(8000000))==NULL)
+  if( (tila=(unsigned char* ) malloc(8000000))==nullptr)
   {
     printf("Out of memory");
     exit(1);
@@ -124,7 +124,7 @@ int main(int argc,char **argv)
 
   
 
-  if( (in=fopen(argv[1],"r"))==NULL)
+  if( (in=fopen(argv[1],"r"))==nullptr)
   {
     printf("\nError opening indexfile %s\n",argv[1]);
     exit(1);
@@ -223,7 +223,7 @@ int main(int argc,char **argv)
       kohtien_lukumaara=vaihe;
       break;
     }
-    if( (in=fopen(info[vaihe].tiedosto,"rb"))==NULL)
+    if( (in=fopen(info[vaihe].tiedosto,"rb"))==nullptr)
     {
       printf("\n\n Cannon't locate file %s\n",info[vaihe].tiedosto);
       exit(1);
@@ -270,7 +270,7 @@ int main(int argc,char **argv)
 
   printf("\n\nTemporary data constructed, writing...\n");
 
-  if( (out=fopen(file_to_be,"wb")) == NULL)
+  if( (out=fopen(file_to_be,"wb")) == nullptr)
   {
     printf("\nError creating file %s\n",file_to_be);
     exit(1);

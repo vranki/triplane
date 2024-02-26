@@ -36,7 +36,7 @@
 #include "util/wutil.h"
 #include "io/timing.h"
 
-int kbhit(void) {
+int kbhit() {
     SDL_Event e;
     int ret;
 
@@ -53,7 +53,7 @@ int kbhit(void) {
     return 0;
 }
 
-int getch(void) {
+int getch() {
     SDL_Event e;
 
     for (;;) {
@@ -76,7 +76,7 @@ int getch(void) {
     }
 }
 
-void update_key_state(void) {
+void update_key_state() {
     SDL_Event e;
     SDL_PumpEvents();
     while (SDL_PollEvent(&e)) {
@@ -88,7 +88,7 @@ void update_key_state(void) {
  * Initialize SDL sounds so that sdl_play_sample can be called.
  * @return 0 on success, nonzero otherwise.
  */
-int sdl_init_sounds(void) {
+int sdl_init_sounds() {
 #ifdef HAVE_SDL_MIXER
     int ret;
 
@@ -112,7 +112,7 @@ int sdl_init_sounds(void) {
 }
 
 /** Deinitalize SDL sounds */
-void sdl_uninit_sounds(void) {
+void sdl_uninit_sounds() {
 #ifdef HAVE_SDL_MIXER
     Mix_CloseAudio();
     SDL_QuitSubSystem(SDL_INIT_AUDIO);
@@ -142,7 +142,7 @@ void sdl_play_sample(sb_sample * sample, int looping) {
 }
 
 /** Stop playing all samples started with sdl_play_sample */
-void sdl_stop_all_samples(void) {
+void sdl_stop_all_samples() {
 #ifdef HAVE_SDL_MIXER
     Mix_HaltChannel(-1);
 #endif
@@ -151,7 +151,7 @@ void sdl_stop_all_samples(void) {
 /**
  * Load sample with given name.
  * @param name audio name used inside fokker.dks
- * @return loaded sample or NULL on error.
+ * @return loaded sample or nullptr on error.
  */
 sb_sample *sdl_sample_load(const char *name) {
 #ifdef HAVE_SDL_MIXER
@@ -161,7 +161,7 @@ sb_sample *sdl_sample_load(const char *name) {
 
     ret = dksopen(name);
     if (ret != 1) {
-        return NULL;
+        return nullptr;
     }
 
     len = dkssize();
@@ -175,7 +175,7 @@ sb_sample *sdl_sample_load(const char *name) {
     sample = (sb_sample *) walloc(sizeof(sb_sample));
 
     sample->chunk = Mix_LoadWAV_RW(SDL_RWFromConstMem(p, len), 1);
-    if (sample->chunk == NULL) {
+    if (sample->chunk == nullptr) {
         fprintf(stderr, "sdl_sample_load: %s\n", Mix_GetError());
         exit(1);
     }
@@ -184,7 +184,7 @@ sb_sample *sdl_sample_load(const char *name) {
 
     return sample;
 #else
-    return NULL;
+    return nullptr;
 #endif
 }
 
@@ -208,7 +208,7 @@ sb_mod_file *sdl_load_mod_file(const char *name) {
 
     ret = dksopen(name);
     if (ret != 1) {
-        return NULL;
+        return nullptr;
     }
 
     len = dkssize();
@@ -224,7 +224,7 @@ sb_mod_file *sdl_load_mod_file(const char *name) {
     rwops = SDL_RWFromConstMem(p, len);
     mod->music = Mix_LoadMUS_RW(rwops);
     SDL_FreeRW(rwops);
-    if (mod->music == NULL) {
+    if (mod->music == nullptr) {
         fprintf(stderr, "sdl_load_mod_file: %s\n", Mix_GetError());
         exit(1);
     }
@@ -233,7 +233,7 @@ sb_mod_file *sdl_load_mod_file(const char *name) {
 
     return mod;
 #else
-    return NULL;
+    return nullptr;
 #endif
 }
 
@@ -251,7 +251,7 @@ void sdl_play_music(sb_mod_file * mod) {
 #endif
 }
 
-void sdl_stop_music(void) {
+void sdl_stop_music() {
 #ifdef HAVE_SDL_MIXER
     Mix_HaltMusic();
 #endif

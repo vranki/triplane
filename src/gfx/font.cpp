@@ -22,7 +22,7 @@
 #include "io/trip_io.h"
 #include "util/wutil.h"
 #include <stdarg.h>
-#include <string.h>
+#include <cstring>
 
 Font::Font(const char *font_name) {
     int temp;
@@ -35,7 +35,7 @@ Font::Font(const char *font_name) {
     scaled_space = 3;
 
     for (temppi = 0; temppi < 256; temppi++)
-        glyphs[temppi] = NULL;
+        glyphs[temppi] = nullptr;
 
     if (strlen(font_name) == 6) {
         valikuva = new Bitmap(font_name);
@@ -58,7 +58,7 @@ Font::Font(const char *font_name) {
                 glyphs[temp] = new Bitmap(valiteksti);
                 glyphs[temp]->info(&width, &height);
             } else
-                glyphs[temp] = NULL;
+                glyphs[temp] = nullptr;
         }
 
     count_scale();
@@ -69,7 +69,7 @@ Font::~Font() {
     int temp;
 
     for (temp = 0; temp < 256; temp++)
-        if (glyphs[temp] != NULL)
+        if (glyphs[temp] != nullptr)
             delete glyphs[temp];
 
 
@@ -95,7 +95,7 @@ int Font::printf(int x, int y, const char *fmt, ...) {
                 y += height;
                 xkohta = 0;
             } else {
-                if (glyphs[(unsigned char) teksti[temp]] != NULL) {
+                if (glyphs[(unsigned char) teksti[temp]] != nullptr) {
                     glyphs[(unsigned char) teksti[temp]]->blit(x + xkohta, y);
 
                 }
@@ -114,7 +114,7 @@ int Font::printf(int x, int y, const char *fmt, ...) {
         }
 
         else {
-            if ((glyphs[(unsigned char) teksti[temp]] != NULL) && ((unsigned char) teksti[temp] != 32)) {
+            if ((glyphs[(unsigned char) teksti[temp]] != nullptr) && ((unsigned char) teksti[temp] != 32)) {
                 glyphs[(unsigned char) teksti[temp]]->blit(x + xkohta - char_start[(unsigned char) teksti[temp]], y);
                 xkohta += char_width[(unsigned char) teksti[temp]];
             } else {
@@ -156,7 +156,7 @@ int Font::scanf(int x, int y, char *str, int max_len) {
                     kohta--;
                     str[kohta] = 0;
                 }
-            } else if (glyphs[(unsigned char) ch] != NULL && kohta < max_len) {
+            } else if (glyphs[(unsigned char) ch] != nullptr && kohta < max_len) {
                 str[kohta] = ch;
                 kohta++;
                 str[kohta] = 0;
@@ -164,7 +164,7 @@ int Font::scanf(int x, int y, char *str, int max_len) {
                 if (ch >= 97 && ch <= 122)
                     ch -= 32;
 
-                if (glyphs[(unsigned char) ch] != NULL && kohta < max_len) {
+                if (glyphs[(unsigned char) ch] != nullptr && kohta < max_len) {
                     str[kohta] = ch;
                     kohta++;
                     str[kohta] = 0;
@@ -178,12 +178,12 @@ int Font::scanf(int x, int y, char *str, int max_len) {
 }
 
 
-void Font::count_scale(void) {
+void Font::count_scale() {
     int ytemp, xtemp, temp, valileveys;
     unsigned char *kuvadata;
 
     for (temp = 0; temp < 256; temp++)
-        if (glyphs[temp] != NULL) {
+        if (glyphs[temp] != nullptr) {
             kuvadata = glyphs[temp]->info(&char_width[temp], &height);
 
             char_start[temp] = -1;
@@ -217,11 +217,11 @@ void Font::count_scale(void) {
         }
 }
 
-void Font::scale(void) {
+void Font::scale() {
     scaled = 1;
 
 }
 
-void Font::unscale(void) {
+void Font::unscale() {
     scaled = 0;
 }

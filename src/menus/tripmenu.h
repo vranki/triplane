@@ -31,15 +31,15 @@
 #define PROJECTOR_Y1 8
 #define PROJECTOR_Y2 178
 
-void main_menu(void);
-void roster_menu(void);
-void credits_menu(void);
-void letter_menu(void);
-void aces_menu(void);
-void options_menu(void);
-void controls_menu(void);
-int kangas_menu(void);
-int solo_player_menu(void);
+void main_menu();
+void roster_menu();
+void credits_menu();
+void letter_menu();
+void aces_menu();
+void options_menu();
+void controls_menu();
+int kangas_menu();
+int solo_player_menu();
 
 void print_clear_roster(Bitmap * rosteri);
 void print_filled_roster(int number);
@@ -49,11 +49,11 @@ void show_descriptions(int number);
 void sort_and_show(int percent = 0);
 int get_rank(int player);
 
-void aces_grand_total(void);
-void aces_multi_total(void);
-void aces_solo_total(void);
+void aces_grand_total();
+void aces_multi_total();
+void aces_solo_total();
 void aces_one_solo(int country, int mission);
 int calculate_multitotal(int player);
-void show_feat5(void);
+void show_feat5();
 
 #endif

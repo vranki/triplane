@@ -21,23 +21,23 @@
 /*******************************************************************************
 
    Purpose: 
-   	.PCX to .PGD graphics converter for Wsystem 2.0 for DJGPP v.2.0á5
+   	.PCX to .PGD graphics converter for Wsystem 2.0 for DJGPP v.2.0ï¿½5
   
 *******************************************************************************/
 
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstring>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 #include <unistd.h>
 
 /* Dummy relics from DOS age. */
 void gotoxy(int x, int y) {
 }
 
-int wherey(void) {
+int wherey() {
     return 0;
 }
 
@@ -51,7 +51,7 @@ void talleta_paletti() {
     FILE *out;
 
 
-    if ((out = fopen("paletdta.000", "wb")) == NULL) {
+    if ((out = fopen("paletdta.000", "wb")) == nullptr) {
         printf("\nError opening file: paletdta.000 \n");
         exit(1);
     }
@@ -93,14 +93,14 @@ void pakit(int dx, int dy, char inputfile[], char picturename[]) {
 
     pointteri2 = (unsigned char *) malloc(800000);
 
-    if (pointteri2 == NULL) {
+    if (pointteri2 == nullptr) {
         printf("Error in memory allocation -- %u bytes\n", x * y);
         exit(1);
     }
 
     pointteri = vkuva;
 
-    if ((out = fopen(outf, "wb")) == NULL) {
+    if ((out = fopen(outf, "wb")) == nullptr) {
         printf("Error opening file %s", outf);
         exit(1);
     }
@@ -222,7 +222,7 @@ void pcx_load(char *file_name, short int *xl, short int *yl) {
 
     FILE *fp;
     fp = fopen(file_name, "rb");
-    if (fp == NULL) {
+    if (fp == nullptr) {
         printf("Error opening file\n");
         exit(1);
     }
@@ -287,14 +287,14 @@ int main(int argc, char *argv[]) {
 
     vkuva = (unsigned char *) malloc(800000);
 
-    if (vkuva == NULL) {
+    if (vkuva == nullptr) {
         printf("Error in memory allocation -- 800000 bytes\n");
         exit(1);
     }
 
     kuvadata = (unsigned char *) malloc(800000);
 
-    if (kuvadata == NULL) {
+    if (kuvadata == nullptr) {
         printf("Error in memory allocation -- 800000 bytes\n");
         exit(1);
     }

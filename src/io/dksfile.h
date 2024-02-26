@@ -21,17 +21,17 @@
 #ifndef DKSFILE_H
 #define DKSFILE_H
 
-#include <stdio.h>
+#include <cstdio>
 
 int dksinit(const char *tiedosto);
 int dksopen(const char *nimi);
 int extdksopen(const char *nimi);
-void dksclose(void);
+void dksclose();
 int dksread(void *mihin, unsigned long int koko);
 int dksseek(int offset, int mode);
-int dksgetc(void);
-long dkstell(void);
-int dkssize(void);
+int dksgetc();
+long dkstell();
+int dkssize();
 
 extern FILE *dks_faili;
 

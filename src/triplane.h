@@ -324,12 +324,12 @@ extern int main_engine_random_seed;
 extern int small_warning(const char *message);
 extern int findparameter(const char *jono);
 extern void kangas_terrain_to_screen(int leftx);
-extern void main_engine(void);
+extern void main_engine();
 extern void do_aftermath(int show_it_all);
-extern void clear_level(void);
+extern void clear_level();
 extern void init_player(int l, int pommit = 1);
 extern void cause_damage(int amount, int plane);
-extern void do_flags(void);
+extern void do_flags();
 
 
 void loading_text(const char *);

@@ -20,7 +20,7 @@
 
 #ifndef SETTINGS_H
 #define SETTINGS_H
-#include <stdio.h>
+#include <cstdio>
 
 #define ROSTER_FILENAME "roster.dta"
 #define MAX_PLAYERS_IN_ROSTER 150
@@ -162,16 +162,16 @@ struct configuration {
 
 extern configuration config;
 
-void load_keyset(void);
-void save_keyset(void);
+void load_keyset();
+void save_keyset();
 int select_key(int player, int old);
-void wait_relase(void);
+void wait_relase();
 
-void load_roster(void);
-void save_roster(void);
+void load_roster();
+void save_roster();
 
-void load_config(void);
-void save_config(void);
+void load_config();
+void save_config();
 
 FILE *settings_open(const char *filename, const char *mode);
 #endif

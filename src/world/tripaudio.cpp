@@ -61,7 +61,7 @@ void itgun_sound(int itgun_x) {
     }
 }
 
-void load_all_samples(void) {
+void load_all_samples() {
     int l;
 
     sample_itexp[0] = sample_load("Itexp1");
@@ -172,19 +172,19 @@ void load_all_samples(void) {
     }
 }
 
-void load_sfx(void) {
+void load_sfx() {
     sfx_loaded = 1;
     load_all_samples();
 }
 
-void load_music(void) {
+void load_music() {
     music_loaded = 1;
 
     triplane_mod = sdl_load_mod_file("music1");
     aces_mod = sdl_load_mod_file("maces");
 }
 
-void clear_sfx(void) {
+void clear_sfx() {
     int l;
 
     sfx_loaded = 0;
@@ -221,7 +221,7 @@ void clear_sfx(void) {
 }
 
 
-void clear_music(void) {
+void clear_music() {
     music_loaded = 0;
     sdl_free_mod_file(triplane_mod);
     sdl_free_mod_file(aces_mod);
