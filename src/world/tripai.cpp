@@ -1548,6 +1548,43 @@ void do_ai(int number) {
       }
     }
 
+    if (current_mission[number] != AIM_CHASE_PLANE)
+      for (l = 0; l < 16; l++) {
+        if (l == number)
+          continue;
+
+        if (!plane_present[l])
+          continue;
+
+        if (player_sides[number] == player_sides[l])
+          continue;
+
+        if (player_ammo[number] && distance_enemy[l] < AI_ATTACK_DISTANCE) {
+          current_mission[number] = AIM_CHASE_PLANE;
+          mission_target[number] = l;
+        }
+      }
+
+    if ((player_x_8[number] < (120 + ((player_speed[number]) / 40)) &&
+         going_left) ||
+        (player_x_8[number] > (2280 - ((player_speed[number]) / 40)) &&
+         !going_left)) {
+      if ((wide_terrain_level[player_x_8[number]] - (player_y_8[number])) >
+          ((player_y_8[number]) + 15))
+        current_mission[number] = AIM_SPLITS;
+      else
+        current_mission[number] = AIM_IMMELMAN;
+      mission_phase[number] = 0;
+
+    } else if ((player_upsidedown[number] && (!going_left)) ||
+               (!player_upsidedown[number] && (going_left)))
+      if (!player_rolling[number])
+        player_rolling[number] = 1;
+
+    ai_evade_terrain(number);
+
+    break;
+
   case AIM_NOMISSION:
     if (current_mission[number] != AIM_CHASE_PLANE)
       for (l = 0; l < 16; l++) {
