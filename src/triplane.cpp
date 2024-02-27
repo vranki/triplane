@@ -25,13 +25,13 @@ constexpr int32_t SUB_VERSION = 3;
 
 //\\\\ Includes
 
-#include "triplane.h"
 #include "gfx/gfx.h"
 #include "io/joystick.h"
 #include "io/sdl_compat.h"
 #include "io/trip_io.h"
 #include "menus/tripmenu.h"
 #include "settings.h"
+#include "triplane.h"
 #include "util/wutil.h"
 #include "world/fobjects.h"
 #include "world/plane.h"
@@ -40,8 +40,8 @@ constexpr int32_t SUB_VERSION = 3;
 #include "world/tripaudio.h"
 #include <SDL/SDL.h>
 #include <SDL/SDL_endian.h>
-#include <cstring>
 #include <cstdint>
+#include <cstring>
 #include <ctime>
 
 //\\\\ Variables
