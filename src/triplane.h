@@ -1,7 +1,7 @@
-/* 
+/*
  * Triplane Classic - a side-scrolling dogfighting game.
  * Copyright (C) 1996,1997,2009  Dodekaedron Software Creations Oy
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -23,12 +23,12 @@
 #ifndef TRIPLANE_H
 #define TRIPLANE_H
 
-#include <SDL.h>
-#include "world/constants.h"
-#include "io/sdl_compat.h"
 #include "gfx/gfx.h"
+#include "io/sdl_compat.h"
 #include "io/video.h"
 #include "settings.h"
+#include "world/constants.h"
+#include <SDL/SDL.h>
 
 #define DKS_FILENAME "fokker.dks"
 #define CALIBRATION_FILENAME "joystic.dta"
@@ -153,7 +153,6 @@ extern int hangarmenu_max_gas[16];
 extern int hangarmenu_max_ammo[16];
 extern int hangarmenu_max_bombs[16];
 
-
 //\ Graphics locating
 
 extern int x_muutos[4];
@@ -181,18 +180,17 @@ extern int aftermath;
 //\ Flying objects control
 
 struct flying_objects_data {
-    int x;
-    int y;
-    int x_speed;
-    int y_speed;
-    int hit_plane;
-    int width;
-    int height;
-    int type;
-    int subtype;
-    int phase;
-    int owner;
-
+  int x;
+  int y;
+  int x_speed;
+  int y_speed;
+  int hit_plane;
+  int width;
+  int height;
+  int type;
+  int subtype;
+  int phase;
+  int owner;
 };
 
 extern flying_objects_data fobjects[MAX_FLYING_OBJECTS];
@@ -211,17 +209,17 @@ extern int player_bomb_hits[16];
 extern char levelname[80];
 
 struct level_struct {
-    char pb_name[8];
-    char pd_name[MAX_STRUCTURES][8];
-    int32_t struct_x[MAX_STRUCTURES];
-    int32_t struct_y[MAX_STRUCTURES];
-    int32_t struct_hit[MAX_STRUCTURES];
-    int32_t struct_owner[MAX_STRUCTURES];
-    int32_t struct_type[MAX_STRUCTURES];
-    int32_t airfield_x[4];
-    int32_t airfield_y[4];
-    int32_t airfield_lenght[4];
-    int32_t plane_direction[4];
+  char pb_name[8];
+  char pd_name[MAX_STRUCTURES][8];
+  int32_t struct_x[MAX_STRUCTURES];
+  int32_t struct_y[MAX_STRUCTURES];
+  int32_t struct_hit[MAX_STRUCTURES];
+  int32_t struct_owner[MAX_STRUCTURES];
+  int32_t struct_type[MAX_STRUCTURES];
+  int32_t airfield_x[4];
+  int32_t airfield_y[4];
+  int32_t airfield_lenght[4];
+  int32_t plane_direction[4];
 };
 
 extern level_struct leveldata;
@@ -280,8 +278,6 @@ extern int bombs_going[100];
 
 extern short joystick_exists;
 
-
-
 extern int modem_com_port;
 extern int modem_com_speed;
 
@@ -306,7 +302,6 @@ extern int mission_duration;
 extern int modem_port_open;
 extern int modem_master;
 
-
 extern int mc_up[16];
 extern int mc_down[16];
 extern int mc_bomb[16];
@@ -330,7 +325,6 @@ extern void clear_level();
 extern void init_player(int l, int pommit = 1);
 extern void cause_damage(int amount, int plane);
 extern void do_flags();
-
 
 void loading_text(const char *);
 

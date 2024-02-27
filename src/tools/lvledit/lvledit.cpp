@@ -22,16 +22,16 @@
 #include "io/trip_io.h"
 #include <cstdio>
 #include "io/sdl_compat.h"
-#include <SDL.h>
-#include <SDL_endian.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_endian.h>
 #include <cstring>
 
-#define MAX_STRUCTURES 100
-#define MAX_TYPES 3
-#define AIRFIELD_LENGHT 110
+constexpr int32_t MAX_STRUCTURES = 100;
+constexpr int32_t MAX_TYPES = 3;
+constexpr int32_t AIRFIELD_LENGHT = 110;
 
-#define MIN_AIRFIELD_LENGHT 40
-#define MAX_AIRFIELD_LENGHT 200
+constexpr int32_t MIN_AIRFIELD_LENGHT = 40;
+constexpr int32_t MAX_AIRFIELD_LENGHT = 200;
 
 struct level_struct {
     char pb_name[8];

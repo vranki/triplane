@@ -1,7 +1,7 @@
-/* 
+/*
  * Triplane Classic - a side-scrolling dogfighting game.
  * Copyright (C) 1996,1997,2009  Dodekaedron Software Creations Oy
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -18,36 +18,34 @@
  * tjt@users.sourceforge.net
  */
 
-#include <SDL.h>
-#include <assert.h>
 #include "sdl_compat.h"
+#include <SDL/SDL.h>
+#include <cassert>
 
 static int enabled = 1;
 
 void nopeuskontrolli(int fps) {
-    static uint32_t viimeinen_aika = 0;
-    uint32_t target_tick;
+  static uint32_t viimeinen_aika = 0;
+  uint32_t target_tick;
 
-    if (!enabled) {
-        return;
+  if (!enabled) {
+    return;
+  }
+
+  target_tick = viimeinen_aika + 1000 / fps;
+  while (SDL_GetTicks() <= target_tick) {
+    uint32_t diff = target_tick - SDL_GetTicks();
+    if (diff > 10 && diff < 1000) {
+      SDL_Delay(diff);
     }
+  }
 
-    target_tick = viimeinen_aika + 1000 / fps;
-    while (SDL_GetTicks() <= target_tick) {
-        uint32_t diff = target_tick - SDL_GetTicks();
-        if (diff > 10 && diff < 1000) {
-            SDL_Delay(diff);
-        }
-    }
+  viimeinen_aika += 1000 / fps;
 
-    viimeinen_aika += 1000 / fps;
-
-    // Recover from stopped process
-    if (SDL_GetTicks() > viimeinen_aika + 1000 / fps) {
-        viimeinen_aika = SDL_GetTicks();
-    }
+  // Recover from stopped process
+  if (SDL_GetTicks() > viimeinen_aika + 1000 / fps) {
+    viimeinen_aika = SDL_GetTicks();
+  }
 }
 
-void nopeuskontrolli_enable(int enable) {
-    enabled = enable;
-}
+void nopeuskontrolli_enable(int enable) { enabled = enable; }

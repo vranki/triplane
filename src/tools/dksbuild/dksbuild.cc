@@ -28,10 +28,10 @@
 
 #include <cstdio>
 #include <cstring>
-#include <time.h>
+#include <ctime>
 #include <cstdlib>
 
-#define MAX_ENTRIES 8192
+constexpr int32_t MAX_ENTRIES = 8192;
 
 #pragma pack(1)
 struct main_directory_entry {

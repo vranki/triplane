@@ -1,7 +1,7 @@
-/* 
+/*
  * Triplane Classic - a side-scrolling dogfighting game.
  * Copyright (C) 1996,1997,2009  Dodekaedron Software Creations Oy
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -22,8 +22,8 @@
 #define GFX_H
 
 #include "gfx/bitmap.h"
-#include "gfx/font.h"
 #include "gfx/fades.h"
+#include "gfx/font.h"
 #include "io/video.h"
 
 void fill_vircr(int x1, int y1, int x2, int y2, unsigned char vari);
@@ -32,7 +32,5 @@ void draw_line(int x1, int y1, int x2, int y2, unsigned char vari);
 void putpix(int x, int y, unsigned char c, int x1, int y1, int x2, int y2);
 void tyhjaa_vircr();
 void do_all_clear(int do_retrace = 0);
-
-
 
 #endif
