@@ -210,10 +210,13 @@ static int init_mode(int new_mode, const char *paletname) {
 
   mode_flags = SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_HWPALETTE;
 
-  if (!draw_with_vircr_mode) mode_flags |= SDL_ANYFORMAT;
-  if (wantfullscreen) mode_flags |= SDL_FULLSCREEN;
+  if (!draw_with_vircr_mode)
+    mode_flags |= SDL_ANYFORMAT;
+  if (wantfullscreen)
+    mode_flags |= SDL_FULLSCREEN;
 
-  if (draw_with_vircr_mode && pixel_multiplier > 1) wfree(vircr);
+  if (draw_with_vircr_mode && pixel_multiplier > 1)
+    wfree(vircr);
 
   pixel_multiplier =
       (new_mode == SVGA_MODE) ? pixel_multiplier_svga : pixel_multiplier_vga;

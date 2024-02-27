@@ -22,8 +22,8 @@
 #define BITMAP_H
 
 #include <SDL/SDL.h>
-#include <cstdlib>
 #include <cstdint>
+#include <cstdlib>
 
 class Bitmap {
   unsigned char *image_data;

@@ -5,7 +5,7 @@ CXX	     ?= g++
 OPTIFLAG     = -O2 -g
 SDL_CONFIG  ?= sdl-config
 VERSION      = 1.0.8-vranki
-CFLAGS      := -Wall -Isrc $(OPTIFLAG) $(CFLAGS_NOSDL) `$(SDL_CONFIG) --cflags` -DHAVE_SDL_MIXER "-DTRIPLANE_DATA=\"$(PREFIX)/share/games/triplane\"" "-DTRIPLANE_VERSION=\"$(VERSION)\""
+CFLAGS      := --std=c++23 -Wall -pedantic -Wextra -Wshadow -Werror -Isrc $(OPTIFLAG) $(CFLAGS_NOSDL) `$(SDL_CONFIG) --cflags` -DHAVE_SDL_MIXER "-DTRIPLANE_DATA=\"$(PREFIX)/share/games/triplane\"" "-DTRIPLANE_VERSION=\"$(VERSION)\""
 LDFLAGS      = 
 LIBS        := `$(SDL_CONFIG) --libs` -lSDL_mixer -lm
 INSTALL_DATA     ?= install -m 644
