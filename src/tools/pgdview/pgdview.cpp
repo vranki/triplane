@@ -31,8 +31,9 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <cstdint>
 
-#define MAX_ENTRIES 8192
+constexpr int32_t MAX_ENTRIES = 8192;
 
 /* XXXX */
 #pragma pack(1)

@@ -1,7 +1,7 @@
-/* 
+/*
  * Triplane Classic - a side-scrolling dogfighting game.
  * Copyright (C) 1996,1997,2009  Dodekaedron Software Creations Oy
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -19,6 +19,8 @@
  */
 
 /* Triplane Turmoil flying objects header */
+
+#include "constants.h"
 
 extern void do_shots();
 extern void start_shot(int player);

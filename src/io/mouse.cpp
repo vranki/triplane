@@ -1,7 +1,7 @@
-/* 
+/*
  * Triplane Classic - a side-scrolling dogfighting game.
  * Copyright (C) 1996,1997,2009  Dodekaedron Software Creations Oy
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,27 +20,27 @@
 
 /*******************************************************************************
 
-   Purpose: 
-   	Mouse handling part of Wsystem 2.0 for DJGPP v.2.0á5
+   Purpose:
+        Mouse handling part of Wsystem 2.0 for DJGPP v.2.0ï¿½5
 
 *******************************************************************************/
 
 #include "io/mouse.h"
 #include "io/video.h"
-#include <SDL.h>
+#include <SDL/SDL.h>
 
 void hiiri_to(int x, int y) {
-    SDL_WarpMouse(x * pixel_multiplier, y * pixel_multiplier);
+  SDL_WarpMouse(x * pixel_multiplier, y * pixel_multiplier);
 }
 
 void koords(int *x, int *y, int *n1, int *n2) {
-    Uint8 ret;
+  Uint8 ret;
 
-    SDL_PumpEvents();
-    ret = SDL_GetMouseState(x, y);
-    *n1 = !!(ret & SDL_BUTTON(1));
-    *n2 = !!(ret & SDL_BUTTON(3));
+  SDL_PumpEvents();
+  ret = SDL_GetMouseState(x, y);
+  *n1 = !!(ret & SDL_BUTTON(1));
+  *n2 = !!(ret & SDL_BUTTON(3));
 
-    *x /= pixel_multiplier;
-    *y /= pixel_multiplier;
+  *x /= pixel_multiplier;
+  *y /= pixel_multiplier;
 }

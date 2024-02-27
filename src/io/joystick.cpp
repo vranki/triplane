@@ -18,9 +18,9 @@
  * tjt@users.sourceforge.net
  */
 
-#include <assert.h>
+#include <cassert>
 #include <cstdio>
-#include <SDL.h>
+#include <SDL/SDL.h>
 #include <cstring>
 #include "sdl_compat.h"
 #include "io/joystick.h"
@@ -31,7 +31,7 @@
  * min/max value given by joystick axis is multiplied by this to give
  * the threshold for when a direction is active
  */
-#define JOYSTICK_THRESHOLD_MULTIPLIER 0.8
+constexpr float JOYSTICK_THRESHOLD_MULTIPLIER = 0.8;
 
 joystick_configuration joystick_config[5];
 

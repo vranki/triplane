@@ -1,7 +1,7 @@
-/* 
+/*
  * Triplane Classic - a side-scrolling dogfighting game.
  * Copyright (C) 1996,1997,2009  Dodekaedron Software Creations Oy
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -21,23 +21,25 @@
 #ifndef VIDEO_H
 #define VIDEO_H
 
-#define VGA_MODE 0
-#define SVGA_MODE 1
+#include <cstdint>
+
+constexpr int32_t VGA_MODE = 0;
+constexpr int32_t SVGA_MODE = 1;
 
 #include "gfx/gfx.h"
 #include "sdl_compat.h"
 
 struct naytto {
-    char paletti[256][3];
-    char normaalipaletti[256][3];
-    char paletti_muutos;
+  char paletti[256][3];
+  char normaalipaletti[256][3];
+  char paletti_muutos;
 };
 extern naytto ruutu;
 
 struct video_state_t {
-    SDL_Surface *surface;
-    int init_done;
-    int haverealpalette;
+  SDL_Surface *surface{};
+  int init_done{};
+  int haverealpalette{};
 };
 extern struct video_state_t video_state;
 extern SDL_Color curpal[256];
@@ -60,7 +62,7 @@ extern int draw_with_vircr_mode;
 extern int pixel_multiplier_vga, pixel_multiplier_svga;
 extern int wantfullscreen;
 
-//Screen resolution
+// Screen resolution
 extern int screen_width;
 extern int screen_height;
 extern int screen_width_less;

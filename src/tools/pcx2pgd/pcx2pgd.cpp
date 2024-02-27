@@ -41,7 +41,7 @@ int wherey() {
     return 0;
 }
 
-#define RAJA 192
+constexpr int32_t RAJA 192
 unsigned char getpixel(int x, int y);
 unsigned char *vkuva;
 unsigned char *kuvadata;

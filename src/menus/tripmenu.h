@@ -1,7 +1,7 @@
-/* 
+/*
  * Triplane Classic - a side-scrolling dogfighting game.
  * Copyright (C) 1996,1997,2009  Dodekaedron Software Creations Oy
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -24,12 +24,13 @@
 /* Triplane Turmoil menusystem headerfile */
 
 #include "gfx/gfx.h"
+#include <cstdint>
 
-#define PROJECTOR_Y_ADJUSTMENT 21
-#define PROJECTOR_X1 5
-#define PROJECTOR_X2 315
-#define PROJECTOR_Y1 8
-#define PROJECTOR_Y2 178
+constexpr int32_t PROJECTOR_Y_ADJUSTMENT = 21;
+constexpr int32_t PROJECTOR_X1 = 5;
+constexpr int32_t PROJECTOR_X2 = 315;
+constexpr int32_t PROJECTOR_Y1 = 8;
+constexpr int32_t PROJECTOR_Y2 = 178;
 
 void main_menu();
 void roster_menu();
@@ -41,7 +42,7 @@ void controls_menu();
 int kangas_menu();
 int solo_player_menu();
 
-void print_clear_roster(Bitmap * rosteri);
+void print_clear_roster(Bitmap *rosteri);
 void print_filled_roster(int number);
 void wait_mouse_relase(int nokb = 0);
 void load_descriptions(int number);

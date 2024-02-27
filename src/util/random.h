@@ -1,7 +1,7 @@
-/* 
+/*
  * Triplane Classic - a side-scrolling dogfighting game.
  * Copyright (C) 1996,1997,2009  Dodekaedron Software Creations Oy
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +20,7 @@
 
 #ifndef RANDOM_H
 #define RANDOM_H
-#include <stdint.h>
+#include <cstdint>
 
 uint32_t triplane_random();
 void triplane_srandom(uint64_t x);
