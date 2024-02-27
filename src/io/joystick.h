@@ -21,6 +21,8 @@
 #ifndef JOYSTICK_H
 #define JOYSTICK_H
 
+#include <SDL/SDL_stdinc.h>
+
 // Vakiom��rittelyt eri tietojen bittimaskeille
 #define JOY1 0x01 // Akselibitit ovat aina 1 jos joystick
 #define JOY2 0x02 // ei ole kytkettyn�.

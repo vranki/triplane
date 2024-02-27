@@ -31,10 +31,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <cstdint>
 
 #include "util/wutil.h"
 
@@ -52,7 +52,7 @@ struct main_directory_entry {
 main_directory_entry *dirri;
 
 class Dirrikka {
- public:
+public:
   Dirrikka();
   ~Dirrikka();
 };
@@ -114,7 +114,8 @@ int dksinit(const char *tiedosto) {
 
   get_datafile_path(tiedosto, dks_tiedosto);
 
-  if ((dks_faili = fopen(dks_tiedosto, "rb")) == nullptr) return (0);
+  if ((dks_faili = fopen(dks_tiedosto, "rb")) == nullptr)
+    return (0);
 
   fread(tekstia, sizeof(tekstia), 1, dks_faili);
   fread(dirri, sizeof(main_directory_entry) * MAX_ENTRIES, 1, dks_faili);
@@ -139,7 +140,8 @@ int dksopen(const char *nimi) {
     return (0);
   }
 
-  if ((dks_faili = fopen(dks_tiedosto, "rb")) == nullptr) return (0);
+  if ((dks_faili = fopen(dks_tiedosto, "rb")) == nullptr)
+    return (0);
 
   fseek(dks_faili, dirri[kohta].offset, SEEK_SET);
 
@@ -151,7 +153,6 @@ int dksopen(const char *nimi) {
 int extdksopen(const char *nimi) {
   int lask;
   int kohta = -1;
-  int faili = 0;
 
   for (lask = 0; lask < MAX_ENTRIES; lask++) {
     if (!strcmp(dirri[lask].nimi, nimi)) {
@@ -162,10 +163,11 @@ int extdksopen(const char *nimi) {
 
   if (kohta == -1) {
     dks_faili = fopen(nimi, "rb");
-    faili = 1;
-    if (dks_faili == nullptr) return (0);
+    if (dks_faili == nullptr)
+      return (0);
   } else {
-    if ((dks_faili = fopen(dks_tiedosto, "rb")) == nullptr) return (0);
+    if ((dks_faili = fopen(dks_tiedosto, "rb")) == nullptr)
+      return (0);
 
     fseek(dks_faili, dirri[kohta].offset, SEEK_SET);
 
@@ -188,21 +190,20 @@ int dksread(void *mihin, unsigned long int koko) {
 
 int dksseek(int offset, int mode) {
   switch (mode) {
-    case SEEK_SET:
-      return (
-          fseek(dks_faili, dirri[nykyinen_faili].offset + offset, SEEK_SET));
-      break;
+  case SEEK_SET:
+    return (fseek(dks_faili, dirri[nykyinen_faili].offset + offset, SEEK_SET));
+    break;
 
-    case SEEK_CUR:
-      return (fseek(dks_faili, offset, SEEK_CUR));
-      break;
+  case SEEK_CUR:
+    return (fseek(dks_faili, offset, SEEK_CUR));
+    break;
 
-    case SEEK_END:
-      return (fseek(
-          dks_faili,
-          dirri[nykyinen_faili].offset + dirri[nykyinen_faili].koko + offset,
-          SEEK_SET));
-      break;
+  case SEEK_END:
+    return (fseek(dks_faili,
+                  dirri[nykyinen_faili].offset + dirri[nykyinen_faili].koko +
+                      offset,
+                  SEEK_SET));
+    break;
   }
 
   return 1;
