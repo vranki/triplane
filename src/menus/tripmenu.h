@@ -23,7 +23,8 @@
 
 /* Triplane Turmoil menusystem headerfile */
 
-#include "gfx/gfx.h"
+#include "../gfx/gfx.h"
+#include "../gfx/bitmap.h"
 #include <cstdint>
 
 constexpr int32_t PROJECTOR_Y_ADJUSTMENT = 21;

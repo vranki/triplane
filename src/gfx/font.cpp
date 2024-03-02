@@ -18,18 +18,21 @@
  * tjt@users.sourceforge.net
  */
 
-#include "gfx/gfx.h"
-#include "io/trip_io.h"
+#include "../gfx/bitmap.h"
+#include "../gfx/gfx.h"
+#include "../gfx/font.h"
+#include "../io/trip_io.h"
 #include "../util/wutil.h"
 #include <cstring>
-#include <stdarg.h>
+#include <cstdarg>
+#include <memory>
 
 Font::Font(const char *font_name) {
   int temp;
   int temppi;
   int kokox, kokoy;
   char valiteksti[7];
-  Bitmap *valikuva;
+  std::unique_ptr<Bitmap> valikuva;
 
   scaled = 0;
   scaled_space = 3;
@@ -38,7 +41,7 @@ Font::Font(const char *font_name) {
     glyphs[temppi] = nullptr;
 
   if (strlen(font_name) == 6) {
-    valikuva = new Bitmap(font_name);
+    valikuva = std::make_unique<Bitmap>(font_name);
     valikuva->info(&kokox, &kokoy);
     kokox--;
     kokoy--;
@@ -48,7 +51,6 @@ Font::Font(const char *font_name) {
       glyphs[temp] =
           new Bitmap(1 + (temp - ((temp >> 4) << 4)) * (width + 1),
                      1 + (temp >> 4) * (height + 1), width, height, valikuva);
-    delete valikuva;
   } else
     for (temp = 0; temp < 256; temp++) {
       strcpy(valiteksti, font_name);

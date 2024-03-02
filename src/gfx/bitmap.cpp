@@ -545,8 +545,8 @@ Bitmap *rotate_bitmap(Bitmap *picture, int degrees) {
   return picture2;
 }
 
-Bitmap *rotate_bitmap(std::unique_ptr<Bitmap>& picture, int degrees) {
-    Bitmap *picture2;
+std::unique_ptr<Bitmap> rotate_bitmap(std::unique_ptr<Bitmap>& picture, int degrees) {
+    std::unique_ptr<Bitmap> picture2;
     unsigned char *picture_data;
     unsigned char *temp_data;
     unsigned char *old_picture_data;
@@ -564,7 +564,7 @@ Bitmap *rotate_bitmap(std::unique_ptr<Bitmap>& picture, int degrees) {
 
     for (count = 0; count < (nxl * nyl); count++)
         temp_data[count] = 255;
-    picture2 = new Bitmap(xl, yl, picture_data, "rotated");
+    picture2 = std::make_unique<Bitmap>(xl, yl, picture_data, "rotated");
 
     for (count = 0; count < xl; count++)
         for (count2 = 0; count2 < yl; count2++)

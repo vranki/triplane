@@ -54,7 +54,7 @@ public:
 
 void all_bitmaps_refresh();
 Bitmap *rotate_bitmap(Bitmap *picture, int degrees);
-Bitmap *rotate_bitmap(std::unique_ptr<Bitmap>& picture, int degrees);
+std::unique_ptr<Bitmap> rotate_bitmap(std::unique_ptr<Bitmap>& picture, int degrees);
 int bitmap_exists(const char *name);
 
 #endif

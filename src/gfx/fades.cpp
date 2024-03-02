@@ -18,20 +18,17 @@
  * tjt@users.sourceforge.net
  */
 
-#include "gfx/fades.h"
-#include "gfx/gfx.h"
+#include "../gfx/fades.h"
+#include "../gfx/gfx.h"
 #include "../util/wutil.h"
+#include "bitmap.h"
 #include <cassert>
 
 void horisontal_split() {
-  Bitmap *upper;
-  Bitmap *lower;
-  int c1, c2 = 1;
+  int c1 = 0, c2 = 1;
+  std::unique_ptr<Bitmap> upper(new Bitmap(0, 0, 320, 100));
+  std::unique_ptr<Bitmap> lower(new Bitmap(0, 100, 320, 100));
 
-  upper = new Bitmap(0, 0, 320, 100);
-  lower = new Bitmap(0, 100, 320, 100);
-
-  c1 = 0;
   while (c1 < 150) {
     upper->blit(0, 0 - c1);
     lower->blit(0, 100 + c1);
@@ -39,21 +36,12 @@ void horisontal_split() {
     c1 += c2;
     c2++;
   }
-
-  delete upper;
-  delete lower;
 }
 
 void vertical_split() {
-  Bitmap *left;
-  Bitmap *right;
-  int c1, c2;
-
-  left = new Bitmap(0, 0, 160, 200);
-  right = new Bitmap(160, 0, 160, 200);
-
-  c1 = 0;
-  c2 = 1;
+  int c1 = 0, c2 = 1;
+  std::unique_ptr<Bitmap> left(new Bitmap(0, 0, 160, 200));
+  std::unique_ptr<Bitmap> right(new Bitmap(160, 0, 160, 200));
 
   while (c1 < 200) {
     left->blit(0 - c1, 0);
@@ -62,9 +50,6 @@ void vertical_split() {
     c1 += c2;
     c2++;
   }
-
-  delete left;
-  delete right;
 }
 
 void pixel_fade() {

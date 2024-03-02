@@ -57,20 +57,20 @@ std::unique_ptr<Bitmap> pwoff;
 std::unique_ptr<Bitmap> picons[4];
 std::unique_ptr<Bitmap> plane1;
 Bitmap *planes[16][61][4][2];
-Bitmap *bomb[61];
+std::unique_ptr<Bitmap> bomb[61];
 std::unique_ptr<Bitmap> boards[4];
 std::unique_ptr<Bitmap> closed;
 std::unique_ptr<Bitmap> bomb_icon;
 std::unique_ptr<Bitmap> gas_icon;
 std::unique_ptr<Bitmap> small_ammo_icon;
 std::unique_ptr<Bitmap> big_ammo_icon;
-Bitmap *plane_crash[6];
-Bitmap *smoke[SMOKE_FRAMES];
-Bitmap *wave1[WAVE1_FRAMES];
-Bitmap *wave2[WAVE2_FRAMES];
+std::unique_ptr<Bitmap> plane_crash[6];
+std::unique_ptr<Bitmap> smoke[SMOKE_FRAMES];
+std::unique_ptr<Bitmap> wave1[WAVE1_FRAMES];
+std::unique_ptr<Bitmap> wave2[WAVE2_FRAMES];
 Bitmap *explox[4][EXPLOX_FRAMES];
 std::unique_ptr<Bitmap> maisema;
-Bitmap *bites[NUMBER_OF_BITES];
+std::unique_ptr<Bitmap> bites[NUMBER_OF_BITES];
 std::unique_ptr<Bitmap> menu1;
 Bitmap *structures[MAX_STRUCTURES][2];
 std::unique_ptr<Bitmap> temp_bitti;
@@ -84,17 +84,17 @@ Bitmap *infantry_shooting[4][2][6];
 Bitmap *infantry_bdying[4][2][10];
 Bitmap *infantry_dropping[4][2];
 Bitmap *infantry_after_drop[4][2];
-Bitmap *itexplosion[ITEXPLOSION_FRAMES];
-Bitmap *flames[6];
+std::unique_ptr<Bitmap> itexplosion[ITEXPLOSION_FRAMES];
+std::unique_ptr<Bitmap> flames[6];
 Bitmap *status_icons[2][2];
 std::unique_ptr<Bitmap> hangarmenu;
 std::unique_ptr<Bitmap> hangaractive;
 std::unique_ptr<Bitmap> hangarinactive;
 Bitmap *radar[4][8];
-Bitmap *rifle[12];
+std::unique_ptr<Bitmap> rifle[12];
 std::unique_ptr<Bitmap> hruks;
-Bitmap *ssmoke[17];
-Bitmap *ovi[13];
+std::unique_ptr<Bitmap> ssmoke[17];
+std::unique_ptr<Bitmap> ovi[13];
 Bitmap *mekan_running[14][2];
 Bitmap *mekan_pushing[2][14][2];
 
@@ -144,9 +144,9 @@ int struct_heigth[MAX_STRUCTURES];
 
 //\ Fonts
 
-Font *fontti;
-Font *frost;
-Font *grid2;
+std::unique_ptr<Font> fontti;
+std::unique_ptr<Font> frost;
+std::unique_ptr<Font> grid2;
 
 //\ Parameter control
 
@@ -2311,10 +2311,10 @@ void load_up() {
   if (!findparameter("-debugnofonts")) {
 
     loading_text("Loading fonts.");
-    frost = new Font("GRFONT");
+    frost = std::make_unique<Font>("GRFONT");
     frost->scale();
-    fontti = new Font("FONTT");
-    grid2 = new Font("G2FONT");
+    fontti = std::make_unique<Font>("FONTT");
+    grid2 = std::make_unique<Font>("G2FONT");
     grid2->scale();
   }
 
@@ -2340,11 +2340,11 @@ void load_up() {
 
   plane1 = std::make_unique<Bitmap>("SMOKE");
   for (l = 0; l < SMOKE_FRAMES; l++)
-    smoke[l] = new Bitmap(1 + l * 21, 1, 20, 20, plane1);
+    smoke[l] = std::make_unique<Bitmap>(1 + l * 21, 1, 20, 20, plane1);
 
   plane1 = std::make_unique<Bitmap>("SSMOKE");
   for (l = 0; l < 17; l++)
-    ssmoke[l] = new Bitmap(1 + l * 10, 1, 9, 9, plane1);
+    ssmoke[l] = std::make_unique<Bitmap>(1 + l * 10, 1, 9, 9, plane1);
 
   loading_text("Loading hangar.");
 
@@ -2366,23 +2366,23 @@ void load_up() {
 
   plane1 = std::make_unique<Bitmap>("WAVE1");
   for (l = 0; l < WAVE1_FRAMES; l++)
-    wave1[l] = new Bitmap(1 + l * 24, 1, 23, 23, plane1);
+    wave1[l] = std::make_unique<Bitmap>(1 + l * 24, 1, 23, 23, plane1);
 
   plane1 = std::make_unique<Bitmap>("WAVE2");
   for (l = 0; l < WAVE2_FRAMES; l++)
-    wave2[l] = new Bitmap(1 + l * 4, 1, 3, 5, plane1);
+    wave2[l] = std::make_unique<Bitmap>(1 + l * 4, 1, 3, 5, plane1);
 
   loading_text("Loading flames");
 
   plane1 = std::make_unique<Bitmap>("FLAME");
   for (l = 0; l < NUMBER_OF_FLAMES; l++)
-    flames[l] = new Bitmap(1 + l * 8, 1, 7, 14, plane1);
+    flames[l] = std::make_unique<Bitmap>(1 + l * 8, 1, 7, 14, plane1);
 
   loading_text("Loading AAA Explosion.");
 
   plane1 = std::make_unique<Bitmap>("ITEXP1");
   for (l = 0; l < ITEXPLOSION_FRAMES; l++)
-    itexplosion[l] = new Bitmap(1 + l * 24, 1, 23, 14, plane1);
+    itexplosion[l] = std::make_unique<Bitmap>(1 + l * 24, 1, 23, 14, plane1);
 
   loading_text("Loading explosion frames.");
 
@@ -2423,7 +2423,7 @@ void load_up() {
   plane1 = std::make_unique<Bitmap>("OVI");
 
   for (l = 0; l < 13; l++)
-    ovi[l] = new Bitmap(1 + l * 26, 1, 25, 13, plane1);
+    ovi[l] = std::make_unique<Bitmap>(1 + l * 26, 1, 25, 13, plane1);
 
   loading_text("Loading mechanic");
 
@@ -2596,7 +2596,7 @@ void load_up() {
   if (!findparameter("-debugnorotate")) {
 
     loading_text("Loading and rotating bomb.");
-    bomb[0] = new Bitmap("BOMB");
+    bomb[0] = std::make_unique<Bitmap>("BOMB");
 
     for (l = 1; l < 61; l++) {
       bomb[l] = rotate_bitmap(bomb[0], l * 6);
@@ -2748,7 +2748,7 @@ void load_up() {
 
   plane1 = std::make_unique<Bitmap>("CRASH");
   for (l = 0; l < 6; l++)
-    plane_crash[l] = new Bitmap(1 + 21 * l, 1, 20, 20, plane1);
+    plane_crash[l] = std::make_unique<Bitmap>(1 + 21 * l, 1, 20, 20, plane1);
 
   loading_text("Loading icons.");
 
@@ -2768,11 +2768,11 @@ void load_up() {
 
   plane1 = std::make_unique<Bitmap>("BITES");
   for (l = 0; l < NUMBER_OF_BITES; l++)
-    bites[l] = new Bitmap(1 + 11 * l, 1, 10, 10, plane1);
+    bites[l] = std::make_unique<Bitmap>(1 + 11 * l, 1, 10, 10, plane1);
 
   plane1 = std::make_unique<Bitmap>("RIFLE");
   for (l = 0; l < 12; l++)
-    rifle[l] = new Bitmap(1 + 9 * l, 1, 8, 8, plane1);
+    rifle[l] = std::make_unique<Bitmap>(1 + 9 * l, 1, 8, 8, plane1);
 
   loading_text("Loading menu graphics.");
 
@@ -2795,21 +2795,12 @@ void load_up() {
 void clean_memory() {
   int l, l2, l3, l4;
 
-  for (l = 0; l < 13; l++)
-    delete ovi[l];
-
   for (l = 0; l < 14; l++)
     for (l2 = 0; l2 < 2; l2++) {
       delete mekan_running[l][l2];
       delete mekan_pushing[0][l][l2];
       delete mekan_pushing[1][l][l2];
     }
-
-  for (l = 0; l < 17; l++)
-    delete ssmoke[l];
-
-  for (l = 0; l < 12; l++)
-    delete rifle[l];
 
   for (l = 0; l < 4; l++)
     for (l2 = 0; l2 < 8; l2++)
@@ -2819,21 +2810,6 @@ void clean_memory() {
   delete status_icons[0][1];
   delete status_icons[1][0];
   delete status_icons[1][1];
-
-  for (l = 0; l < SMOKE_FRAMES; l++)
-    delete smoke[l];
-
-  for (l = 0; l < WAVE1_FRAMES; l++)
-    delete wave1[l];
-
-  for (l = 0; l < WAVE2_FRAMES; l++)
-    delete wave2[l];
-
-  for (l = 0; l < NUMBER_OF_FLAMES; l++)
-    delete flames[l];
-
-  for (l = 0; l < ITEXPLOSION_FRAMES; l++)
-    delete itexplosion[l];
 
   for (l = 0; l < 4; l++)
     for (l2 = 0; l2 < EXPLOX_FRAMES; l2++)
@@ -2879,15 +2855,6 @@ void clean_memory() {
         for (l4 = 0; l4 < 2; l4++)
           delete planes[l2][l][l3][l4];
   }
-
-  for (l2 = 0; l2 < 6; l2++)
-    delete plane_crash[l2];
-
-  for (l = 0; l < NUMBER_OF_BITES; l++)
-    delete bites[l];
-
-  delete fontti;
-  delete frost;
 
   for (l = 0; l < 4; l++)
     for (l2 = 0; l2 < 12; l2++)
