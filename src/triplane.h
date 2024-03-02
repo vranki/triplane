@@ -43,20 +43,20 @@ extern std::unique_ptr<Bitmap> pwoff;
 extern std::unique_ptr<Bitmap> picons[4];
 extern std::unique_ptr<Bitmap> plane1;
 extern Bitmap *planes[16][61][4][2];
-extern Bitmap *bomb[61];
+extern std::unique_ptr<Bitmap> bomb[61];
 extern std::unique_ptr<Bitmap> boards[4];
 extern std::unique_ptr<Bitmap> closed;
 extern std::unique_ptr<Bitmap> bomb_icon;
 extern std::unique_ptr<Bitmap> gas_icon;
 extern std::unique_ptr<Bitmap> small_ammo_icon;
 extern std::unique_ptr<Bitmap> big_ammo_icon;
-extern Bitmap *plane_crash[6];
-extern Bitmap *smoke[SMOKE_FRAMES];
-extern Bitmap *wave1[WAVE1_FRAMES];
-extern Bitmap *wave2[WAVE2_FRAMES];
+extern std::unique_ptr<Bitmap> plane_crash[6];
+extern std::unique_ptr<Bitmap> smoke[SMOKE_FRAMES];
+extern std::unique_ptr<Bitmap> wave1[WAVE1_FRAMES];
+extern std::unique_ptr<Bitmap> wave2[WAVE2_FRAMES];
 extern Bitmap *explox[4][EXPLOX_FRAMES];
 extern std::unique_ptr<Bitmap> maisema;
-extern Bitmap *bites[NUMBER_OF_BITES];
+extern std::unique_ptr<Bitmap> bites[NUMBER_OF_BITES];
 extern std::unique_ptr<Bitmap> menu1;
 extern Bitmap *structures[MAX_STRUCTURES][2];
 extern std::unique_ptr<Bitmap> temp_bitti;
@@ -70,17 +70,17 @@ extern Bitmap *infantry_shooting[4][2][6];
 extern Bitmap *infantry_bdying[4][2][10];
 extern Bitmap *infantry_dropping[4][2];
 extern Bitmap *infantry_after_drop[4][2];
-extern Bitmap *itexplosion[ITEXPLOSION_FRAMES];
-extern Bitmap *flames[6];
+extern std::unique_ptr<Bitmap> itexplosion[ITEXPLOSION_FRAMES];
+extern std::unique_ptr<Bitmap> flames[6];
 extern Bitmap *status_icons[2][2];
 extern std::unique_ptr<Bitmap> hangarmenu;
 extern std::unique_ptr<Bitmap> hangaractive;
 extern std::unique_ptr<Bitmap> hangarinactive;
 extern Bitmap *radar[4][8];
-extern Bitmap *rifle[12];
+extern std::unique_ptr<Bitmap> rifle[12];
 extern std::unique_ptr<Bitmap> hruks;
-extern Bitmap *ssmoke[17];
-extern Bitmap *ovi[13];
+extern std::unique_ptr<Bitmap> ssmoke[17];
+extern std::unique_ptr<Bitmap> ovi[13];
 extern Bitmap *mekan_running[14][2];
 extern Bitmap *mekan_pushing[2][14][2];
 
@@ -118,9 +118,9 @@ extern int struct_heigth[MAX_STRUCTURES];
 
 //\ Fonts
 
-extern Font *fontti;
-extern Font *frost;
-extern Font *grid2;
+extern std::unique_ptr<Font> fontti;
+extern std::unique_ptr<Font> frost;
+extern std::unique_ptr<Font> grid2;
 
 //\ Parameter control
 

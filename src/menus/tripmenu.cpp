@@ -35,6 +35,9 @@
 #include <ctime>
 #include <memory>
 #include <array>
+#include "../gfx/fades.h"
+#include "../gfx/font.h"
+#include "../io/dksfile.h"
 
 extern int miss_pl_x[16];
 extern int miss_pl_y[16];
@@ -59,8 +62,7 @@ char rank_names[6][10] = {"2nd Lt.", "1st Lt.", "Capt.",
 void joystick_roster_setup(Bitmap *controlme);
 
 void show_feat5() {
-  Bitmap *feat5;
-  feat5 = new Bitmap("FEAT5");
+  std::unique_ptr<Bitmap> feat5(new Bitmap("FEAT5"));
   int n1 = 0, n2 = 0;
   int x, y;
 
@@ -78,7 +80,7 @@ void show_feat5() {
   wait_mouse_relase();
 }
 
-int get_rank(int player) {
+int get_rank(const int player) {
   int l, l2, l3;
 
   l = roster[player].solo_mis_flown + roster[player].multi_mis_flown;
@@ -105,7 +107,7 @@ int get_rank(int player) {
   return 5;
 }
 
-int calculate_multitotal(int player) {
+int calculate_multitotal(const int player) {
   int ts = 0;
 
   if (!roster[player].pilotname[0])
@@ -123,7 +125,7 @@ int calculate_multitotal(int player) {
   return ts;
 }
 
-void sort_and_show(int percent) {
+void sort_and_show(const int percent) {
   int alkuosa, loppuosa;
   int flag = 1;
   int aces_number[MAX_PLAYERS_IN_ROSTER];
@@ -393,7 +395,7 @@ void aces_totalmissions() {
   }
 }
 
-void aces_one_solo(int country, int mission) {
+void aces_one_solo(const int country, const int mission) {
   char country_names_genetive[4][15] = {"German", "Finnish", "English",
                                         "Japanese"};
 
@@ -419,7 +421,7 @@ void aces_one_solo(int country, int mission) {
   }
 }
 
-void show_descriptions(int number) {
+void show_descriptions(const int number) {
   int c;
 
   frost->printf((320 - mission_headline_pixels) >> 1, 24, "%s",
@@ -433,7 +435,7 @@ void show_descriptions(int number) {
   }
 }
 
-void load_descriptions(int number) {
+void load_descriptions(const int number) {
   char *temp_storage;
   int c;
   int locator = 0;
@@ -531,10 +533,10 @@ int solo_player_menu() {
   char missionnames[4][7] = {"MISSI0", "MISSI1", "MISSI2", "MISSI3"};
   char modnames[4][7] = {"mgerma", "mfinla", "mengla", "mjapan"};
 
-  Bitmap *misboa = 0;
-  Bitmap *misbak = 0;
-  Bitmap *face = 0;
-  Bitmap *mission = 0;
+  std::unique_ptr<Bitmap> misboa = 0;
+  std::unique_ptr<Bitmap> misbak = 0;
+  std::unique_ptr<Bitmap> face = 0;
+  std::unique_ptr<Bitmap> mission = 0;
   int flag = 0;
   int l;
   int x, y, n1, n2;
@@ -561,11 +563,11 @@ int solo_player_menu() {
     flag = 3;
 
   } else {
-    misboa = new Bitmap("MISBOA");
-    misbak = new Bitmap("MISBAK", 0);
+    misboa = std::make_unique<Bitmap>("MISBOA");
+    misbak = std::make_unique<Bitmap>("MISBAK", 0);
 
-    face = new Bitmap(facenames[solo_country]);
-    mission = new Bitmap(missionnames[solo_country]);
+    face = std::make_unique<Bitmap>(facenames[solo_country]);
+    mission = std::make_unique<Bitmap>(missionnames[solo_country]);
 
     misbak->blit(0, 0);
     misboa->blit(9, 4);
@@ -616,10 +618,6 @@ int solo_player_menu() {
   }
 
   if (mission_re_fly == -1) {
-    delete misboa;
-    delete misbak;
-    delete face;
-    delete mission;
     delete standard_background;
     standard_background = nullptr;
   }
