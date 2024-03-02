@@ -475,6 +475,32 @@ void Bitmap::blit_to_bitmap(Bitmap *to, int xx, int yy) {
   to->refresh_sdlsurface();
 }
 
+void Bitmap::blit_to_bitmap(std::unique_ptr<Bitmap>& to, int xx, int yy) {
+    unsigned char *to_point;
+    int laskx, lasky;
+    int kokox, kokoy;
+
+    to_point = to->info(&kokox, &kokoy);
+
+    if ((xx >= kokox) | (yy >= kokoy) | (xx + width < 0) | (yy + height < 0))
+        return;
+
+    for (laskx = 0; laskx < width; laskx++)
+        for (lasky = 0; lasky < height; lasky++) {
+            if ((laskx + xx >= kokox) | (laskx + xx < 0))
+                continue;
+            if ((lasky + yy >= kokoy) | (lasky + yy < 0))
+                continue;
+            if (image_data[laskx + lasky * width] == 255)
+                continue;
+
+            to_point[laskx + xx + (lasky + yy) * kokox] =
+                    image_data[laskx + lasky * width];
+        }
+
+    to->refresh_sdlsurface();
+}
+
 Bitmap *rotate_bitmap(Bitmap *picture, int degrees) {
   Bitmap *picture2;
   unsigned char *picture_data;
@@ -517,6 +543,50 @@ Bitmap *rotate_bitmap(Bitmap *picture, int degrees) {
 
   picture2->refresh_sdlsurface();
   return picture2;
+}
+
+Bitmap *rotate_bitmap(std::unique_ptr<Bitmap>& picture, int degrees) {
+    Bitmap *picture2;
+    unsigned char *picture_data;
+    unsigned char *temp_data;
+    unsigned char *old_picture_data;
+    int xl, yl;
+    int nxl, nyl;
+    int count, count2;
+
+    old_picture_data = picture->info(&xl, &yl);
+    picture_data = (unsigned char *)walloc(xl * yl);
+
+    nxl = xl << 1;
+    nyl = yl << 1;
+
+    temp_data = (unsigned char *)walloc(nxl * nyl);
+
+    for (count = 0; count < (nxl * nyl); count++)
+        temp_data[count] = 255;
+    picture2 = new Bitmap(xl, yl, picture_data, "rotated");
+
+    for (count = 0; count < xl; count++)
+        for (count2 = 0; count2 < yl; count2++)
+            temp_data[(xl / 2 + count) + (yl / 2 + count2) * nxl] =
+                    old_picture_data[count + count2 * xl];
+
+    for (count = (-(xl >> 1)); count < (xl >> 1); count++)
+        for (count2 = (-(yl >> 1)); count2 < (yl >> 1); count2++) {
+
+            picture_data[(xl >> 1) + count + ((yl >> 1) + count2) * xl] =
+                    temp_data[(xl + (((count * cosinit[degrees]) -
+                                      (count2 * sinit[degrees]) + 128) >>
+                                                                       8)) +
+                              (yl + (((count * sinit[degrees]) +
+                                      (count2 * cosinit[degrees]) + 128) >>
+                                                                         8)) *
+                              nxl];
+        }
+    free(temp_data);
+
+    picture2->refresh_sdlsurface();
+    return picture2;
 }
 
 int bitmap_exists(const char *name) {

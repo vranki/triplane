@@ -44,6 +44,7 @@ constexpr int32_t SUB_VERSION = 3;
 #include <cstring>
 #include <ctime>
 #include <memory>
+#include <array>
 
 //\\\\ Variables
 
@@ -53,27 +54,27 @@ std::unique_ptr<Bitmap> board;
 std::unique_ptr<Bitmap> board2;
 std::unique_ptr<Bitmap> pwon;
 std::unique_ptr<Bitmap> pwoff;
-Bitmap *picons[4];
+std::unique_ptr<Bitmap> picons[4];
 std::unique_ptr<Bitmap> plane1;
 Bitmap *planes[16][61][4][2];
 Bitmap *bomb[61];
-Bitmap *boards[4];
-Bitmap *closed;
-Bitmap *bomb_icon;
-Bitmap *gas_icon;
-Bitmap *small_ammo_icon;
-Bitmap *big_ammo_icon;
+std::unique_ptr<Bitmap> boards[4];
+std::unique_ptr<Bitmap> closed;
+std::unique_ptr<Bitmap> bomb_icon;
+std::unique_ptr<Bitmap> gas_icon;
+std::unique_ptr<Bitmap> small_ammo_icon;
+std::unique_ptr<Bitmap> big_ammo_icon;
 Bitmap *plane_crash[6];
 Bitmap *smoke[SMOKE_FRAMES];
 Bitmap *wave1[WAVE1_FRAMES];
 Bitmap *wave2[WAVE2_FRAMES];
 Bitmap *explox[4][EXPLOX_FRAMES];
-Bitmap *maisema;
+std::unique_ptr<Bitmap> maisema;
 Bitmap *bites[NUMBER_OF_BITES];
-Bitmap *menu1;
+std::unique_ptr<Bitmap> menu1;
 Bitmap *structures[MAX_STRUCTURES][2];
-Bitmap *temp_bitti;
-Bitmap *cursor;
+std::unique_ptr<Bitmap> temp_bitti;
+std::unique_ptr<Bitmap> cursor;
 Bitmap *kkbase[2][3][7];
 Bitmap *infantry_walking[4][2][12];
 Bitmap *infantry_dying[4][2][7];
@@ -86,11 +87,12 @@ Bitmap *infantry_after_drop[4][2];
 Bitmap *itexplosion[ITEXPLOSION_FRAMES];
 Bitmap *flames[6];
 Bitmap *status_icons[2][2];
-Bitmap *hangarmenu;
-Bitmap *hangaractive, *hangarinactive;
+std::unique_ptr<Bitmap> hangarmenu;
+std::unique_ptr<Bitmap> hangaractive;
+std::unique_ptr<Bitmap> hangarinactive;
 Bitmap *radar[4][8];
 Bitmap *rifle[12];
-Bitmap *hruks;
+std::unique_ptr<Bitmap> hruks;
 Bitmap *ssmoke[17];
 Bitmap *ovi[13];
 Bitmap *mekan_running[14][2];
@@ -2318,12 +2320,12 @@ void load_up() {
 
   loading_text("Loading and initializing board-graphics.");
   board = std::make_unique<Bitmap>("BOARD", 0);
-  boards[0] = new Bitmap(2, 90, 159, 12, board);
-  boards[1] = new Bitmap(162, 90, 158, 12, board);
-  boards[2] = new Bitmap(2, 188, 159, 12, board);
-  boards[3] = new Bitmap(162, 188, 158, 12, board);
+  boards[0] = std::make_unique<Bitmap>(2, 90, 159, 12, board);
+  boards[1] = std::make_unique<Bitmap>(162, 90, 158, 12, board);
+  boards[2] = std::make_unique<Bitmap>(2, 188, 159, 12, board);
+  boards[3] = std::make_unique<Bitmap>(162, 188, 158, 12, board);
 
-  closed = new Bitmap("CLOSED", 0);
+  closed = std::make_unique<Bitmap>("CLOSED", 0);
   board2 = std::make_unique<Bitmap>("BOARD2", 0);
 
   loading_text("Loading status icons.");
@@ -2346,10 +2348,10 @@ void load_up() {
 
   loading_text("Loading hangar.");
 
-  hangarmenu = new Bitmap("HMENU", 0);
-  hangaractive = new Bitmap("HACTIV");
-  hangarinactive = new Bitmap("HINACT");
-  hruks = new Bitmap("HRUKS");
+  hangarmenu = std::make_unique<Bitmap>("HMENU", 0);
+  hangaractive = std::make_unique<Bitmap>("HACTIV");
+  hangarinactive = std::make_unique<Bitmap>("HINACT");
+  hruks = std::make_unique<Bitmap>("HRUKS");
 
   loading_text("Loading radaricons.");
 
@@ -2750,14 +2752,14 @@ void load_up() {
 
   loading_text("Loading icons.");
 
-  bomb_icon = new Bitmap("ASE1", 0);
-  gas_icon = new Bitmap("ASE2", 0);
-  small_ammo_icon = new Bitmap("ASE4", 0);
-  big_ammo_icon = new Bitmap("ASE3", 0);
+  bomb_icon = std::make_unique<Bitmap>("ASE1", 0);
+  gas_icon = std::make_unique<Bitmap>("ASE2", 0);
+  small_ammo_icon = std::make_unique<Bitmap>("ASE4", 0);
+  big_ammo_icon = std::make_unique<Bitmap>("ASE3", 0);
 
   plane1 = std::make_unique<Bitmap>("PICONS", 0);
   for (l = 0; l < 4; l++)
-    picons[l] = new Bitmap(9 * l, 0, 9, 9, plane1);
+      picons[l] = std::make_unique<Bitmap>(9 * l, 0, 9, 9, plane1);
 
   pwon = std::make_unique<Bitmap>("PWON");
   pwoff = std::make_unique<Bitmap>("PWOFF");
@@ -2774,11 +2776,11 @@ void load_up() {
 
   loading_text("Loading menu graphics.");
 
-  menu1 = new Bitmap("MENU01");
+  menu1 = std::make_unique<Bitmap>("MENU01");
 
   loading_text("Loading flags.");
 
-  temp_bitti = new Bitmap("FLAGS");
+  temp_bitti = std::make_unique<Bitmap>("FLAGS");
 
   for (l = 0; l < 4; l++) {
     for (l2 = 0; l2 < 12; l2++) {
@@ -2786,10 +2788,8 @@ void load_up() {
     }
   }
 
-  delete temp_bitti;
-
   loading_text("Loading mouse cursor.");
-  cursor = new Bitmap("CURSOR");
+  cursor = std::make_unique<Bitmap>("CURSOR");
 }
 
 void clean_memory() {
@@ -2807,11 +2807,6 @@ void clean_memory() {
 
   for (l = 0; l < 17; l++)
     delete ssmoke[l];
-
-  delete hangarmenu;
-  delete hangaractive;
-  delete hangarinactive;
-  delete hruks;
 
   for (l = 0; l < 12; l++)
     delete rifle[l];
@@ -2879,8 +2874,6 @@ void clean_memory() {
     }
 
   for (l2 = 0; l2 < 4; l2++) {
-    delete picons[l2];
-    delete boards[l2];
     for (l = 0; l < 60; l++)
       for (l3 = 0; l3 < 4; l3++)
         for (l4 = 0; l4 < 2; l4++)
@@ -2893,20 +2886,12 @@ void clean_memory() {
   for (l = 0; l < NUMBER_OF_BITES; l++)
     delete bites[l];
 
-  delete closed;
-  delete bomb_icon;
-  delete gas_icon;
-  delete small_ammo_icon;
-  delete big_ammo_icon;
-
   delete fontti;
   delete frost;
-  delete menu1;
 
   for (l = 0; l < 4; l++)
     for (l2 = 0; l2 < 12; l2++)
       delete flags[l][l2];
-  delete cursor;
 }
 
 void load_level() {
@@ -2976,7 +2961,7 @@ void load_level() {
 
   loading_text("Loading scenery.");
 
-  maisema = new Bitmap(leveldata.pb_name, 0);
+  maisema = std::make_unique<Bitmap>(leveldata.pb_name, 0);
 
   loading_text("Loading structures.");
 
@@ -3186,8 +3171,6 @@ void clear_level() {
       if (structures[l][l2] != nullptr)
         delete structures[l][l2];
     }
-
-  delete maisema;
 }
 
 void init_data() {

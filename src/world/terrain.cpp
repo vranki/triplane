@@ -20,7 +20,7 @@
 
 /* Terrain drawing code */
 
-#include "menus/tripmenu.h"
+#include "../menus/tripmenu.h"
 #include "../triplane.h"
 #include "../world/constants.h"
 #include "../world/plane.h"
