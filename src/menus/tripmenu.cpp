@@ -672,11 +672,11 @@ void roster_menu() {
   std::unique_ptr<Bitmap> buttr;
   std::unique_ptr<Bitmap> setk1;
   std::unique_ptr<Bitmap> setk2;
-  Bitmap *medal2[4];
+  std::unique_ptr<Bitmap> medal2[4];
   std::unique_ptr<Bitmap> medal3;
   std::unique_ptr<Bitmap> medal5;
   std::unique_ptr<Bitmap> temp;
-  Bitmap *ribbon[6];
+  std::unique_ptr<Bitmap> ribbon[6];
   int l, l2, l3, l4;
   int rank;
 
@@ -694,7 +694,7 @@ void roster_menu() {
   medal3 = std::make_unique<Bitmap>("MEDAL3");
 
   for (l = 0; l < 4; l++) {
-    medal2[l] = new Bitmap(1 + l * 17, 1, 16, 28, temp);
+    medal2[l] = std::make_unique<Bitmap>(1 + l * 17, 1, 16, 28, temp);
   }
 
   medal5 = std::make_unique<Bitmap>(1 + 4 * 17, 1, 16, 28, temp);
@@ -702,7 +702,7 @@ void roster_menu() {
   temp = std::make_unique<Bitmap>("RIBBON");
 
   for (l = 0; l < 6; l++)
-    ribbon[l] = new Bitmap(36 * l, 0, 35, 8, temp);
+    ribbon[l] = std::make_unique<Bitmap>(36 * l, 0, 35, 8, temp);
 
   hiiri_to(264, 109);
 
@@ -1100,13 +1100,6 @@ void roster_menu() {
     }
   }
 
-  delete rosteri;
-  for (l = 0; l < 4; l++)
-    delete medal2[l];
-
-  for (l = 0; l < 6; l++)
-    delete ribbon[l];
-
   wait_mouse_relase();
 }
 
@@ -1125,7 +1118,7 @@ void options_menu() {
   int menuselect;
   int menusubselect = 0;
   std::unique_ptr<Bitmap> optionme(new Bitmap("OPTION"));
-  Bitmap *kohta[4];
+  std::unique_ptr<Bitmap> kohta[4];
   std::unique_ptr<Bitmap> right(new Bitmap("RIGHT"));
   std::unique_ptr<Bitmap> wrong(new Bitmap("WRONG"));
   std::unique_ptr<Bitmap> opt1(new Bitmap("OPT1"));
@@ -1138,10 +1131,10 @@ void options_menu() {
                             "Phychological questions about flying.",
                             "Questions about hostile environments."};
 
-  kohta[3] = new Bitmap("OPTI1");
-  kohta[2] = new Bitmap("OPTI2");
-  kohta[1] = new Bitmap("OPTI3");
-  kohta[0] = new Bitmap("OPTI4");
+  kohta[3] = std::make_unique<Bitmap>("OPTI1");
+  kohta[2] = std::make_unique<Bitmap>("OPTI2");
+  kohta[1] = std::make_unique<Bitmap>("OPTI3");
+  kohta[0] = std::make_unique<Bitmap>("OPTI4");
 
   while (!exit_flag) {
     if (kbhit())
@@ -1754,11 +1747,6 @@ void options_menu() {
       }
     }
   }
-
-  delete kohta[0];
-  delete kohta[1];
-  delete kohta[2];
-  delete kohta[3];
 
   if (config.sound_on && (is_there_sound == 0))
     init_sounds();
@@ -2714,11 +2702,11 @@ int kangas_menu() {
   int place_x = -2079;
   int showing_texts = 1;
 
-  Bitmap *kangas = new Bitmap("KANGAS", 0);
-  Bitmap *buttr = new Bitmap("BUTTR");
-  Bitmap *buttl = new Bitmap("BUTTL");
-  Bitmap *fly = new Bitmap("FLY");
-  Bitmap *exit = new Bitmap("EXIT");
+  std::unique_ptr<Bitmap> kangas(new Bitmap("KANGAS", 0));
+  std::unique_ptr<Bitmap> buttr(new Bitmap("BUTTR"));
+  std::unique_ptr<Bitmap> buttl(new Bitmap("BUTTL"));
+  std::unique_ptr<Bitmap> fly(new Bitmap("FLY"));
+  std::unique_ptr<Bitmap> exit(new Bitmap("EXIT"));
 
   init_vga("PALET3");
 
@@ -2831,12 +2819,6 @@ int kangas_menu() {
       place_x = -2079;
   }
 
-  delete kangas;
-  delete buttr;
-  delete buttl;
-  delete fly;
-  delete exit;
-
   if (is_there_sound && config.sfx_on) {
     if (soundcard_type != SOUNDCARD_GUS) {
       sdl_stop_all_samples(); /* stop hurr sound */
@@ -2864,13 +2846,10 @@ void credits_menu() {
   int x, y, n1, n2;
   int kohta1, kohta2;
 
-  Font *grid3;
-  Bitmap *credi1;
+  std::unique_ptr<Font> grid3(new Font("G3FONT"));
+  std::unique_ptr<Bitmap> credi1(new Bitmap("CREDI1"));
 
-  grid3 = new Font("G3FONT");
   grid3->scale();
-
-  credi1 = new Bitmap("CREDI1");
 
   kohta1 = 160 - (grid3->printf(0, 25, "Triplane Turmoil Crew") >> 1);
   kohta2 = 160 - (grid3->printf(0, 25, "Special Thanks:") >> 1);
@@ -2916,9 +2895,6 @@ void credits_menu() {
   if (!findparameter("-debugnographics"))
     init_vga("PALET5");
 
-  delete credi1;
-  delete grid3;
-
   wait_mouse_relase();
 }
 
@@ -2928,13 +2904,8 @@ void letter_menu() {
   char country_names[4][10] = {"German", "Finnish", "English", "Japanese"};
   char modnames[4][7] = {"mgerma", "mfinla", "mengla", "mjapan"};
 
-  Bitmap *letter;
-  Bitmap *temp;
-  Bitmap *medal1;
-
-  temp = new Bitmap("MEDAL1");
-  medal1 = new Bitmap(1 + 32 * solo_country, 1, 31, 57, temp);
-  delete temp;
+  std::unique_ptr<Bitmap> temp(new Bitmap("MEDAL1"));
+  std::unique_ptr<Bitmap> medal1(new Bitmap(1 + 32 * solo_country, 1, 31, 57, temp));
 
   if (is_there_sound && config.music_on && !findparameter("-nomusic")) {
     national_mod = sdl_load_mod_file(modnames[solo_country]);
@@ -2945,7 +2916,7 @@ void letter_menu() {
     sdl_play_music(national_mod);
   }
 
-  letter = new Bitmap("LETTER");
+  std::unique_ptr<Bitmap> letter(new Bitmap("LETTER"));
 
   while (!exit_flag) {
     if (kbhit()) {
@@ -2982,9 +2953,6 @@ void letter_menu() {
   tyhjaa_vircr();
   do_all();
 
-  delete letter;
-  delete medal1;
-
   wait_mouse_relase();
 
   if (is_there_sound && config.music_on && !findparameter("-nomusic")) {
@@ -3000,9 +2968,7 @@ void main_menu() {
   int l, l2, l3;
   int help_on = 0;
   int ch;
-  Bitmap *help;
-
-  help = new Bitmap("HELP1");
+  std::unique_ptr<Bitmap> help(new Bitmap("HELP1"));
 
   if (is_there_sound && config.music_on) {
 
@@ -3377,8 +3343,6 @@ void main_menu() {
       }
     }
   }
-
-  delete help;
 }
 
 void print_clear_roster(Bitmap *rosteri) {

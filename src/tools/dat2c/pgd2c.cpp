@@ -28,13 +28,13 @@
 #include <cstdio>
 #include <io.h>
 #include <mem.h>
+#include "../../gfx/bitmap.h"
 
 int main(int argc, char **argv) {
   unsigned char *data;
   FILE *faili;
   int c;
   int size;
-  Bitmap *pict;
   int x, y;
 
   printf("\nDat2C (c) 1996 Wraith/DKS\n\n");
@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
     exit(0);
   }
 
-  pict = new Bitmap(argv[1]);
+  std::unique_ptr<Bitmap> pict(new Bitmap(argv[1]));
 
   data = pict->info(&x, &y);
   size = x * y;
@@ -67,6 +67,4 @@ int main(int argc, char **argv) {
   fprintf(faili, "\n\n/* Pgd2C converted data ends here */\n");
 
   fclose(faili);
-
-  delete pict;
 }
