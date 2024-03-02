@@ -24,7 +24,7 @@
 #include "gfx/bitmap.h"
 #include "gfx/fades.h"
 #include "gfx/font.h"
-#include "io/video.h"
+#include "../io/video.h"
 
 void fill_vircr(int x1, int y1, int x2, int y2, unsigned char vari);
 void boxi(int x1, int y1, int x2, int y2, unsigned char vari);

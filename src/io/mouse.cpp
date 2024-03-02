@@ -25,8 +25,8 @@
 
 *******************************************************************************/
 
-#include "io/mouse.h"
-#include "io/video.h"
+#include "../io/mouse.h"
+#include "../io/video.h"
 #include <SDL/SDL.h>
 
 void hiiri_to(int x, int y) {

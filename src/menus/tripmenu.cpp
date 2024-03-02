@@ -21,17 +21,20 @@
 /* Triplane Turmoil menusystem */
 
 #include "tripmenu.h"
-#include "io/joystick.h"
-#include "io/sdl_compat.h"
-#include "io/trip_io.h"
-#include "settings.h"
-#include "triplane.h"
-#include "util/wutil.h"
-#include "world/plane.h"
-#include "world/tripaudio.h"
+#include "../gfx/bitmap.h"
+#include "../io/joystick.h"
+#include "../io/sdl_compat.h"
+#include "../io/trip_io.h"
+#include "../settings.h"
+#include "../triplane.h"
+#include "../util/wutil.h"
+#include "../world/plane.h"
+#include "../world/tripaudio.h"
 #include <SDL/SDL.h>
 #include <cstring>
 #include <ctime>
+#include <memory>
+#include <array>
 
 extern int miss_pl_x[16];
 extern int miss_pl_y[16];
@@ -1896,7 +1899,7 @@ void transfer_menu() {
   wait_mouse_relase();
 }
 
-static void joystick_setup(int joy, Bitmap *controlme) {
+static void joystick_setup(int joy, std::unique_ptr<Bitmap>& controlme) {
   Sint16 *idle, *current;
   int i, c;
   struct {
@@ -2027,17 +2030,15 @@ void controls_menu() {
   int exit_flag = 0;
   int x, y, n1, n2;
   int menuselect;
-  Bitmap *controlme;
-  Bitmap *napp[4];
-  Bitmap *help;
+  std::unique_ptr<Bitmap> controlme(new Bitmap("NAPPIS"));
+  std::array<std::unique_ptr<Bitmap>, 4> napp;
+  std::unique_ptr<Bitmap> help(new Bitmap("HELP4"));
   int active = 0;
 
-  controlme = new Bitmap("NAPPIS");
-  napp[0] = new Bitmap("NAPPRE");
-  napp[1] = new Bitmap("NAPPBL");
-  napp[2] = new Bitmap("NAPPGR");
-  napp[3] = new Bitmap("NAPPYL");
-  help = new Bitmap("HELP4");
+  napp[0] = std::make_unique<Bitmap>("NAPPRE");
+  napp[1] = std::make_unique<Bitmap>("NAPPBL");
+  napp[2] = std::make_unique<Bitmap>("NAPPGR");
+  napp[3] = std::make_unique<Bitmap>("NAPPYL");
 
   while (!exit_flag) {
     if (kbhit()) {
@@ -2283,13 +2284,6 @@ void controls_menu() {
       }
     }
   }
-
-  delete napp[0];
-  delete napp[1];
-  delete napp[2];
-  delete napp[3];
-  delete controlme;
-  delete help;
 
   wait_mouse_relase();
 }

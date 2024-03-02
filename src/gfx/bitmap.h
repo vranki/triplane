@@ -24,6 +24,7 @@
 #include <SDL/SDL.h>
 #include <cstdint>
 #include <cstdlib>
+#include <memory>
 
 class Bitmap {
   unsigned char *image_data;
@@ -38,6 +39,7 @@ public:
   Bitmap(int xl, int yl, unsigned char *image_data,
          const char *name = "unknown");
   Bitmap(int x1, int y1, int xl, int yl, Bitmap *source_image);
+  Bitmap(int x1, int y1, int xl, int yl, std::unique_ptr<Bitmap>& source_image);
   Bitmap(int x, int y, int w, int h);
   ~Bitmap();
 
@@ -45,12 +47,14 @@ public:
             int ry2 = 199);
   void blit_fullscreen();
   void blit_to_bitmap(Bitmap *to, int xx, int yy);
+  void blit_to_bitmap(std::unique_ptr<Bitmap>& to, int xx, int yy);
   unsigned char *info(int *width = nullptr, int *height = nullptr);
   void refresh_sdlsurface();
 };
 
 void all_bitmaps_refresh();
 Bitmap *rotate_bitmap(Bitmap *picture, int degrees);
+Bitmap *rotate_bitmap(std::unique_ptr<Bitmap>& picture, int degrees);
 int bitmap_exists(const char *name);
 
 #endif

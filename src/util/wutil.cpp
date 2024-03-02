@@ -21,7 +21,7 @@
 #include "wutil.h"
 #include "io/dksfile.h"
 #include "random.h"
-#include "triplane.h"
+#include "../triplane.h"
 #include <SDL/SDL.h>
 #include <SDL/SDL_endian.h>
 #include <cassert>

@@ -25,10 +25,10 @@
 
 *******************************************************************************/
 
-#include "gfx/bitmap.h"
-#include "gfx/gfx.h"
-#include "io/trip_io.h"
-#include "util/wutil.h"
+#include "../gfx/bitmap.h"
+#include "../gfx/gfx.h"
+#include "../io/trip_io.h"
+#include "../util/wutil.h"
 #include <SDL/SDL.h>
 #include <SDL/SDL_endian.h>
 #include <cassert>
@@ -247,13 +247,13 @@ Bitmap::Bitmap(const char *image_name, int transparent) {
   all_bitmaps_add(this);
 }
 
-Bitmap::Bitmap(int width, int height, unsigned char *image_data,
-               const char *name) {
-  this->image_data = image_data;
-  this->width = width;
-  this->height = height;
+Bitmap::Bitmap(const int width_bitmap, const int height_bitmap, unsigned char *image_data_bitmap,
+               const char *name_bitmap) {
+  this->image_data = image_data_bitmap;
+  this->width = width_bitmap;
+  this->height = height_bitmap;
   this->external_image_data = 1;
-  this->name = name;
+  this->name = name_bitmap;
   this->hastransparency = 1;
   this->sdlsurface = nullptr;
   refresh_sdlsurface();
@@ -365,10 +365,10 @@ void Bitmap::blit(int xx, int yy, int rx, int ry, int rx2, int ry2) {
   }
 }
 
-unsigned char *Bitmap::info(int *width, int *height) {
-  if (width != nullptr && height != nullptr) {
-    *width = this->width;
-    *height = this->height;
+unsigned char *Bitmap::info(int *width_bitmap, int *height_bitmap) {
+  if (width_bitmap != nullptr && height_bitmap != nullptr) {
+    *width_bitmap = this->width;
+    *height_bitmap = this->height;
   }
   return image_data;
 }
@@ -398,6 +398,33 @@ Bitmap::Bitmap(int x1, int y1, int xl, int yl, Bitmap *source_image) {
   sdlsurface = nullptr;
   refresh_sdlsurface();
   all_bitmaps_add(this);
+}
+
+Bitmap::Bitmap(int x1, int y1, int xl, int yl, std::unique_ptr<Bitmap>& source_image) {
+    int kokox, kokoy;
+    int laskx, lasky;
+    unsigned char *lahtopointti;
+
+    laskx = xl;
+    lasky = yl;
+
+    image_data = (unsigned char *)walloc(laskx * lasky);
+    external_image_data = 0;
+
+    lahtopointti = source_image->info(&kokox, &kokoy);
+    width = xl;
+    height = yl;
+
+    for (lasky = y1; lasky < (y1 + yl); lasky++)
+        for (laskx = x1; laskx < (x1 + xl); laskx++)
+            image_data[(laskx - x1) + (lasky - y1) * width] =
+                    lahtopointti[laskx + lasky * kokox];
+
+    name = source_image->name;
+    hastransparency = source_image->hastransparency;
+    sdlsurface = nullptr;
+    refresh_sdlsurface();
+    all_bitmaps_add(this);
 }
 
 /* Create a new Bitmap from the contents of vircr at (x,y) to (x+w,y+h) */
@@ -448,6 +475,32 @@ void Bitmap::blit_to_bitmap(Bitmap *to, int xx, int yy) {
   to->refresh_sdlsurface();
 }
 
+void Bitmap::blit_to_bitmap(std::unique_ptr<Bitmap>& to, int xx, int yy) {
+    unsigned char *to_point;
+    int laskx, lasky;
+    int kokox, kokoy;
+
+    to_point = to->info(&kokox, &kokoy);
+
+    if ((xx >= kokox) | (yy >= kokoy) | (xx + width < 0) | (yy + height < 0))
+        return;
+
+    for (laskx = 0; laskx < width; laskx++)
+        for (lasky = 0; lasky < height; lasky++) {
+            if ((laskx + xx >= kokox) | (laskx + xx < 0))
+                continue;
+            if ((lasky + yy >= kokoy) | (lasky + yy < 0))
+                continue;
+            if (image_data[laskx + lasky * width] == 255)
+                continue;
+
+            to_point[laskx + xx + (lasky + yy) * kokox] =
+                    image_data[laskx + lasky * width];
+        }
+
+    to->refresh_sdlsurface();
+}
+
 Bitmap *rotate_bitmap(Bitmap *picture, int degrees) {
   Bitmap *picture2;
   unsigned char *picture_data;
@@ -490,6 +543,50 @@ Bitmap *rotate_bitmap(Bitmap *picture, int degrees) {
 
   picture2->refresh_sdlsurface();
   return picture2;
+}
+
+Bitmap *rotate_bitmap(std::unique_ptr<Bitmap>& picture, int degrees) {
+    Bitmap *picture2;
+    unsigned char *picture_data;
+    unsigned char *temp_data;
+    unsigned char *old_picture_data;
+    int xl, yl;
+    int nxl, nyl;
+    int count, count2;
+
+    old_picture_data = picture->info(&xl, &yl);
+    picture_data = (unsigned char *)walloc(xl * yl);
+
+    nxl = xl << 1;
+    nyl = yl << 1;
+
+    temp_data = (unsigned char *)walloc(nxl * nyl);
+
+    for (count = 0; count < (nxl * nyl); count++)
+        temp_data[count] = 255;
+    picture2 = new Bitmap(xl, yl, picture_data, "rotated");
+
+    for (count = 0; count < xl; count++)
+        for (count2 = 0; count2 < yl; count2++)
+            temp_data[(xl / 2 + count) + (yl / 2 + count2) * nxl] =
+                    old_picture_data[count + count2 * xl];
+
+    for (count = (-(xl >> 1)); count < (xl >> 1); count++)
+        for (count2 = (-(yl >> 1)); count2 < (yl >> 1); count2++) {
+
+            picture_data[(xl >> 1) + count + ((yl >> 1) + count2) * xl] =
+                    temp_data[(xl + (((count * cosinit[degrees]) -
+                                      (count2 * sinit[degrees]) + 128) >>
+                                                                       8)) +
+                              (yl + (((count * sinit[degrees]) +
+                                      (count2 * cosinit[degrees]) + 128) >>
+                                                                         8)) *
+                              nxl];
+        }
+    free(temp_data);
+
+    picture2->refresh_sdlsurface();
+    return picture2;
 }
 
 int bitmap_exists(const char *name) {

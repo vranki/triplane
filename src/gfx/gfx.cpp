@@ -18,8 +18,8 @@
  * tjt@users.sourceforge.net
  */
 
-#include "gfx/gfx.h"
-#include "io/video.h"
+#include "../gfx/gfx.h"
+#include "../io/video.h"
 #include <cassert>
 #include <cstring>
 
@@ -113,7 +113,7 @@ static void do_isa_clear() {
   }
 }
 
-void do_all_clear(int do_retrace) {
+void do_all_clear(int /*do_retrace*/) {
   do_all();
   do_isa_clear();
 }

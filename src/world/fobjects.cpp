@@ -20,13 +20,13 @@
 
 /* Triplane Turmoil flying objects code */
 
-#include "io/sound.h"
+#include "../io/sound.h"
 #include "tripai.h"
-#include "triplane.h"
-#include "util/wutil.h"
-#include "world/constants.h"
-#include "world/plane.h"
-#include "world/tripaudio.h"
+#include "../triplane.h"
+#include "../util/wutil.h"
+#include "../world/constants.h"
+#include "../world/plane.h"
+#include "../world/tripaudio.h"
 
 void do_shots();
 void start_shot(int player);

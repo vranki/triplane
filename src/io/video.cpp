@@ -26,7 +26,7 @@
 #include <unistd.h>
 
 #include "dksfile.h"
-#include "util/wutil.h"
+#include "../util/wutil.h"
 
 struct video_state_t video_state = {nullptr, 0, 0};
 
@@ -94,7 +94,7 @@ static Uint32 getcolor(unsigned char c) {
                       curpal[c].b);
 }
 
-void fillrect(int x, int y, int w, int h, int c) {
+void fillrect(const int x, const int y, const int w, const int h, const int c) {
   SDL_Rect r;
   r.x = x;
   r.y = y;
@@ -109,7 +109,7 @@ void fillrect(int x, int y, int w, int h, int c) {
   SDL_FillRect(video_state.surface, &r, getcolor(c));
 }
 
-void do_all(int do_retrace) {
+void do_all(int /*do_retrace*/) {
   if (draw_with_vircr_mode) {
     if (pixel_multiplier > 1) {
       int i, j, k;
@@ -171,7 +171,7 @@ void do_all(int do_retrace) {
   SDL_Flip(video_state.surface);
 }
 
-static void sigint_handler(int dummy) { _exit(1); }
+static void sigint_handler(int /*dummy*/) { _exit(1); }
 
 void init_video() {
   int ret;

@@ -18,11 +18,11 @@
  * tjt@users.sourceforge.net
  */
 
-#include "world/tripaudio.h"
-#include "settings.h"
-#include "triplane.h"
-#include "util/wutil.h"
-#include "world/plane.h"
+#include "../world/tripaudio.h"
+#include "../settings.h"
+#include "../triplane.h"
+#include "../util/wutil.h"
+#include "../world/plane.h"
 
 sb_mod_file *triplane_mod;
 sb_mod_file *aces_mod;
@@ -46,12 +46,12 @@ int alku_sample_over = 0;
 int sfx_loaded = 0;
 int music_loaded = 0;
 
-void kkbase_sound(int type, int kkbase_x) {
+void kkbase_sound(const int type, const int kkbase_sound_x) {
   if (config.ground_i_sounds && config.sound_on && config.sfx_on) {
     if (type)
-      play_2d_sample(sample_itshot, player_x_8[solo_country], kkbase_x);
+      play_2d_sample(sample_itshot, player_x_8[solo_country], kkbase_sound_x);
     else
-      play_2d_sample(sample_aagun, player_x_8[solo_country], kkbase_x);
+      play_2d_sample(sample_aagun, player_x_8[solo_country], kkbase_sound_x);
   }
 }
 

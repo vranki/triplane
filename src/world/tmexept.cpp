@@ -21,9 +21,9 @@
 /* Solomission exceptions code */
 
 #include "tripai.h"
-#include "triplane.h"
-#include "world/constants.h"
-#include "world/plane.h"
+#include "../triplane.h"
+#include "../world/constants.h"
+#include "../world/plane.h"
 
 extern int number_of_planes[16];
 

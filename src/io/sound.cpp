@@ -18,8 +18,8 @@
  * tjt@users.sourceforge.net
  */
 
-#include "io/sound.h"
-#include "triplane.h"
+#include "../io/sound.h"
+#include "../triplane.h"
 #include <cstdio>
 #include <cstdlib>
 

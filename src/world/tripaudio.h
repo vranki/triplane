@@ -21,7 +21,7 @@
 #ifndef TRIPAUDIO_H
 #define TRIPAUDIO_H
 
-#include "io/sound.h"
+#include "../io/sound.h"
 
 extern sb_mod_file *triplane_mod;
 extern sb_mod_file *aces_mod;
