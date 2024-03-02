@@ -23,9 +23,9 @@
 
 #include "io/dksfile.h"
 #include "io/joystick.h"
-#include "io/mouse.h"
-#include "io/sound.h"
+#include "../io/mouse.h"
+#include "../io/sound.h"
 #include "io/timing.h"
-#include "io/video.h"
+#include "../io/video.h"
 
 #endif

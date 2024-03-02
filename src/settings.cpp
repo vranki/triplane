@@ -25,7 +25,7 @@
 #include <cstring>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <triplane.h>
+#include "triplane.h"
 #include <unistd.h>
 
 //\\ Keys

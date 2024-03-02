@@ -36,7 +36,7 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "util/wutil.h"
+#include "../util/wutil.h"
 
 constexpr int32_t MAX_ENTRIES = 8192;
 

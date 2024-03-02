@@ -21,7 +21,7 @@
 #include "io/joystick.h"
 #include "sdl_compat.h"
 #include "settings.h"
-#include "util/wutil.h"
+#include "../util/wutil.h"
 #include <SDL/SDL.h>
 #include <cassert>
 #include <cstdio>

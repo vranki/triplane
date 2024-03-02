@@ -25,10 +25,10 @@
 
 *******************************************************************************/
 
-#include "gfx/bitmap.h"
-#include "gfx/gfx.h"
-#include "io/trip_io.h"
-#include "util/wutil.h"
+#include "../gfx/bitmap.h"
+#include "../gfx/gfx.h"
+#include "../io/trip_io.h"
+#include "../util/wutil.h"
 #include <SDL/SDL.h>
 #include <SDL/SDL_endian.h>
 #include <cassert>
@@ -247,13 +247,13 @@ Bitmap::Bitmap(const char *image_name, int transparent) {
   all_bitmaps_add(this);
 }
 
-Bitmap::Bitmap(int width, int height, unsigned char *image_data,
-               const char *name) {
-  this->image_data = image_data;
-  this->width = width;
-  this->height = height;
+Bitmap::Bitmap(const int width_bitmap, const int height_bitmap, unsigned char *image_data_bitmap,
+               const char *name_bitmap) {
+  this->image_data = image_data_bitmap;
+  this->width = width_bitmap;
+  this->height = height_bitmap;
   this->external_image_data = 1;
-  this->name = name;
+  this->name = name_bitmap;
   this->hastransparency = 1;
   this->sdlsurface = nullptr;
   refresh_sdlsurface();
@@ -365,10 +365,10 @@ void Bitmap::blit(int xx, int yy, int rx, int ry, int rx2, int ry2) {
   }
 }
 
-unsigned char *Bitmap::info(int *width, int *height) {
-  if (width != nullptr && height != nullptr) {
-    *width = this->width;
-    *height = this->height;
+unsigned char *Bitmap::info(int *width_bitmap, int *height_bitmap) {
+  if (width_bitmap != nullptr && height_bitmap != nullptr) {
+    *width_bitmap = this->width;
+    *height_bitmap = this->height;
   }
   return image_data;
 }
@@ -398,6 +398,33 @@ Bitmap::Bitmap(int x1, int y1, int xl, int yl, Bitmap *source_image) {
   sdlsurface = nullptr;
   refresh_sdlsurface();
   all_bitmaps_add(this);
+}
+
+Bitmap::Bitmap(int x1, int y1, int xl, int yl, std::unique_ptr<Bitmap>& source_image) {
+    int kokox, kokoy;
+    int laskx, lasky;
+    unsigned char *lahtopointti;
+
+    laskx = xl;
+    lasky = yl;
+
+    image_data = (unsigned char *)walloc(laskx * lasky);
+    external_image_data = 0;
+
+    lahtopointti = source_image->info(&kokox, &kokoy);
+    width = xl;
+    height = yl;
+
+    for (lasky = y1; lasky < (y1 + yl); lasky++)
+        for (laskx = x1; laskx < (x1 + xl); laskx++)
+            image_data[(laskx - x1) + (lasky - y1) * width] =
+                    lahtopointti[laskx + lasky * kokox];
+
+    name = source_image->name;
+    hastransparency = source_image->hastransparency;
+    sdlsurface = nullptr;
+    refresh_sdlsurface();
+    all_bitmaps_add(this);
 }
 
 /* Create a new Bitmap from the contents of vircr at (x,y) to (x+w,y+h) */

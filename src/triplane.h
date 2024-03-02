@@ -28,6 +28,7 @@
 #include "io/video.h"
 #include "settings.h"
 #include "world/constants.h"
+#include "gfx/bitmap.h"
 #include <SDL/SDL.h>
 
 #define DKS_FILENAME "fokker.dks"
@@ -35,12 +36,12 @@
 
 //\ Picturedata
 
-extern Bitmap *board;
-extern Bitmap *board2;
-extern Bitmap *pwon;
-extern Bitmap *pwoff;
+extern std::unique_ptr<Bitmap> board;
+extern std::unique_ptr<Bitmap> board2;
+extern std::unique_ptr<Bitmap> pwon;
+extern std::unique_ptr<Bitmap> pwoff;
 extern Bitmap *picons[4];
-extern Bitmap *plane1;
+extern std::unique_ptr<Bitmap> plane1;
 extern Bitmap *planes[16][61][4][2];
 extern Bitmap *bomb[61];
 extern Bitmap *boards[4];

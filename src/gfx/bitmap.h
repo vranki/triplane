@@ -24,6 +24,7 @@
 #include <SDL/SDL.h>
 #include <cstdint>
 #include <cstdlib>
+#include <memory>
 
 class Bitmap {
   unsigned char *image_data;
@@ -38,6 +39,7 @@ public:
   Bitmap(int xl, int yl, unsigned char *image_data,
          const char *name = "unknown");
   Bitmap(int x1, int y1, int xl, int yl, Bitmap *source_image);
+  Bitmap(int x1, int y1, int xl, int yl, std::unique_ptr<Bitmap>& source_image);
   Bitmap(int x, int y, int w, int h);
   ~Bitmap();
 

@@ -20,7 +20,7 @@
 
 #include "gfx/gfx.h"
 #include "io/trip_io.h"
-#include "util/wutil.h"
+#include "../util/wutil.h"
 #include <cstring>
 #include <stdarg.h>
 

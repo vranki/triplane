@@ -20,7 +20,7 @@
 
 #include "gfx/fades.h"
 #include "gfx/gfx.h"
-#include "util/wutil.h"
+#include "../util/wutil.h"
 #include <cassert>
 
 void horisontal_split() {

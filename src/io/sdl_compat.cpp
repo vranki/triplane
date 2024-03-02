@@ -33,7 +33,7 @@
 #include "io/dksfile.h"
 #include "io/timing.h"
 #include "sdl_compat.h"
-#include "util/wutil.h"
+#include "../util/wutil.h"
 #include <cassert>
 
 int kbhit() {

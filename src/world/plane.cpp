@@ -18,9 +18,9 @@
  * tjt@users.sourceforge.net
  */
 
-#include "world/plane.h"
-#include "triplane.h"
-#include "util/wutil.h"
+#include "../world/plane.h"
+#include "../triplane.h"
+#include "../util/wutil.h"
 #include <cstdint>
 
 constexpr int32_t PLANE_TURN_SPEED = 5;

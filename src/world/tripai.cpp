@@ -19,12 +19,12 @@
  */
 
 #include "fobjects.h"
-#include "io/sound.h"
-#include "triplane.h"
-#include "util/wutil.h"
-#include "world/constants.h"
-#include "world/plane.h"
-#include "world/tripaudio.h"
+#include "../io/sound.h"
+#include "../triplane.h"
+#include "../util/wutil.h"
+#include "../world/constants.h"
+#include "../world/plane.h"
+#include "../world/tripaudio.h"
 #include <cstdint>
 
 constexpr int32_t SPEED = 4;

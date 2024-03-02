@@ -43,17 +43,18 @@ constexpr int32_t SUB_VERSION = 3;
 #include <cstdint>
 #include <cstring>
 #include <ctime>
+#include <memory>
 
 //\\\\ Variables
 
 //\ Picturedata
 
-Bitmap *board;
-Bitmap *board2;
-Bitmap *pwon;
-Bitmap *pwoff;
+std::unique_ptr<Bitmap> board;
+std::unique_ptr<Bitmap> board2;
+std::unique_ptr<Bitmap> pwon;
+std::unique_ptr<Bitmap> pwoff;
 Bitmap *picons[4];
-Bitmap *plane1;
+std::unique_ptr<Bitmap> plane1;
 Bitmap *planes[16][61][4][2];
 Bitmap *bomb[61];
 Bitmap *boards[4];
@@ -574,12 +575,11 @@ void hangarmenu_handle() {
 void init_sologame() { init_mission(solo_country, solo_mission); }
 
 int small_warning(const char *message) {
-  Bitmap *warnkuva;
   int flag = 1;
   int x, y, n1, n2;
   int response = 0;
 
-  warnkuva = new Bitmap("WARN2");
+  std::unique_ptr<Bitmap> warnkuva(new Bitmap("WARN2"));
 
   while (flag) {
     koords(&x, &y, &n1, &n2);
@@ -606,8 +606,6 @@ int small_warning(const char *message) {
 
   while (n1 || n2)
     koords(&x, &y, &n1, &n2);
-
-  delete warnkuva;
 
   return response;
 }
@@ -1871,8 +1869,7 @@ void main_engine() {
 }
 
 void do_aftermath(int show_it_all) {
-  Bitmap *temp;
-  Bitmap *temp2;
+
   int l, l2;
   int tempt;
   int firedi;
@@ -1883,14 +1880,15 @@ void do_aftermath(int show_it_all) {
   int x, y, n1, n2;
   int need_for_letter = 0;
   char ch;
-  Bitmap *fly, *exit;
   int x_coord;
   int best_in_record = 0;
   int sisennys;
   int mission_success = 0;
 
-  fly = new Bitmap("FLY");
-  exit = new Bitmap("EXIT");
+  std::unique_ptr<Bitmap> temp;
+  std::unique_ptr<Bitmap> temp2;
+  std::unique_ptr<Bitmap> fly(new Bitmap("FLY"));
+  std::unique_ptr<Bitmap> exit(new Bitmap("EXIT"));
 
   random_fade_out();
 
@@ -1900,9 +1898,8 @@ void do_aftermath(int show_it_all) {
     if (!findparameter("-debugnographics"))
       init_vga("PALET5");
 
-    temp = new Bitmap("SCORE");
+    temp = std::make_unique<Bitmap>("SCORE");
     temp->blit(0, 0);
-    delete temp;
 
     for (l = 0; l < 4; l++) {
       for (l2 = 0; l2 < 4; l2++) {
@@ -1936,12 +1933,10 @@ void do_aftermath(int show_it_all) {
                              mission_names[solo_mission + solo_country * 6]);
     sisennys = (320 - sisennys) >> 1;
 
-    temp = new Bitmap("KANGAS", 0);
+    temp = std::make_unique<Bitmap>("KANGAS", 0);
     temp->blit_fullscreen();
-    temp2 = new Bitmap(260, 188, 37, 10, temp);
+    temp2 = std::make_unique<Bitmap>(260, 188, 37, 10, temp);
     temp2->blit(0, 190);
-    delete temp2;
-    delete temp;
 
     tempt = 0;
 
@@ -2297,8 +2292,6 @@ void do_aftermath(int show_it_all) {
   }
   save_roster();
   init_vga("PALET5");
-  delete fly;
-  delete exit;
   if (need_for_letter)
     letter_menu();
 }
@@ -2324,38 +2317,32 @@ void load_up() {
   }
 
   loading_text("Loading and initializing board-graphics.");
-  board = new Bitmap("BOARD", 0);
+  board = std::make_unique<Bitmap>("BOARD", 0);
   boards[0] = new Bitmap(2, 90, 159, 12, board);
   boards[1] = new Bitmap(162, 90, 158, 12, board);
   boards[2] = new Bitmap(2, 188, 159, 12, board);
   boards[3] = new Bitmap(162, 188, 158, 12, board);
 
   closed = new Bitmap("CLOSED", 0);
-  board2 = new Bitmap("BOARD2", 0);
+  board2 = std::make_unique<Bitmap>("BOARD2", 0);
 
   loading_text("Loading status icons.");
-  plane1 = new Bitmap("STATUS");
+  plane1 = std::make_unique<Bitmap>("STATUS");
 
   status_icons[0][0] = new Bitmap(1, 1, 31, 11, plane1);
   status_icons[0][1] = new Bitmap(1, 13, 31, 11, plane1);
   status_icons[1][0] = new Bitmap(33, 1, 31, 11, plane1);
   status_icons[1][1] = new Bitmap(33, 13, 31, 11, plane1);
 
-  delete plane1;
-
   loading_text("Loading smoke.");
 
-  plane1 = new Bitmap("SMOKE");
+  plane1 = std::make_unique<Bitmap>("SMOKE");
   for (l = 0; l < SMOKE_FRAMES; l++)
     smoke[l] = new Bitmap(1 + l * 21, 1, 20, 20, plane1);
 
-  delete plane1;
-
-  plane1 = new Bitmap("SSMOKE");
+  plane1 = std::make_unique<Bitmap>("SSMOKE");
   for (l = 0; l < 17; l++)
     ssmoke[l] = new Bitmap(1 + l * 10, 1, 9, 9, plane1);
-
-  delete plane1;
 
   loading_text("Loading hangar.");
 
@@ -2366,44 +2353,34 @@ void load_up() {
 
   loading_text("Loading radaricons.");
 
-  plane1 = new Bitmap("RADAR");
+  plane1 = std::make_unique<Bitmap>("RADAR");
 
   for (l = 0; l < 4; l++)
     for (l2 = 0; l2 < 8; l2++) {
       radar[l][l2] = new Bitmap(1 + l2 * 4, 1 + l * 4, 3, 3, plane1);
     }
 
-  delete plane1;
-
   loading_text("Loading waves.");
 
-  plane1 = new Bitmap("WAVE1");
+  plane1 = std::make_unique<Bitmap>("WAVE1");
   for (l = 0; l < WAVE1_FRAMES; l++)
     wave1[l] = new Bitmap(1 + l * 24, 1, 23, 23, plane1);
 
-  delete plane1;
-
-  plane1 = new Bitmap("WAVE2");
+  plane1 = std::make_unique<Bitmap>("WAVE2");
   for (l = 0; l < WAVE2_FRAMES; l++)
     wave2[l] = new Bitmap(1 + l * 4, 1, 3, 5, plane1);
 
-  delete plane1;
-
   loading_text("Loading flames");
 
-  plane1 = new Bitmap("FLAME");
+  plane1 = std::make_unique<Bitmap>("FLAME");
   for (l = 0; l < NUMBER_OF_FLAMES; l++)
     flames[l] = new Bitmap(1 + l * 8, 1, 7, 14, plane1);
 
-  delete plane1;
-
   loading_text("Loading AAA Explosion.");
 
-  plane1 = new Bitmap("ITEXP1");
+  plane1 = std::make_unique<Bitmap>("ITEXP1");
   for (l = 0; l < ITEXPLOSION_FRAMES; l++)
     itexplosion[l] = new Bitmap(1 + l * 24, 1, 23, 14, plane1);
-
-  delete plane1;
 
   loading_text("Loading explosion frames.");
 
@@ -2411,17 +2388,15 @@ void load_up() {
   for (l = 0; l < 2501; l++)
     point1[l] = converted_explosion[l];
 
-  plane1 = new Bitmap(61, 41, point1, "explosion");
+  plane1 = std::make_unique<Bitmap>(61, 41, point1, "explosion");
 
   for (l = 0; l < 4; l++)
     for (l2 = 0; l2 < EXPLOX_FRAMES; l2++)
       explox[l][l2] = new Bitmap(1 + l2 * 10, 1 + l * 10, 9, 9, plane1);
 
-  delete plane1;
-
   loading_text("Loading AA-MG animations");
 
-  plane1 = new Bitmap("KKPESA");
+  plane1 = std::make_unique<Bitmap>("KKPESA");
   for (l = 0; l < 2; l++)
     for (l2 = 0; l2 < 7; l2++) {
       kkbase[0][l][l2] = new Bitmap(1 + l2 * 27, 1 + l * 22, 26, 21, plane1);
@@ -2430,11 +2405,9 @@ void load_up() {
   for (l2 = 0; l2 < 5; l2++)
     kkbase[0][2][l2] = new Bitmap(1 + l2 * 27, 1 + l * 22, 26, 21, plane1);
 
-  delete plane1;
-
   loading_text("Loading AA-GUN animations");
 
-  plane1 = new Bitmap("ITGUNS");
+  plane1 = std::make_unique<Bitmap>("ITGUNS");
   for (l = 0; l < 2; l++)
     for (l2 = 0; l2 < 7; l2++) {
       kkbase[1][l][l2] = new Bitmap(1 + l2 * 27, 1 + l * 22, 26, 21, plane1);
@@ -2443,20 +2416,16 @@ void load_up() {
   for (l2 = 0; l2 < 5; l2++)
     kkbase[1][2][l2] = new Bitmap(1 + l2 * 27, 1 + l * 22, 26, 21, plane1);
 
-  delete plane1;
-
   loading_text("Loading hangar doors");
 
-  plane1 = new Bitmap("OVI");
+  plane1 = std::make_unique<Bitmap>("OVI");
 
   for (l = 0; l < 13; l++)
     ovi[l] = new Bitmap(1 + l * 26, 1, 25, 13, plane1);
 
-  delete plane1;
-
   loading_text("Loading mechanic");
 
-  plane1 = new Bitmap("MEKAN1");
+  plane1 = std::make_unique<Bitmap>("MEKAN1");
   for (l = 0; l < 14; l++) {
     mekan_running[l][0] = new Bitmap(1 + 14 * l, 1, 13, 11, plane1);
 
@@ -2469,9 +2438,8 @@ void load_up() {
       for (yyy = 0; yyy < 11; yyy++)
         point1[xxx + yyy * 13] = point2[12 - xxx + yyy * 13];
   }
-  delete plane1;
 
-  plane1 = new Bitmap("MEKAN2");
+  plane1 = std::make_unique<Bitmap>("MEKAN2");
   for (l = 0; l < 14; l++) {
     mekan_pushing[0][l][0] = new Bitmap(1 + 14 * l, 1, 13, 11, plane1);
 
@@ -2483,9 +2451,8 @@ void load_up() {
       for (yyy = 0; yyy < 11; yyy++)
         point1[xxx + yyy * 13] = point2[12 - xxx + yyy * 13];
   }
-  delete plane1;
 
-  plane1 = new Bitmap("MEKAN3");
+  plane1 = std::make_unique<Bitmap>("MEKAN3");
   for (l = 0; l < 9; l++) {
     mekan_pushing[1][l][1] = new Bitmap(1 + 14 * l, 1, 13, 11, plane1);
 
@@ -2498,13 +2465,12 @@ void load_up() {
       for (yyy = 0; yyy < 11; yyy++)
         point1[xxx + yyy * 13] = point2[12 - xxx + yyy * 13];
   }
-  delete plane1;
 
   loading_text("Loading Infantry");
 
   if (!findparameter("-debugnoinfantry")) {
 
-    plane1 = new Bitmap("INFANT");
+    plane1 = std::make_unique<Bitmap>("INFANT");
 
     for (l = 0; l < 4; l++) // Down X
     {
@@ -2535,7 +2501,6 @@ void load_up() {
             new Bitmap(97 + l2 * 16, 31 + l * 45, 15, 14, plane1);
       }
     }
-    delete plane1; // Up X
 
     loading_text("Mirroring infantry.");
 
@@ -2636,7 +2601,7 @@ void load_up() {
     }
 
     loading_text("Loading main planepicture.");
-    plane1 = new Bitmap("PLANES");
+    plane1 = std::make_unique<Bitmap>("PLANES");
 
     loading_text("Generating rotated pictures.");
     for (l3 = 0; l3 < 4; l3++)
@@ -2745,8 +2710,6 @@ void load_up() {
               point2[xxx + (19 - yyy) * 20] = point1[xxx + yyy * 20];
         }
 
-    delete plane1;
-
     for (l = 0; l < 61; l++)
       for (l2 = 0; l2 < 4; l2++)
         for (l3 = 0; l3 < 2; l3++) {
@@ -2781,10 +2744,9 @@ void load_up() {
 
   loading_text("Loading explosions.");
 
-  plane1 = new Bitmap("CRASH");
+  plane1 = std::make_unique<Bitmap>("CRASH");
   for (l = 0; l < 6; l++)
     plane_crash[l] = new Bitmap(1 + 21 * l, 1, 20, 20, plane1);
-  delete plane1;
 
   loading_text("Loading icons.");
 
@@ -2793,26 +2755,22 @@ void load_up() {
   small_ammo_icon = new Bitmap("ASE4", 0);
   big_ammo_icon = new Bitmap("ASE3", 0);
 
-  plane1 = new Bitmap("PICONS", 0);
+  plane1 = std::make_unique<Bitmap>("PICONS", 0);
   for (l = 0; l < 4; l++)
     picons[l] = new Bitmap(9 * l, 0, 9, 9, plane1);
 
-  delete plane1;
-
-  pwon = new Bitmap("PWON");
-  pwoff = new Bitmap("PWOFF");
+  pwon = std::make_unique<Bitmap>("PWON");
+  pwoff = std::make_unique<Bitmap>("PWOFF");
 
   loading_text("Loading small parts.");
 
-  plane1 = new Bitmap("BITES");
+  plane1 = std::make_unique<Bitmap>("BITES");
   for (l = 0; l < NUMBER_OF_BITES; l++)
     bites[l] = new Bitmap(1 + 11 * l, 1, 10, 10, plane1);
-  delete plane1;
 
-  plane1 = new Bitmap("RIFLE");
+  plane1 = std::make_unique<Bitmap>("RIFLE");
   for (l = 0; l < 12; l++)
     rifle[l] = new Bitmap(1 + 9 * l, 1, 8, 8, plane1);
-  delete plane1;
 
   loading_text("Loading menu graphics.");
 
@@ -2861,9 +2819,6 @@ void clean_memory() {
   for (l = 0; l < 4; l++)
     for (l2 = 0; l2 < 8; l2++)
       delete radar[l][l2];
-
-  delete board;
-  delete board2;
 
   delete status_icons[0][0];
   delete status_icons[0][1];
@@ -2943,8 +2898,6 @@ void clean_memory() {
   delete gas_icon;
   delete small_ammo_icon;
   delete big_ammo_icon;
-  delete pwon;
-  delete pwoff;
 
   delete fontti;
   delete frost;
@@ -2960,7 +2913,7 @@ void load_level() {
   int l, l2, i;
   int xx, yy;
   int c_flag;
-  Bitmap *temppic;
+  std::unique_ptr<Bitmap> temppic;
 
   loading_text("Loading levelinfo.");
 
@@ -3143,7 +3096,7 @@ void load_level() {
         structures[l][0] = new Bitmap(leveldata.pd_name[l]);
 
       } else {
-        temppic = new Bitmap(leveldata.pd_name[l]);
+        temppic = std::make_unique<Bitmap>(leveldata.pd_name[l]);
         temppic->info(&struct_width[l], &struct_heigth[l]);
 
         structures[l][0] =
@@ -3151,18 +3104,16 @@ void load_level() {
                        struct_width[l], struct_heigth[l], maisema);
 
         temppic->blit_to_bitmap(structures[l][0], 0, 0);
-        delete temppic;
 
         for (l2 = 0; l2 < NUMBER_OF_STRUCT_NAMES; l2++) {
           if (!strcmp(struct_names[l2 * 2], leveldata.pd_name[l])) {
-            temppic = new Bitmap(struct_names[l2 * 2 + 1]);
+            temppic = std::make_unique<Bitmap>(struct_names[l2 * 2 + 1]);
 
             structures[l][1] =
                 new Bitmap(leveldata.struct_x[l], leveldata.struct_y[l],
                            struct_width[l], struct_heigth[l], maisema);
 
             temppic->blit_to_bitmap(structures[l][1], 0, 0);
-            delete temppic;
 
             break;
           }
@@ -3554,7 +3505,7 @@ int main(int argc, char *argv[]) {
   int x, y, n1, n2;
   int laskuri;
   FILE *faili;
-  Bitmap *lakuva1;
+  std::unique_ptr<Bitmap> lakuva1;
 
   for (laskuri = 0; laskuri < argc; laskuri++)
     strcpy(parametrit[laskuri], argv[laskuri]);
@@ -3659,12 +3610,10 @@ int main(int argc, char *argv[]) {
   }
 
   init_vga("PALETD");
-  lakuva1 = new Bitmap("STARTD", 0);
+  lakuva1 = std::make_unique<Bitmap>("STARTD", 0);
 
   lakuva1->blit(0, 0);
   do_all();
-
-  delete lakuva1;
 
   if (sfx_loaded && config.sound_on) {
     play_sample(sample_alku);
@@ -3700,13 +3649,11 @@ int main(int argc, char *argv[]) {
   }
 
 #ifdef NO_TRADEMARK_PROBLEMS
-  lakuva1 = new Bitmap("START1", 0);
+  lakuva1 = std::make_unique<Bitmap>("START1", 0);
   init_vga("PALETA");
 
   lakuva1->blit(0, 0);
   do_all();
-
-  delete lakuva1;
 
   while (!kbhit() && !findparameter("-autostart")) {
     koords(&x, &y, &n1, &n2);
