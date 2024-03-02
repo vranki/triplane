@@ -533,10 +533,10 @@ int solo_player_menu() {
   char missionnames[4][7] = {"MISSI0", "MISSI1", "MISSI2", "MISSI3"};
   char modnames[4][7] = {"mgerma", "mfinla", "mengla", "mjapan"};
 
-  std::unique_ptr<Bitmap> misboa = 0;
-  std::unique_ptr<Bitmap> misbak = 0;
-  std::unique_ptr<Bitmap> face = 0;
-  std::unique_ptr<Bitmap> mission = 0;
+  std::unique_ptr<Bitmap> misboa;
+  std::unique_ptr<Bitmap> misbak;
+  std::unique_ptr<Bitmap> face;
+  std::unique_ptr<Bitmap> mission;
   int flag = 0;
   int l;
   int x, y, n1, n2;
@@ -666,44 +666,43 @@ void roster_menu() {
   int keysetmode = 0;
   int help_on = 0;
   char ch;
-  Bitmap *help;
+  std::unique_ptr<Bitmap> help;
   Bitmap *rosteri;
-  Bitmap *buttl, *buttr;
-  Bitmap *setk1, *setk2;
+  std::unique_ptr<Bitmap> buttl;
+  std::unique_ptr<Bitmap> buttr;
+  std::unique_ptr<Bitmap> setk1;
+  std::unique_ptr<Bitmap> setk2;
   Bitmap *medal2[4];
-  Bitmap *medal3;
-  Bitmap *medal5;
-  Bitmap *temp;
+  std::unique_ptr<Bitmap> medal3;
+  std::unique_ptr<Bitmap> medal5;
+  std::unique_ptr<Bitmap> temp;
   Bitmap *ribbon[6];
   int l, l2, l3, l4;
   int rank;
 
-  if (number == -1 && roster[0].pilotname[0])
-    number = 0;
+  if (number == -1 && roster[0].pilotname[0]) {
+      number = 0;
+  }
 
   rosteri = new Bitmap("ROSTER");
-  buttl = new Bitmap("BUTTL"); // 187,174
-  buttr = new Bitmap("BUTTR"); // 205,174
-  setk1 = new Bitmap("SETK1");
-  setk2 = new Bitmap("SETK2");
-  help = new Bitmap("HELP2");
-  temp = new Bitmap("MEDAL2");
-  medal3 = new Bitmap("MEDAL3");
+  buttl = std::make_unique<Bitmap>("BUTTL"); // 187,174
+  buttr = std::make_unique<Bitmap>("BUTTR"); // 205,174
+  setk1 = std::make_unique<Bitmap>("SETK1");
+  setk2 = std::make_unique<Bitmap>("SETK2");
+  help = std::make_unique<Bitmap>("HELP2");
+  temp = std::make_unique<Bitmap>("MEDAL2");
+  medal3 = std::make_unique<Bitmap>("MEDAL3");
 
   for (l = 0; l < 4; l++) {
     medal2[l] = new Bitmap(1 + l * 17, 1, 16, 28, temp);
   }
 
-  medal5 = new Bitmap(1 + 4 * 17, 1, 16, 28, temp);
+  medal5 = std::make_unique<Bitmap>(1 + 4 * 17, 1, 16, 28, temp);
 
-  delete temp;
-
-  temp = new Bitmap("RIBBON");
+  temp = std::make_unique<Bitmap>("RIBBON");
 
   for (l = 0; l < 6; l++)
     ribbon[l] = new Bitmap(36 * l, 0, 35, 8, temp);
-
-  delete temp;
 
   hiiri_to(264, 109);
 
@@ -1101,16 +1100,9 @@ void roster_menu() {
     }
   }
 
-  delete help;
-  delete buttl;
-  delete buttr;
-  delete setk1;
-  delete setk2;
   delete rosteri;
   for (l = 0; l < 4; l++)
     delete medal2[l];
-  delete medal3;
-  delete medal5;
 
   for (l = 0; l < 6; l++)
     delete ribbon[l];
@@ -1132,10 +1124,12 @@ void options_menu() {
   int x, y, n1, n2;
   int menuselect;
   int menusubselect = 0;
-  Bitmap *optionme;
+  std::unique_ptr<Bitmap> optionme(new Bitmap("OPTION"));
   Bitmap *kohta[4];
-  Bitmap *right, *wrong;
-  Bitmap *opt1, *opt2;
+  std::unique_ptr<Bitmap> right(new Bitmap("RIGHT"));
+  std::unique_ptr<Bitmap> wrong(new Bitmap("WRONG"));
+  std::unique_ptr<Bitmap> opt1(new Bitmap("OPT1"));
+  std::unique_ptr<Bitmap> opt2(new Bitmap("OPT2"));
   int optimode = 0;
   int l;
 
@@ -1144,15 +1138,10 @@ void options_menu() {
                             "Phychological questions about flying.",
                             "Questions about hostile environments."};
 
-  optionme = new Bitmap("OPTION");
-  right = new Bitmap("RIGHT");
-  wrong = new Bitmap("WRONG");
   kohta[3] = new Bitmap("OPTI1");
   kohta[2] = new Bitmap("OPTI2");
   kohta[1] = new Bitmap("OPTI3");
   kohta[0] = new Bitmap("OPTI4");
-  opt1 = new Bitmap("OPT1");
-  opt2 = new Bitmap("OPT2");
 
   while (!exit_flag) {
     if (kbhit())
@@ -1770,11 +1759,6 @@ void options_menu() {
   delete kohta[1];
   delete kohta[2];
   delete kohta[3];
-  delete optionme;
-  delete right;
-  delete wrong;
-  delete opt1;
-  delete opt2;
 
   if (config.sound_on && (is_there_sound == 0))
     init_sounds();
@@ -1806,30 +1790,27 @@ void transfer_menu() {
   int exit_flag = 0;
   int x, y, n1, n2;
   int menuselect;
-  Bitmap *optionme;
-  Bitmap *color_bites[6];
-  Bitmap *descs[6];
+  std::unique_ptr<Bitmap> color_bites[6];
+    std::unique_ptr<Bitmap> descs[6];
   int l;
 
-  optionme = new Bitmap("TRANS2");
+  std::unique_ptr<Bitmap> optionme(new Bitmap("TRANS2"));
 
-  color_bites[0] = new Bitmap(39, 46, 80, 50, optionme);
-  color_bites[1] = new Bitmap(119, 46, 80, 50, optionme);
-  color_bites[2] = new Bitmap(199, 46, 80, 50, optionme);
-  color_bites[3] = new Bitmap(39, 96, 80, 50, optionme);
-  color_bites[4] = new Bitmap(119, 96, 80, 50, optionme);
-  color_bites[5] = new Bitmap(199, 96, 80, 50, optionme);
+  color_bites[0] = std::make_unique<Bitmap>(39, 46, 80, 50, optionme);
+  color_bites[1] = std::make_unique<Bitmap>(119, 46, 80, 50, optionme);
+  color_bites[2] = std::make_unique<Bitmap>(199, 46, 80, 50, optionme);
+  color_bites[3] = std::make_unique<Bitmap>(39, 96, 80, 50, optionme);
+  color_bites[4] = std::make_unique<Bitmap>(119, 96, 80, 50, optionme);
+  color_bites[5] = std::make_unique<Bitmap>(199, 96, 80, 50, optionme);
 
-  descs[0] = new Bitmap("DESC1");
-  descs[1] = new Bitmap("DESC2");
-  descs[2] = new Bitmap("DESC3");
-  descs[3] = new Bitmap("DESC4");
-  descs[4] = new Bitmap("DESC5");
-  descs[5] = new Bitmap("DESC6");
+  descs[0] = std::make_unique<Bitmap>("DESC1");
+  descs[1] = std::make_unique<Bitmap>("DESC2");
+  descs[2] = std::make_unique<Bitmap>("DESC3");
+  descs[3] = std::make_unique<Bitmap>("DESC4");
+  descs[4] = std::make_unique<Bitmap>("DESC5");
+  descs[5] = std::make_unique<Bitmap>("DESC6");
 
-  delete optionme;
-
-  optionme = new Bitmap("TRANSF");
+  optionme = std::make_unique<Bitmap>("TRANSF");
 
   while (!exit_flag) {
     if (kbhit())
@@ -1886,13 +1867,6 @@ void transfer_menu() {
       }
     }
   }
-
-  for (x = 0; x < 6; x++) {
-    delete color_bites[x];
-    delete descs[x];
-  }
-
-  delete optionme;
 
   wait_mouse_relase();
 }
@@ -2291,9 +2265,9 @@ void assign_menu() {
   int x, y, n1, n2;
   int menuselect;
   int menusubselect1 = 0, menusubselect2 = 0;
-  Bitmap *acesme;
-  Bitmap *ruksi;
-  Bitmap *help;
+  std::unique_ptr<Bitmap> acesme(new Bitmap("ASSIGN"));
+  std::unique_ptr<Bitmap> ruksi(new Bitmap("RUKSI"));
+  std::unique_ptr<Bitmap> help(new Bitmap("HELP5"));
   int l, lx, ly;
   int l2, l3;
   int lym[4] = {0, 11, 24, 36};
@@ -2313,11 +2287,6 @@ void assign_menu() {
     } else
       return;
   }
-
-  acesme = new Bitmap("ASSIGN");
-
-  ruksi = new Bitmap("RUKSI");
-  help = new Bitmap("HELP5");
 
   while (!exit_flag) {
     if (kbhit()) {
@@ -2592,10 +2561,6 @@ void assign_menu() {
     }
   }
 
-  delete acesme;
-  delete ruksi;
-  delete help;
-
   wait_mouse_relase();
 }
 
@@ -2606,22 +2571,16 @@ void aces_menu() {
   int current_page = 0;
   int help_on = 0;
   char ch;
-  Bitmap *acesme;
-  Bitmap *firstpage;
-  Bitmap *buttl;
-  Bitmap *buttr;
-  Bitmap *help;
+  std::unique_ptr<Bitmap> acesme(new Bitmap("ACESA"));
+  std::unique_ptr<Bitmap> firstpage(new Bitmap("ACESB"));
+  std::unique_ptr<Bitmap> buttl(new Bitmap("BUTTL"));
+  std::unique_ptr<Bitmap> buttr(new Bitmap("BUTTR"));
+  std::unique_ptr<Bitmap> help(new Bitmap("HELP3"));
 
   if (is_there_sound && config.music_on) {
     sdl_stop_music();
     sdl_play_music(aces_mod);
   }
-
-  acesme = new Bitmap("ACESA");
-  firstpage = new Bitmap("ACESB");
-  buttl = new Bitmap("BUTTL");
-  buttr = new Bitmap("BUTTR");
-  help = new Bitmap("HELP3");
 
   acesme->blit(0, 0);
   standard_background = new Bitmap(0, 0, 320, 200);
@@ -2744,11 +2703,6 @@ void aces_menu() {
   standard_background = nullptr;
   if (n1)
     random_fade_out();
-  delete help;
-  delete acesme;
-  delete firstpage;
-  delete buttl;
-  delete buttr;
 
   wait_mouse_relase();
 }
