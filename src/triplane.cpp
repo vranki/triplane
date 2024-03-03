@@ -56,7 +56,7 @@ std::unique_ptr<Bitmap> pwon;
 std::unique_ptr<Bitmap> pwoff;
 std::unique_ptr<Bitmap> picons[4];
 std::unique_ptr<Bitmap> plane1;
-Bitmap *planes[16][61][4][2];
+std::unique_ptr<Bitmap> planes[16][61][4][2];
 std::unique_ptr<Bitmap> bomb[61];
 std::unique_ptr<Bitmap> boards[4];
 std::unique_ptr<Bitmap> closed;
@@ -254,7 +254,7 @@ int flags_frame[MAX_FLAGS];
 int flags_x[MAX_FLAGS];
 int flags_y[MAX_FLAGS];
 int flags_owner[MAX_FLAGS];
-Bitmap *flags[4][12];
+std::unique_ptr<Bitmap> flags[4][12];
 
 //\\ AA-MG && AA-Gun
 
@@ -372,7 +372,6 @@ void controls();
 void detect_collision();
 void main_engine();
 void load_up();
-void clean_memory();
 void init_data();
 void do_aftermath(int show_it_all);
 void airfield_checks();
@@ -2606,7 +2605,7 @@ void load_up() {
     for (l3 = 0; l3 < 4; l3++)
       for (l2 = 0; l2 < 4; l2++) {
         planes[l2][0][l3][0] =
-            new Bitmap(1 + l3 * 21, 1 + l2 * 21, 20, 20, plane1);
+                std::make_unique<Bitmap>(1 + l3 * 21, 1 + l2 * 21, 20, 20, plane1);
         plane_p[l2][0][l3][0] = planes[l2][0][l3][0]->info(&xxx, &yyy);
         for (l = 1; l < 16; l++) {
           planes[l2][l][l3][0] = rotate_bitmap(planes[l2][0][l3][0], l * 6);
@@ -2617,7 +2616,7 @@ void load_up() {
     for (l3 = 0; l3 < 4; l3++)
       for (l2 = 0; l2 < 4; l2++) {
         planes[l2][0][l3][0] =
-            new Bitmap(1 + l3 * 21, 1 + l2 * 21, 20, 20, plane1);
+                std::make_unique<Bitmap>(1 + l3 * 21, 1 + l2 * 21, 20, 20, plane1);
         plane_p[l2][0][l3][0] = planes[l2][0][l3][0]->info(&xxx, &yyy);
         for (l = 45; l < 60; l++) {
           planes[l2][l][l3][0] = rotate_bitmap(planes[l2][0][l3][0], l * 6);
@@ -2631,11 +2630,11 @@ void load_up() {
           point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
           point2 = (unsigned char *)walloc(400);
           if (!l2) {
-            planes[l1][30][l3][1] = new Bitmap(20, 20, point2, "mirr_plane_1");
+            planes[l1][30][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_1");
             plane_p[l1][30][l3][1] = point2;
           } else {
             planes[l1][30 - l2][l3][1] =
-                new Bitmap(20, 20, point2, "mirr_plane_2");
+                    std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_2");
             plane_p[l1][30 - l2][l3][1] = point2;
           }
           for (xxx = 0; xxx < 20; xxx++)
@@ -2650,7 +2649,7 @@ void load_up() {
           point2 = (unsigned char *)walloc(400);
 
           planes[l1][90 - l2][l3][1] =
-              new Bitmap(20, 20, point2, "mirr_plane_3");
+                  std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_3");
           plane_p[l1][90 - l2][l3][1] = point2;
 
           for (xxx = 0; xxx < 20; xxx++)
@@ -2664,11 +2663,11 @@ void load_up() {
           point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
           point2 = (unsigned char *)walloc(400);
           if (!l2) {
-            planes[l1][0][l3][1] = new Bitmap(20, 20, point2, "mirr_plane_4");
+            planes[l1][0][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_4");
             plane_p[l1][0][l3][1] = point2;
           } else {
             planes[l1][60 - l2][l3][1] =
-                new Bitmap(20, 20, point2, "mirr_plane_5");
+                    std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_5");
             plane_p[l1][60 - l2][l3][1] = point2;
           }
           for (xxx = 0; xxx < 20; xxx++)
@@ -2682,11 +2681,11 @@ void load_up() {
           point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
           point2 = (unsigned char *)walloc(400);
           if (!l2) {
-            planes[l1][0][l3][1] = new Bitmap(20, 20, point2, "mirr_plane_6");
+            planes[l1][0][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_6");
             plane_p[l1][0][l3][1] = point2;
           } else {
             planes[l1][60 - l2][l3][1] =
-                new Bitmap(20, 20, point2, "mirr_plane_7");
+                    std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_7");
             plane_p[l1][60 - l2][l3][1] = point2;
           }
           for (xxx = 0; xxx < 20; xxx++)
@@ -2701,7 +2700,7 @@ void load_up() {
           point2 = (unsigned char *)walloc(400);
 
           planes[l1][60 - l2][l3][0] =
-              new Bitmap(20, 20, point2, "mirr_plane_8");
+                  std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_8");
           plane_p[l1][60 - l2][l3][0] = point2;
 
           for (xxx = 0; xxx < 20; xxx++)
@@ -2725,18 +2724,18 @@ void load_up() {
           plane_p[14][l][l2][l3] = plane_p[3][l][l2][l3];
           plane_p[15][l][l2][l3] = plane_p[0][l][l2][l3];
 
-          planes[4][l][l2][l3] = planes[0][l][l2][l3];
-          planes[5][l][l2][l3] = planes[1][l][l2][l3];
-          planes[6][l][l2][l3] = planes[2][l][l2][l3];
-          planes[7][l][l2][l3] = planes[3][l][l2][l3];
-          planes[8][l][l2][l3] = planes[0][l][l2][l3];
-          planes[9][l][l2][l3] = planes[1][l][l2][l3];
-          planes[10][l][l2][l3] = planes[2][l][l2][l3];
-          planes[11][l][l2][l3] = planes[3][l][l2][l3];
-          planes[12][l][l2][l3] = planes[1][l][l2][l3];
-          planes[13][l][l2][l3] = planes[2][l][l2][l3];
-          planes[14][l][l2][l3] = planes[3][l][l2][l3];
-          planes[15][l][l2][l3] = planes[0][l][l2][l3];
+          planes[4][l][l2][l3] = std::move(planes[0][l][l2][l3]);
+          planes[5][l][l2][l3] = std::move(planes[1][l][l2][l3]);
+          planes[6][l][l2][l3] = std::move(planes[2][l][l2][l3]);
+          planes[7][l][l2][l3] = std::move(planes[3][l][l2][l3]);
+          planes[8][l][l2][l3] = std::move(planes[0][l][l2][l3]);
+          planes[9][l][l2][l3] = std::move(planes[1][l][l2][l3]);
+          planes[10][l][l2][l3] = std::move(planes[2][l][l2][l3]);
+          planes[11][l][l2][l3] = std::move(planes[3][l][l2][l3]);
+          planes[12][l][l2][l3] = std::move(planes[1][l][l2][l3]);
+          planes[13][l][l2][l3] = std::move(planes[2][l][l2][l3]);
+          planes[14][l][l2][l3] = std::move(planes[3][l][l2][l3]);
+          planes[15][l][l2][l3] = std::move(planes[0][l][l2][l3]);
         }
 
   } // debug
@@ -2781,27 +2780,12 @@ void load_up() {
 
   for (l = 0; l < 4; l++) {
     for (l2 = 0; l2 < 12; l2++) {
-      flags[l][l2] = new Bitmap(1 + l2 * 14, 1 + l * 10, 13, 9, temp_bitti);
+      flags[l][l2] =  std::make_unique<Bitmap>(1 + l2 * 14, 1 + l * 10, 13, 9, temp_bitti);
     }
   }
 
   loading_text("Loading mouse cursor.");
   cursor = std::make_unique<Bitmap>("CURSOR");
-}
-
-void clean_memory() {
-  int l, l2, l3, l4;
-
-  for (l2 = 0; l2 < 4; l2++) {
-    for (l = 0; l < 60; l++)
-      for (l3 = 0; l3 < 4; l3++)
-        for (l4 = 0; l4 < 2; l4++)
-          delete planes[l2][l][l3][l4];
-  }
-
-  for (l = 0; l < 4; l++)
-    for (l2 = 0; l2 < 12; l2++)
-      delete flags[l][l2];
 }
 
 void load_level() {
@@ -3605,8 +3589,6 @@ int main(int argc, char *argv[]) {
   }
 
   save_config();
-
-  clean_memory();
 
   return 0;
 }

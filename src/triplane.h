@@ -42,7 +42,7 @@ extern std::unique_ptr<Bitmap> pwon;
 extern std::unique_ptr<Bitmap> pwoff;
 extern std::unique_ptr<Bitmap> picons[4];
 extern std::unique_ptr<Bitmap> plane1;
-extern Bitmap *planes[16][61][4][2];
+extern std::unique_ptr<Bitmap> planes[16][61][4][2];
 extern std::unique_ptr<Bitmap> bomb[61];
 extern std::unique_ptr<Bitmap> boards[4];
 extern std::unique_ptr<Bitmap> closed;
@@ -245,7 +245,7 @@ extern int flags_frame[MAX_FLAGS];
 extern int flags_x[MAX_FLAGS];
 extern int flags_y[MAX_FLAGS];
 extern int flags_owner[MAX_FLAGS];
-extern Bitmap *flags[4][12];
+extern std::unique_ptr<Bitmap> flags[4][12];
 
 //\\ AA-MG && AA-Gun
 
