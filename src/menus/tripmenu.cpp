@@ -574,7 +574,7 @@ int solo_player_menu() {
     face->blit(0, 0);
     mission->blit(22, 19, 0, 0, 319, 46 + highest_mission * 27);
 
-    standard_background = new Bitmap(0, 0, 320, 200);
+    standard_background = std::make_unique<Bitmap>(0, 0, 320, 200);
     do_all_clear();
   }
 
@@ -618,7 +618,6 @@ int solo_player_menu() {
   }
 
   if (mission_re_fly == -1) {
-    delete standard_background;
     standard_background = nullptr;
   }
 
@@ -2571,7 +2570,7 @@ void aces_menu() {
   }
 
   acesme->blit(0, 0);
-  standard_background = new Bitmap(0, 0, 320, 200);
+  standard_background = std::make_unique<Bitmap>(0, 0, 320, 200);
   do_all_clear();
 
   while (!exit_flag) {
@@ -2687,7 +2686,6 @@ void aces_menu() {
     sdl_play_music(triplane_mod);
   }
 
-  delete standard_background;
   standard_background = nullptr;
   if (n1)
     random_fade_out();
@@ -3267,7 +3265,6 @@ void main_menu() {
         }
 
         if (level_loaded) {
-          clear_level();
           level_loaded = 0;
         }
 

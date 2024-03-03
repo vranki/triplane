@@ -18,6 +18,7 @@
  * tjt@users.sourceforge.net
  */
 
+#include "../gfx/bitmap.h"
 #include "../gfx/gfx.h"
 #include "../io/video.h"
 #include <cassert>
@@ -25,7 +26,7 @@
 
 static void do_isa_clear();
 
-Bitmap *standard_background = nullptr;
+std::unique_ptr<Bitmap> standard_background;
 
 void putpix(int x, int y, unsigned char c, int x1, int y1, int x2, int y2) {
   if (x < x1)

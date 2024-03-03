@@ -56,12 +56,11 @@ std::unique_ptr<Bitmap> hiirikursori = nullptr;
 std::unique_ptr<Bitmap> hiirik;
 std::unique_ptr<Bitmap> lappu1;
 std::unique_ptr<Bitmap> lappu2;
-// Bitmap *plane[4];
 
 int picture_width[MAX_STRUCTURES];
 int picture_height[MAX_STRUCTURES];
 
-Font *fontti;
+std::unique_ptr<Font> fontti;
 
 const char hitting_names[2][16] = {"UNHITTABLE", "HITTABLE"};
 
@@ -512,7 +511,7 @@ int main(int argc, char **argv) {
   }
 
   printf("Loading font \"FROST\"\n\r");
-  fontti = new Font("G2FONT");
+  fontti = std::make_unique<Font>("G2FONT");
 
   printf("Loading cursor\n\r");
   hiirik = std::make_unique<Bitmap>("FONTT1");
@@ -538,9 +537,6 @@ int main(int argc, char **argv) {
   fwrite(&leveldata, sizeof(leveldata), 1, faili);
   fclose(faili);
   swap_byte_order();
-
-
-  delete fontti;
 
   return 0;
 }
