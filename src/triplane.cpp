@@ -56,7 +56,7 @@ std::unique_ptr<Bitmap> pwon;
 std::unique_ptr<Bitmap> pwoff;
 std::unique_ptr<Bitmap> picons[4];
 std::unique_ptr<Bitmap> plane1;
-Bitmap *planes[16][61][4][2];
+std::unique_ptr<Bitmap> planes[16][61][4][2];
 std::unique_ptr<Bitmap> bomb[61];
 std::unique_ptr<Bitmap> boards[4];
 std::unique_ptr<Bitmap> closed;
@@ -68,35 +68,35 @@ std::unique_ptr<Bitmap> plane_crash[6];
 std::unique_ptr<Bitmap> smoke[SMOKE_FRAMES];
 std::unique_ptr<Bitmap> wave1[WAVE1_FRAMES];
 std::unique_ptr<Bitmap> wave2[WAVE2_FRAMES];
-Bitmap *explox[4][EXPLOX_FRAMES];
+std::unique_ptr<Bitmap> explox[4][EXPLOX_FRAMES];
 std::unique_ptr<Bitmap> maisema;
 std::unique_ptr<Bitmap> bites[NUMBER_OF_BITES];
 std::unique_ptr<Bitmap> menu1;
-Bitmap *structures[MAX_STRUCTURES][2];
+std::unique_ptr<Bitmap> structures[MAX_STRUCTURES][2];
 std::unique_ptr<Bitmap> temp_bitti;
 std::unique_ptr<Bitmap> cursor;
-Bitmap *kkbase[2][3][7];
-Bitmap *infantry_walking[4][2][12];
-Bitmap *infantry_dying[4][2][7];
-Bitmap *infantry_aiming[4][2][6];
-Bitmap *infantry_wavedeath[4][2][10];
-Bitmap *infantry_shooting[4][2][6];
-Bitmap *infantry_bdying[4][2][10];
-Bitmap *infantry_dropping[4][2];
-Bitmap *infantry_after_drop[4][2];
+std::unique_ptr<Bitmap> kkbase[2][3][7];
+std::unique_ptr<Bitmap> infantry_walking[4][2][12];
+std::unique_ptr<Bitmap> infantry_dying[4][2][7];
+std::unique_ptr<Bitmap> infantry_aiming[4][2][6];
+std::unique_ptr<Bitmap> infantry_wavedeath[4][2][10];
+std::unique_ptr<Bitmap> infantry_shooting[4][2][6];
+std::unique_ptr<Bitmap> infantry_bdying[4][2][10];
+std::unique_ptr<Bitmap> infantry_dropping[4][2];
+std::unique_ptr<Bitmap> infantry_after_drop[4][2];
 std::unique_ptr<Bitmap> itexplosion[ITEXPLOSION_FRAMES];
 std::unique_ptr<Bitmap> flames[6];
-Bitmap *status_icons[2][2];
+std::unique_ptr<Bitmap> status_icons[2][2];
 std::unique_ptr<Bitmap> hangarmenu;
 std::unique_ptr<Bitmap> hangaractive;
 std::unique_ptr<Bitmap> hangarinactive;
-Bitmap *radar[4][8];
+std::unique_ptr<Bitmap> radar[4][8];
 std::unique_ptr<Bitmap> rifle[12];
 std::unique_ptr<Bitmap> hruks;
 std::unique_ptr<Bitmap> ssmoke[17];
 std::unique_ptr<Bitmap> ovi[13];
-Bitmap *mekan_running[14][2];
-Bitmap *mekan_pushing[2][14][2];
+std::unique_ptr<Bitmap> mekan_running[14][2];
+std::unique_ptr<Bitmap> mekan_pushing[2][14][2];
 
 int hangar_x[4];
 int hangar_y[4];
@@ -254,7 +254,7 @@ int flags_frame[MAX_FLAGS];
 int flags_x[MAX_FLAGS];
 int flags_y[MAX_FLAGS];
 int flags_owner[MAX_FLAGS];
-Bitmap *flags[4][12];
+std::unique_ptr<Bitmap> flags[4][12];
 
 //\\ AA-MG && AA-Gun
 
@@ -372,14 +372,13 @@ void controls();
 void detect_collision();
 void main_engine();
 void load_up();
-void clean_memory();
 void init_data();
 void do_aftermath(int show_it_all);
 void airfield_checks();
 void handle_parameters();
 void init_resolution(int width, int height);
 void load_level();
-void clear_level();
+
 void do_flags();
 sb_sample *sample_load(const char *name);
 void kkbase_sound(int type, int kkbase_x);
@@ -1556,7 +1555,7 @@ void main_engine() {
       }
     }
 
-    standard_background = new Bitmap(0, 0, screen_width, screen_height);
+    standard_background = std::make_unique<Bitmap>(0, 0, screen_width, screen_height);
     standard_background->blit(0, 0, 0, 0, screen_width_less,
                               screen_height_less);
 
@@ -1864,8 +1863,6 @@ void main_engine() {
   //// Record
 
   if (current_mode == SVGA_MODE) {
-
-    delete standard_background;
     standard_background = nullptr;
   }
 }
@@ -2151,7 +2148,7 @@ void do_aftermath(int show_it_all) {
   }
 
   if (show_it_all) {
-    standard_background = new Bitmap(0, 0, 320, 200);
+    standard_background = std::make_unique<Bitmap>(0, 0, 320, 200);
     do_all_clear();
   }
 
@@ -2286,7 +2283,6 @@ void do_aftermath(int show_it_all) {
       }
     }
 
-    delete standard_background;
     standard_background = nullptr;
 
     if (!findparameter("-debugnoaftermathfadeout") && l == 0)
@@ -2331,10 +2327,10 @@ void load_up() {
   loading_text("Loading status icons.");
   plane1 = std::make_unique<Bitmap>("STATUS");
 
-  status_icons[0][0] = new Bitmap(1, 1, 31, 11, plane1);
-  status_icons[0][1] = new Bitmap(1, 13, 31, 11, plane1);
-  status_icons[1][0] = new Bitmap(33, 1, 31, 11, plane1);
-  status_icons[1][1] = new Bitmap(33, 13, 31, 11, plane1);
+  status_icons[0][0] = std::make_unique<Bitmap>(1, 1, 31, 11, plane1);
+  status_icons[0][1] = std::make_unique<Bitmap>(1, 13, 31, 11, plane1);
+  status_icons[1][0] = std::make_unique<Bitmap>(33, 1, 31, 11, plane1);
+  status_icons[1][1] = std::make_unique<Bitmap>(33, 13, 31, 11, plane1);
 
   loading_text("Loading smoke.");
 
@@ -2359,7 +2355,7 @@ void load_up() {
 
   for (l = 0; l < 4; l++)
     for (l2 = 0; l2 < 8; l2++) {
-      radar[l][l2] = new Bitmap(1 + l2 * 4, 1 + l * 4, 3, 3, plane1);
+      radar[l][l2] = std::make_unique<Bitmap>(1 + l2 * 4, 1 + l * 4, 3, 3, plane1);
     }
 
   loading_text("Loading waves.");
@@ -2394,29 +2390,29 @@ void load_up() {
 
   for (l = 0; l < 4; l++)
     for (l2 = 0; l2 < EXPLOX_FRAMES; l2++)
-      explox[l][l2] = new Bitmap(1 + l2 * 10, 1 + l * 10, 9, 9, plane1);
+      explox[l][l2] = std::make_unique<Bitmap>(1 + l2 * 10, 1 + l * 10, 9, 9, plane1);
 
   loading_text("Loading AA-MG animations");
 
   plane1 = std::make_unique<Bitmap>("KKPESA");
   for (l = 0; l < 2; l++)
     for (l2 = 0; l2 < 7; l2++) {
-      kkbase[0][l][l2] = new Bitmap(1 + l2 * 27, 1 + l * 22, 26, 21, plane1);
+      kkbase[0][l][l2] = std::make_unique<Bitmap>(1 + l2 * 27, 1 + l * 22, 26, 21, plane1);
     }
 
   for (l2 = 0; l2 < 5; l2++)
-    kkbase[0][2][l2] = new Bitmap(1 + l2 * 27, 1 + l * 22, 26, 21, plane1);
+    kkbase[0][2][l2] = std::make_unique<Bitmap>(1 + l2 * 27, 1 + l * 22, 26, 21, plane1);
 
   loading_text("Loading AA-GUN animations");
 
   plane1 = std::make_unique<Bitmap>("ITGUNS");
   for (l = 0; l < 2; l++)
     for (l2 = 0; l2 < 7; l2++) {
-      kkbase[1][l][l2] = new Bitmap(1 + l2 * 27, 1 + l * 22, 26, 21, plane1);
+      kkbase[1][l][l2] = std::make_unique<Bitmap>(1 + l2 * 27, 1 + l * 22, 26, 21, plane1);
     }
 
   for (l2 = 0; l2 < 5; l2++)
-    kkbase[1][2][l2] = new Bitmap(1 + l2 * 27, 1 + l * 22, 26, 21, plane1);
+    kkbase[1][2][l2] = std::make_unique<Bitmap>(1 + l2 * 27, 1 + l * 22, 26, 21, plane1);
 
   loading_text("Loading hangar doors");
 
@@ -2429,12 +2425,12 @@ void load_up() {
 
   plane1 = std::make_unique<Bitmap>("MEKAN1");
   for (l = 0; l < 14; l++) {
-    mekan_running[l][0] = new Bitmap(1 + 14 * l, 1, 13, 11, plane1);
+    mekan_running[l][0] = std::make_unique<Bitmap>(1 + 14 * l, 1, 13, 11, plane1);
 
     point1 = (unsigned char *)walloc(13 * 11);
 
     point2 = mekan_running[l][0]->info(&xxx, &yyy);
-    mekan_running[l][1] = new Bitmap(13, 11, point1, "mekan1");
+    mekan_running[l][1] = std::make_unique<Bitmap>(13, 11, point1, "mekan1");
 
     for (xxx = 0; xxx < 13; xxx++)
       for (yyy = 0; yyy < 11; yyy++)
@@ -2443,11 +2439,11 @@ void load_up() {
 
   plane1 = std::make_unique<Bitmap>("MEKAN2");
   for (l = 0; l < 14; l++) {
-    mekan_pushing[0][l][0] = new Bitmap(1 + 14 * l, 1, 13, 11, plane1);
+    mekan_pushing[0][l][0] = std::make_unique<Bitmap>(1 + 14 * l, 1, 13, 11, plane1);
 
     point1 = (unsigned char *)walloc(13 * 11);
     point2 = mekan_pushing[0][l][0]->info(&xxx, &yyy);
-    mekan_pushing[0][l][1] = new Bitmap(13, 11, point1, "mekan2");
+    mekan_pushing[0][l][1] = std::make_unique<Bitmap>(13, 11, point1, "mekan2");
 
     for (xxx = 0; xxx < 13; xxx++)
       for (yyy = 0; yyy < 11; yyy++)
@@ -2456,12 +2452,12 @@ void load_up() {
 
   plane1 = std::make_unique<Bitmap>("MEKAN3");
   for (l = 0; l < 9; l++) {
-    mekan_pushing[1][l][1] = new Bitmap(1 + 14 * l, 1, 13, 11, plane1);
+    mekan_pushing[1][l][1] = std::make_unique<Bitmap>(1 + 14 * l, 1, 13, 11, plane1);
 
     point1 = (unsigned char *)walloc(13 * 11);
 
     point2 = mekan_pushing[1][l][1]->info(&xxx, &yyy);
-    mekan_pushing[1][l][0] = new Bitmap(13, 11, point1, "mekan3");
+    mekan_pushing[1][l][0] = std::make_unique<Bitmap>(13, 11, point1, "mekan3");
 
     for (xxx = 0; xxx < 13; xxx++)
       for (yyy = 0; yyy < 11; yyy++)
@@ -2476,31 +2472,31 @@ void load_up() {
 
     for (l = 0; l < 4; l++) // Down X
     {
-      infantry_dropping[l][0] = new Bitmap(257, 16 + l * 45, 15, 14, plane1);
-      infantry_after_drop[l][0] = new Bitmap(257, 31 + l * 45, 15, 14, plane1);
+      infantry_dropping[l][0] = std::make_unique<Bitmap>(257, 16 + l * 45, 15, 14, plane1);
+      infantry_after_drop[l][0] = std::make_unique<Bitmap>(257, 31 + l * 45, 15, 14, plane1);
 
       for (l2 = 0; l2 < 12; l2++)
         infantry_walking[l][0][l2] =
-            new Bitmap(1 + l2 * 16, 1 + l * 45, 15, 14, plane1);
+                std::make_unique<Bitmap>(1 + l2 * 16, 1 + l * 45, 15, 14, plane1);
 
       for (l2 = 0; l2 < 7; l2++)
         infantry_dying[l][0][l2] =
-            new Bitmap(193 + l2 * 16, 1 + l * 45, 15, 14, plane1);
+                std::make_unique<Bitmap>(193 + l2 * 16, 1 + l * 45, 15, 14, plane1);
 
       for (l2 = 0; l2 < 6; l2++) {
         infantry_aiming[l][0][l2] =
-            new Bitmap(1 + l2 * 16, 16 + l * 45, 15, 14, plane1);
+                std::make_unique<Bitmap>(1 + l2 * 16, 16 + l * 45, 15, 14, plane1);
 
         infantry_shooting[l][0][l2] =
-            new Bitmap(1 + l2 * 16, 31 + l * 45, 15, 14, plane1);
+                std::make_unique<Bitmap>(1 + l2 * 16, 31 + l * 45, 15, 14, plane1);
       }
 
       for (l2 = 0; l2 < 10; l2++) {
         infantry_wavedeath[l][0][l2] =
-            new Bitmap(97 + l2 * 16, 16 + l * 45, 15, 14, plane1);
+                std::make_unique<Bitmap>(97 + l2 * 16, 16 + l * 45, 15, 14, plane1);
 
         infantry_bdying[l][0][l2] =
-            new Bitmap(97 + l2 * 16, 31 + l * 45, 15, 14, plane1);
+                std::make_unique<Bitmap>(97 + l2 * 16, 31 + l * 45, 15, 14, plane1);
       }
     }
 
@@ -2510,7 +2506,7 @@ void load_up() {
       point1 = (unsigned char *)walloc(15 * 14);
 
       point2 = infantry_dropping[l][0]->info(&xxx, &yyy);
-      infantry_dropping[l][1] = new Bitmap(15, 14, point1, "mirr_inf_dropping");
+      infantry_dropping[l][1] = std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_dropping");
 
       for (xxx = 0; xxx < 15; xxx++)
         for (yyy = 0; yyy < 14; yyy++)
@@ -2520,7 +2516,7 @@ void load_up() {
 
       point2 = infantry_after_drop[l][0]->info(&xxx, &yyy);
       infantry_after_drop[l][1] =
-          new Bitmap(15, 14, point1, "mirr_inf_after_drop");
+              std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_after_drop");
 
       for (xxx = 0; xxx < 15; xxx++)
         for (yyy = 0; yyy < 14; yyy++)
@@ -2531,7 +2527,7 @@ void load_up() {
 
         point2 = infantry_walking[l][0][l2]->info(&xxx, &yyy);
         infantry_walking[l][1][l2] =
-            new Bitmap(15, 14, point1, "mirr_inf_walking");
+                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_walking");
 
         for (xxx = 0; xxx < 15; xxx++)
           for (yyy = 0; yyy < 14; yyy++)
@@ -2542,7 +2538,7 @@ void load_up() {
         point1 = (unsigned char *)walloc(15 * 14);
 
         point2 = infantry_dying[l][0][l2]->info(&xxx, &yyy);
-        infantry_dying[l][1][l2] = new Bitmap(15, 14, point1, "mirr_inf_dying");
+        infantry_dying[l][1][l2] = std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_dying");
 
         for (xxx = 0; xxx < 15; xxx++)
           for (yyy = 0; yyy < 14; yyy++)
@@ -2554,7 +2550,7 @@ void load_up() {
 
         point2 = infantry_aiming[l][0][l2]->info(&xxx, &yyy);
         infantry_aiming[l][1][l2] =
-            new Bitmap(15, 14, point1, "mirr_inf_aiming");
+                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_aiming");
 
         for (xxx = 0; xxx < 15; xxx++)
           for (yyy = 0; yyy < 14; yyy++)
@@ -2563,7 +2559,7 @@ void load_up() {
         point1 = (unsigned char *)walloc(15 * 14);
         point2 = infantry_shooting[l][0][l2]->info(&xxx, &yyy);
         infantry_shooting[l][1][l2] =
-            new Bitmap(15, 14, point1, "mirr_inf_shooting");
+                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_shooting");
 
         for (xxx = 0; xxx < 15; xxx++)
           for (yyy = 0; yyy < 14; yyy++)
@@ -2574,7 +2570,7 @@ void load_up() {
         point1 = (unsigned char *)walloc(15 * 14);
         point2 = infantry_wavedeath[l][0][l2]->info(&xxx, &yyy);
         infantry_wavedeath[l][1][l2] =
-            new Bitmap(15, 14, point1, "mirr_inf_wavedeath");
+                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_wavedeath");
 
         for (xxx = 0; xxx < 15; xxx++)
           for (yyy = 0; yyy < 14; yyy++)
@@ -2584,7 +2580,7 @@ void load_up() {
 
         point2 = infantry_bdying[l][0][l2]->info(&xxx, &yyy);
         infantry_bdying[l][1][l2] =
-            new Bitmap(15, 14, point1, "mirr_inf_bdying");
+                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_bdying");
 
         for (xxx = 0; xxx < 15; xxx++)
           for (yyy = 0; yyy < 14; yyy++)
@@ -2609,7 +2605,7 @@ void load_up() {
     for (l3 = 0; l3 < 4; l3++)
       for (l2 = 0; l2 < 4; l2++) {
         planes[l2][0][l3][0] =
-            new Bitmap(1 + l3 * 21, 1 + l2 * 21, 20, 20, plane1);
+                std::make_unique<Bitmap>(1 + l3 * 21, 1 + l2 * 21, 20, 20, plane1);
         plane_p[l2][0][l3][0] = planes[l2][0][l3][0]->info(&xxx, &yyy);
         for (l = 1; l < 16; l++) {
           planes[l2][l][l3][0] = rotate_bitmap(planes[l2][0][l3][0], l * 6);
@@ -2620,7 +2616,7 @@ void load_up() {
     for (l3 = 0; l3 < 4; l3++)
       for (l2 = 0; l2 < 4; l2++) {
         planes[l2][0][l3][0] =
-            new Bitmap(1 + l3 * 21, 1 + l2 * 21, 20, 20, plane1);
+                std::make_unique<Bitmap>(1 + l3 * 21, 1 + l2 * 21, 20, 20, plane1);
         plane_p[l2][0][l3][0] = planes[l2][0][l3][0]->info(&xxx, &yyy);
         for (l = 45; l < 60; l++) {
           planes[l2][l][l3][0] = rotate_bitmap(planes[l2][0][l3][0], l * 6);
@@ -2634,11 +2630,11 @@ void load_up() {
           point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
           point2 = (unsigned char *)walloc(400);
           if (!l2) {
-            planes[l1][30][l3][1] = new Bitmap(20, 20, point2, "mirr_plane_1");
+            planes[l1][30][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_1");
             plane_p[l1][30][l3][1] = point2;
           } else {
             planes[l1][30 - l2][l3][1] =
-                new Bitmap(20, 20, point2, "mirr_plane_2");
+                    std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_2");
             plane_p[l1][30 - l2][l3][1] = point2;
           }
           for (xxx = 0; xxx < 20; xxx++)
@@ -2653,7 +2649,7 @@ void load_up() {
           point2 = (unsigned char *)walloc(400);
 
           planes[l1][90 - l2][l3][1] =
-              new Bitmap(20, 20, point2, "mirr_plane_3");
+                  std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_3");
           plane_p[l1][90 - l2][l3][1] = point2;
 
           for (xxx = 0; xxx < 20; xxx++)
@@ -2667,11 +2663,11 @@ void load_up() {
           point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
           point2 = (unsigned char *)walloc(400);
           if (!l2) {
-            planes[l1][0][l3][1] = new Bitmap(20, 20, point2, "mirr_plane_4");
+            planes[l1][0][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_4");
             plane_p[l1][0][l3][1] = point2;
           } else {
             planes[l1][60 - l2][l3][1] =
-                new Bitmap(20, 20, point2, "mirr_plane_5");
+                    std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_5");
             plane_p[l1][60 - l2][l3][1] = point2;
           }
           for (xxx = 0; xxx < 20; xxx++)
@@ -2685,11 +2681,11 @@ void load_up() {
           point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
           point2 = (unsigned char *)walloc(400);
           if (!l2) {
-            planes[l1][0][l3][1] = new Bitmap(20, 20, point2, "mirr_plane_6");
+            planes[l1][0][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_6");
             plane_p[l1][0][l3][1] = point2;
           } else {
             planes[l1][60 - l2][l3][1] =
-                new Bitmap(20, 20, point2, "mirr_plane_7");
+                    std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_7");
             plane_p[l1][60 - l2][l3][1] = point2;
           }
           for (xxx = 0; xxx < 20; xxx++)
@@ -2704,7 +2700,7 @@ void load_up() {
           point2 = (unsigned char *)walloc(400);
 
           planes[l1][60 - l2][l3][0] =
-              new Bitmap(20, 20, point2, "mirr_plane_8");
+                  std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_8");
           plane_p[l1][60 - l2][l3][0] = point2;
 
           for (xxx = 0; xxx < 20; xxx++)
@@ -2728,18 +2724,18 @@ void load_up() {
           plane_p[14][l][l2][l3] = plane_p[3][l][l2][l3];
           plane_p[15][l][l2][l3] = plane_p[0][l][l2][l3];
 
-          planes[4][l][l2][l3] = planes[0][l][l2][l3];
-          planes[5][l][l2][l3] = planes[1][l][l2][l3];
-          planes[6][l][l2][l3] = planes[2][l][l2][l3];
-          planes[7][l][l2][l3] = planes[3][l][l2][l3];
-          planes[8][l][l2][l3] = planes[0][l][l2][l3];
-          planes[9][l][l2][l3] = planes[1][l][l2][l3];
-          planes[10][l][l2][l3] = planes[2][l][l2][l3];
-          planes[11][l][l2][l3] = planes[3][l][l2][l3];
-          planes[12][l][l2][l3] = planes[1][l][l2][l3];
-          planes[13][l][l2][l3] = planes[2][l][l2][l3];
-          planes[14][l][l2][l3] = planes[3][l][l2][l3];
-          planes[15][l][l2][l3] = planes[0][l][l2][l3];
+          planes[4][l][l2][l3] = std::move(planes[0][l][l2][l3]);
+          planes[5][l][l2][l3] = std::move(planes[1][l][l2][l3]);
+          planes[6][l][l2][l3] = std::move(planes[2][l][l2][l3]);
+          planes[7][l][l2][l3] = std::move(planes[3][l][l2][l3]);
+          planes[8][l][l2][l3] = std::move(planes[0][l][l2][l3]);
+          planes[9][l][l2][l3] = std::move(planes[1][l][l2][l3]);
+          planes[10][l][l2][l3] = std::move(planes[2][l][l2][l3]);
+          planes[11][l][l2][l3] = std::move(planes[3][l][l2][l3]);
+          planes[12][l][l2][l3] = std::move(planes[1][l][l2][l3]);
+          planes[13][l][l2][l3] = std::move(planes[2][l][l2][l3]);
+          planes[14][l][l2][l3] = std::move(planes[3][l][l2][l3]);
+          planes[15][l][l2][l3] = std::move(planes[0][l][l2][l3]);
         }
 
   } // debug
@@ -2784,81 +2780,12 @@ void load_up() {
 
   for (l = 0; l < 4; l++) {
     for (l2 = 0; l2 < 12; l2++) {
-      flags[l][l2] = new Bitmap(1 + l2 * 14, 1 + l * 10, 13, 9, temp_bitti);
+      flags[l][l2] =  std::make_unique<Bitmap>(1 + l2 * 14, 1 + l * 10, 13, 9, temp_bitti);
     }
   }
 
   loading_text("Loading mouse cursor.");
   cursor = std::make_unique<Bitmap>("CURSOR");
-}
-
-void clean_memory() {
-  int l, l2, l3, l4;
-
-  for (l = 0; l < 14; l++)
-    for (l2 = 0; l2 < 2; l2++) {
-      delete mekan_running[l][l2];
-      delete mekan_pushing[0][l][l2];
-      delete mekan_pushing[1][l][l2];
-    }
-
-  for (l = 0; l < 4; l++)
-    for (l2 = 0; l2 < 8; l2++)
-      delete radar[l][l2];
-
-  delete status_icons[0][0];
-  delete status_icons[0][1];
-  delete status_icons[1][0];
-  delete status_icons[1][1];
-
-  for (l = 0; l < 4; l++)
-    for (l2 = 0; l2 < EXPLOX_FRAMES; l2++)
-      delete explox[l][l2];
-
-  for (l3 = 0; l3 < 2; l3++)
-    for (l = 0; l < 2; l++)
-      for (l2 = 0; l2 < 7; l2++) {
-        delete kkbase[l3][l][l2];
-      }
-
-  for (l3 = 0; l3 < 2; l3++)
-    for (l2 = 0; l2 < 5; l2++)
-      delete kkbase[l3][l][l2];
-
-  for (l3 = 0; l3 < 2; l3++)
-    for (l = 0; l < 4; l++) {
-      delete infantry_dropping[l][l3];
-      delete infantry_after_drop[l][l3];
-
-      for (l2 = 0; l2 < 12; l2++)
-        delete infantry_walking[l][l3][l2];
-
-      for (l2 = 0; l2 < 7; l2++)
-        delete infantry_dying[l][l3][l2];
-
-      for (l2 = 0; l2 < 6; l2++) {
-        delete infantry_aiming[l][l3][l2];
-
-        delete infantry_shooting[l][l3][l2];
-      }
-
-      for (l2 = 0; l2 < 10; l2++) {
-        delete infantry_wavedeath[l][l3][l2];
-
-        delete infantry_bdying[l][l3][l2];
-      }
-    }
-
-  for (l2 = 0; l2 < 4; l2++) {
-    for (l = 0; l < 60; l++)
-      for (l3 = 0; l3 < 4; l3++)
-        for (l4 = 0; l4 < 2; l4++)
-          delete planes[l2][l][l3][l4];
-  }
-
-  for (l = 0; l < 4; l++)
-    for (l2 = 0; l2 < 12; l2++)
-      delete flags[l][l2];
 }
 
 void load_level() {
@@ -3045,14 +2972,14 @@ void load_level() {
       }
 
       if (leveldata.struct_hit[l]) {
-        structures[l][0] = new Bitmap(leveldata.pd_name[l]);
+        structures[l][0] = std::make_unique<Bitmap>(leveldata.pd_name[l]);
 
       } else {
         temppic = std::make_unique<Bitmap>(leveldata.pd_name[l]);
         temppic->info(&struct_width[l], &struct_heigth[l]);
 
         structures[l][0] =
-            new Bitmap(leveldata.struct_x[l], leveldata.struct_y[l],
+                std::make_unique<Bitmap>(leveldata.struct_x[l], leveldata.struct_y[l],
                        struct_width[l], struct_heigth[l], maisema);
 
         temppic->blit_to_bitmap(structures[l][0], 0, 0);
@@ -3062,7 +2989,7 @@ void load_level() {
             temppic = std::make_unique<Bitmap>(struct_names[l2 * 2 + 1]);
 
             structures[l][1] =
-                new Bitmap(leveldata.struct_x[l], leveldata.struct_y[l],
+                    std::make_unique<Bitmap>(leveldata.struct_x[l], leveldata.struct_y[l],
                            struct_width[l], struct_heigth[l], maisema);
 
             temppic->blit_to_bitmap(structures[l][1], 0, 0);
@@ -3072,8 +2999,7 @@ void load_level() {
         }
 
         if (l2 == NUMBER_OF_STRUCT_NAMES) {
-          delete structures[l][0];
-          structures[l][0] = new Bitmap(leveldata.pd_name[l]);
+          structures[l][0] = std::make_unique<Bitmap>(leveldata.pd_name[l]);
           structures[l][0]->info(&struct_width[l], &struct_heigth[l]);
         }
       }
@@ -3128,16 +3054,6 @@ void load_level() {
     else
       init_vga("PALET3");
   }
-}
-
-void clear_level() {
-  int l, l2;
-
-  for (l2 = 0; l2 < 2; l2++)
-    for (l = 0; l < MAX_STRUCTURES; l++) {
-      if (structures[l][l2] != nullptr)
-        delete structures[l][l2];
-    }
 }
 
 void init_data() {
@@ -3673,8 +3589,6 @@ int main(int argc, char *argv[]) {
   }
 
   save_config();
-
-  clean_memory();
 
   return 0;
 }

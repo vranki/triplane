@@ -26,7 +26,10 @@
 constexpr int32_t VGA_MODE = 0;
 constexpr int32_t SVGA_MODE = 1;
 
-#include "gfx/gfx.h"
+#include <SDL/SDL.h>
+#include <memory>
+#include "../gfx/bitmap.h"
+#include "../gfx/gfx.h"
 #include "sdl_compat.h"
 
 struct naytto {
@@ -54,7 +57,7 @@ void init_vga(const char *paletname);
 void init_video();
 
 extern unsigned char *vircr;
-extern Bitmap *standard_background;
+extern std::unique_ptr<Bitmap> standard_background;
 extern int current_mode;
 extern int pixel_multiplier;
 extern int update_vircr_mode;
