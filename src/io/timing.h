@@ -21,7 +21,11 @@
 #ifndef TIMING_H
 #define TIMING_H
 
-void nopeuskontrolli(int fps = 24);
-void nopeuskontrolli_enable(int enable);
+namespace io::timing {
+
+    void nopeuskontrolli(int fps = 24);
+    void nopeuskontrolli_enable(int enable);
+
+} // namespace io::timing
 
 #endif

@@ -1650,15 +1650,15 @@ void main_engine() {
     if (key[SDLK_PAUSE]) {
       // wait until pause key is released, then pressed and released again
       while (key[SDLK_PAUSE]) { // still pressed
-        nopeuskontrolli();
+        io::timing::nopeuskontrolli();
         update_key_state();
       }
       while (!key[SDLK_PAUSE]) { // released
-        nopeuskontrolli();
+        io::timing::nopeuskontrolli();
         update_key_state();
       }
       while (key[SDLK_PAUSE]) { // pressed again
-        nopeuskontrolli();
+        io::timing::nopeuskontrolli();
         update_key_state();
       }
     }
@@ -1668,15 +1668,15 @@ void main_engine() {
     if (key[SDLK_F4]) {
       // wait until F4 is released, then pressed and released again
       while (key[SDLK_F4]) { // still pressed
-        nopeuskontrolli();
+        io::timing::nopeuskontrolli();
         update_key_state();
       }
       while (!key[SDLK_F4]) { // released
-        nopeuskontrolli();
+        io::timing::nopeuskontrolli();
         update_key_state();
       }
       while (key[SDLK_F4]) { // pressed again
-        nopeuskontrolli();
+        io::timing::nopeuskontrolli();
         update_key_state();
       }
     }
@@ -1825,10 +1825,10 @@ void main_engine() {
 
     if (playing_solo && hangarmenu_active[solo_country]) {
       controls();
-      nopeuskontrolli();
+      io::timing::nopeuskontrolli();
     } else {
       controls();
-      nopeuskontrolli();
+      io::timing::nopeuskontrolli();
       frame_laskuri++;
       mission_duration++;
     }
@@ -3453,7 +3453,7 @@ int main(int argc, char *argv[]) {
     load_keyset();
 
   if (findparameter("-speed")) {
-    nopeuskontrolli_enable(0);
+    io::timing::nopeuskontrolli_enable(0);
   }
 
   if (is_there_sound) {

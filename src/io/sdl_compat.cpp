@@ -40,7 +40,7 @@ int kbhit() {
   SDL_Event e;
   int ret;
 
-  nopeuskontrolli();
+  io::timing::nopeuskontrolli();
 
   ret = SDL_PeepEvents(&e, 1, SDL_PEEKEVENT, ~0);
   if (ret) {
