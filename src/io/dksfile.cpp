@@ -25,7 +25,7 @@
 
 *******************************************************************************/
 
-#include "io/dksfile.h"
+#include "../io/dksfile.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -58,7 +58,7 @@ public:
 };
 
 Dirrikka::Dirrikka() {
-  dirri = (main_directory_entry *)walloc(MAX_ENTRIES *
+  dirri = (main_directory_entry *)util::wutil::walloc(MAX_ENTRIES *
                                          sizeof(main_directory_entry));
 }
 

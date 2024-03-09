@@ -18,4 +18,8 @@
  * tjt@users.sourceforge.net
  */
 
-extern unsigned char converted_explosion[2501];
+namespace gfx::extra {
+
+    extern unsigned char converted_explosion[2501];
+
+} // namespace gfx::extra

@@ -625,14 +625,14 @@ void cause_damage(int amount, int plane) {
   if (player_endurance[plane] < 1) {
     if (!player_spinning[plane] && !in_closing[plane]) {
 
-      if (wrandom(2) == 1 && (!player_on_airfield[plane]))
+      if (util::wutil::wrandom(2) == 1 && (!player_on_airfield[plane]))
         player_spinning[plane] = 1;
       else {
         in_closing[plane] = 2;
         plane_present[plane] = 0;
         start_parts(plane);
         if (config.sound_on && config.sfx_on)
-          play_2d_sample(sample_crash[wrandom(2)], player_x_8[solo_country],
+          play_2d_sample(sample_crash[util::wutil::wrandom(2)], player_x_8[solo_country],
                          player_x_8[plane]);
       }
     }
@@ -692,8 +692,8 @@ void airfield_checks() {
     }
 
     plane_tire_y = ((player_y[l]) +
-                    (((-xxx * sinit[player_angle[l] >> 8] +
-                       yyy * cosinit[player_angle[l] >> 8] + 128) >>
+                    (((-xxx * util::wutil::sinit[player_angle[l] >> 8] +
+                       yyy * util::wutil::cosinit[player_angle[l] >> 8] + 128) >>
                       8)
                      << 8) +
                     256) >>
@@ -849,7 +849,7 @@ void init_player(int l, int pommit) {
       player_ammo[l] = plane_ammo[l];
       player_bombs[l] =
           computer_active[l]
-              ? ((wrandom(mission_duration + 1) < 1440) ? plane_bombs[l] : 0)
+              ? ((util::wutil::wrandom(mission_duration + 1) < 1440) ? plane_bombs[l] : 0)
               : (pommit ? plane_bombs[l] : 0);
     }
 
@@ -903,7 +903,7 @@ void controls() {
       record_data[record_counter++] = rbyte;
     }
 
-    record_random[record_counter >> 4] = wrandom(2147483647);
+    record_random[record_counter >> 4] = util::wutil::wrandom(2147483647);
   }
 
   if (findparameter("-playback")) {
@@ -918,7 +918,7 @@ void controls() {
       mc_guns[rcount] = rbyte & 32;
     }
 
-    if (record_random[record_counter >> 4] != wrandom(2147483647)) {
+    if (record_random[record_counter >> 4] != util::wutil::wrandom(2147483647)) {
       printf("Random failure at %d\n", record_counter >> 4);
     }
   }
@@ -1236,7 +1236,7 @@ void detect_collision() {
                     player_shots_down[l][l]++;
                     player_points[l]--;
                     if (config.sound_on && config.sfx_on)
-                      play_2d_sample(sample_crash[wrandom(2)],
+                      play_2d_sample(sample_crash[util::wutil::wrandom(2)],
                                      player_x_8[solo_country], player_x_8[l]);
                   }
                   if (!in_closing[l2]) {
@@ -1246,7 +1246,7 @@ void detect_collision() {
                     player_shots_down[l2][l2]++;
                     player_points[l2]--;
                     if (config.sound_on && config.sfx_on)
-                      play_2d_sample(sample_crash[wrandom(2)],
+                      play_2d_sample(sample_crash[util::wutil::wrandom(2)],
                                      player_x_8[solo_country], player_x_8[l]);
                   }
                 }
@@ -1254,8 +1254,8 @@ void detect_collision() {
           }
       }
     }
-    nx = (player_x[l] + 12 * cosinit[player_angle[l] >> 8]) >> 8;
-    ny = (player_y[l] - 12 * sinit[player_angle[l] >> 8]) >> 8;
+    nx = (player_x[l] + 12 * util::wutil::cosinit[player_angle[l] >> 8]) >> 8;
+    ny = (player_y[l] - 12 * util::wutil::sinit[player_angle[l] >> 8]) >> 8;
 
     if (nx < 0 || nx >= 2400 || ny >= 200) {
       nx = 0;
@@ -1283,7 +1283,7 @@ void detect_collision() {
           play_2d_sample(sample_spcrash, player_x_8[solo_country],
                          player_x_8[l]);
         else
-          play_2d_sample(sample_crash[wrandom(2)], player_x_8[solo_country],
+          play_2d_sample(sample_crash[util::wutil::wrandom(2)], player_x_8[solo_country],
                          player_x_8[l]);
       }
 
@@ -1299,11 +1299,11 @@ void detect_collision() {
       xxx = 5;
     }
 
-    nx = (player_x[l] >> 8) + ((+xxx * cosinit[player_angle[l] >> 8] +
-                                yyy * sinit[player_angle[l] >> 8] + 128) >>
+    nx = (player_x[l] >> 8) + ((+xxx * util::wutil::cosinit[player_angle[l] >> 8] +
+                                yyy * util::wutil::sinit[player_angle[l] >> 8] + 128) >>
                                8);
-    ny = (player_y[l] >> 8) + ((-xxx * sinit[player_angle[l] >> 8] +
-                                yyy * cosinit[player_angle[l] >> 8] + 128) >>
+    ny = (player_y[l] >> 8) + ((-xxx * util::wutil::sinit[player_angle[l] >> 8] +
+                                yyy * util::wutil::cosinit[player_angle[l] >> 8] + 128) >>
                                8);
 
     if (nx < 0 || nx >= 2400 || ny >= 200) {
@@ -1332,7 +1332,7 @@ void detect_collision() {
           play_2d_sample(sample_spcrash, player_x_8[solo_country],
                          player_x_8[l]);
         else
-          play_2d_sample(sample_crash[wrandom(2)], player_x_8[solo_country],
+          play_2d_sample(sample_crash[util::wutil::wrandom(2)], player_x_8[solo_country],
                          player_x_8[l]);
       }
       continue;
@@ -1448,7 +1448,7 @@ void main_engine() {
   }
   aftermath = 1;
 
-  setwrandom(7);
+  util::wutil::setwrandom(7);
 
   load_level();
   level_loaded = 1;
@@ -1624,8 +1624,8 @@ void main_engine() {
   //// Record
 
   if (findparameter("-record") || findparameter("-playback")) {
-    record_data = (char *)walloc(16 * 24 * 1280);
-    record_random = (int *)walloc(4 * 24 * 1280);
+    record_data = (char *)util::wutil::walloc(16 * 24 * 1280);
+    record_random = (int *)util::wutil::walloc(4 * 24 * 1280);
   }
 
   if (findparameter("-playback")) {
@@ -1639,7 +1639,7 @@ void main_engine() {
     fclose(record_file);
   }
   //// Record
-  setwrandom(7);
+  util::wutil::wrandom(7);
 
   if (!draw_with_vircr_mode)
     update_vircr_mode = 0;
@@ -1889,7 +1889,7 @@ void do_aftermath(int show_it_all) {
   std::unique_ptr<Bitmap> fly(new Bitmap("FLY"));
   std::unique_ptr<Bitmap> exit(new Bitmap("EXIT"));
 
-  random_fade_out();
+  gfx::fades::random_fade_out();
 
   mission_re_fly = -1;
 
@@ -2286,7 +2286,7 @@ void do_aftermath(int show_it_all) {
     standard_background = nullptr;
 
     if (!findparameter("-debugnoaftermathfadeout") && l == 0)
-      random_fade_out();
+        gfx::fades::random_fade_out();
   }
   save_roster();
   init_vga("PALET5");
@@ -2302,7 +2302,7 @@ void load_up() {
   loading_text("DKS-file directory structure loaded.");
   loading_text("Loading Trigonometric functions.");
 
-  init_trigs();
+    util::wutil::init_trigs();
 
   if (!findparameter("-debugnofonts")) {
 
@@ -2382,9 +2382,9 @@ void load_up() {
 
   loading_text("Loading explosion frames.");
 
-  point1 = (unsigned char *)walloc(61 * 41);
+  point1 = (unsigned char *)util::wutil::walloc(61 * 41);
   for (l = 0; l < 2501; l++)
-    point1[l] = converted_explosion[l];
+    point1[l] = gfx::extra::converted_explosion[l];
 
   plane1 = std::make_unique<Bitmap>(61, 41, point1, "explosion");
 
@@ -2427,7 +2427,7 @@ void load_up() {
   for (l = 0; l < 14; l++) {
     mekan_running[l][0] = std::make_unique<Bitmap>(1 + 14 * l, 1, 13, 11, plane1);
 
-    point1 = (unsigned char *)walloc(13 * 11);
+    point1 = (unsigned char *)util::wutil::walloc(13 * 11);
 
     point2 = mekan_running[l][0]->info(&xxx, &yyy);
     mekan_running[l][1] = std::make_unique<Bitmap>(13, 11, point1, "mekan1");
@@ -2441,7 +2441,7 @@ void load_up() {
   for (l = 0; l < 14; l++) {
     mekan_pushing[0][l][0] = std::make_unique<Bitmap>(1 + 14 * l, 1, 13, 11, plane1);
 
-    point1 = (unsigned char *)walloc(13 * 11);
+    point1 = (unsigned char *)util::wutil::walloc(13 * 11);
     point2 = mekan_pushing[0][l][0]->info(&xxx, &yyy);
     mekan_pushing[0][l][1] = std::make_unique<Bitmap>(13, 11, point1, "mekan2");
 
@@ -2454,7 +2454,7 @@ void load_up() {
   for (l = 0; l < 9; l++) {
     mekan_pushing[1][l][1] = std::make_unique<Bitmap>(1 + 14 * l, 1, 13, 11, plane1);
 
-    point1 = (unsigned char *)walloc(13 * 11);
+    point1 = (unsigned char *)util::wutil::walloc(13 * 11);
 
     point2 = mekan_pushing[1][l][1]->info(&xxx, &yyy);
     mekan_pushing[1][l][0] = std::make_unique<Bitmap>(13, 11, point1, "mekan3");
@@ -2503,7 +2503,7 @@ void load_up() {
     loading_text("Mirroring infantry.");
 
     for (l = 0; l < 4; l++) {
-      point1 = (unsigned char *)walloc(15 * 14);
+      point1 = (unsigned char *)util::wutil::walloc(15 * 14);
 
       point2 = infantry_dropping[l][0]->info(&xxx, &yyy);
       infantry_dropping[l][1] = std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_dropping");
@@ -2512,7 +2512,7 @@ void load_up() {
         for (yyy = 0; yyy < 14; yyy++)
           point1[xxx + yyy * 15] = point2[14 - xxx + yyy * 15];
 
-      point1 = (unsigned char *)walloc(15 * 14);
+      point1 = (unsigned char *)util::wutil::walloc(15 * 14);
 
       point2 = infantry_after_drop[l][0]->info(&xxx, &yyy);
       infantry_after_drop[l][1] =
@@ -2523,7 +2523,7 @@ void load_up() {
           point1[xxx + yyy * 15] = point2[14 - xxx + yyy * 15];
 
       for (l2 = 0; l2 < 12; l2++) {
-        point1 = (unsigned char *)walloc(15 * 14);
+        point1 = (unsigned char *)util::wutil::walloc(15 * 14);
 
         point2 = infantry_walking[l][0][l2]->info(&xxx, &yyy);
         infantry_walking[l][1][l2] =
@@ -2535,7 +2535,7 @@ void load_up() {
       }
 
       for (l2 = 0; l2 < 7; l2++) {
-        point1 = (unsigned char *)walloc(15 * 14);
+        point1 = (unsigned char *)util::wutil::walloc(15 * 14);
 
         point2 = infantry_dying[l][0][l2]->info(&xxx, &yyy);
         infantry_dying[l][1][l2] = std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_dying");
@@ -2546,7 +2546,7 @@ void load_up() {
       }
 
       for (l2 = 0; l2 < 6; l2++) {
-        point1 = (unsigned char *)walloc(15 * 14);
+        point1 = (unsigned char *)util::wutil::walloc(15 * 14);
 
         point2 = infantry_aiming[l][0][l2]->info(&xxx, &yyy);
         infantry_aiming[l][1][l2] =
@@ -2556,7 +2556,7 @@ void load_up() {
           for (yyy = 0; yyy < 14; yyy++)
             point1[xxx + yyy * 15] = point2[14 - xxx + yyy * 15];
 
-        point1 = (unsigned char *)walloc(15 * 14);
+        point1 = (unsigned char *)util::wutil::walloc(15 * 14);
         point2 = infantry_shooting[l][0][l2]->info(&xxx, &yyy);
         infantry_shooting[l][1][l2] =
                 std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_shooting");
@@ -2567,7 +2567,7 @@ void load_up() {
       }
 
       for (l2 = 0; l2 < 10; l2++) {
-        point1 = (unsigned char *)walloc(15 * 14);
+        point1 = (unsigned char *)util::wutil::walloc(15 * 14);
         point2 = infantry_wavedeath[l][0][l2]->info(&xxx, &yyy);
         infantry_wavedeath[l][1][l2] =
                 std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_wavedeath");
@@ -2576,7 +2576,7 @@ void load_up() {
           for (yyy = 0; yyy < 14; yyy++)
             point1[xxx + yyy * 15] = point2[14 - xxx + yyy * 15];
 
-        point1 = (unsigned char *)walloc(15 * 14);
+        point1 = (unsigned char *)util::wutil::walloc(15 * 14);
 
         point2 = infantry_bdying[l][0][l2]->info(&xxx, &yyy);
         infantry_bdying[l][1][l2] =
@@ -2628,7 +2628,7 @@ void load_up() {
       for (l2 = 0; l2 < 16; l2++)
         for (l1 = 0; l1 < 4; l1++) {
           point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
-          point2 = (unsigned char *)walloc(400);
+          point2 = (unsigned char *)util::wutil::walloc(400);
           if (!l2) {
             planes[l1][30][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_1");
             plane_p[l1][30][l3][1] = point2;
@@ -2646,7 +2646,7 @@ void load_up() {
       for (l2 = 45; l2 < 60; l2++)
         for (l1 = 0; l1 < 4; l1++) {
           point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
-          point2 = (unsigned char *)walloc(400);
+          point2 = (unsigned char *)util::wutil::walloc(400);
 
           planes[l1][90 - l2][l3][1] =
                   std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_3");
@@ -2661,7 +2661,7 @@ void load_up() {
       for (l2 = 0; l2 < 16; l2++)
         for (l1 = 0; l1 < 4; l1++) {
           point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
-          point2 = (unsigned char *)walloc(400);
+          point2 = (unsigned char *)util::wutil::walloc(400);
           if (!l2) {
             planes[l1][0][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_4");
             plane_p[l1][0][l3][1] = point2;
@@ -2679,7 +2679,7 @@ void load_up() {
       for (l2 = 45; l2 < 60; l2++)
         for (l1 = 0; l1 < 4; l1++) {
           point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
-          point2 = (unsigned char *)walloc(400);
+          point2 = (unsigned char *)util::wutil::walloc(400);
           if (!l2) {
             planes[l1][0][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_6");
             plane_p[l1][0][l3][1] = point2;
@@ -2697,7 +2697,7 @@ void load_up() {
       for (l2 = 16; l2 < 45; l2++)
         for (l1 = 0; l1 < 4; l1++) {
           point1 = planes[l1][l2][l3][1]->info(&xxx, &yyy);
-          point2 = (unsigned char *)walloc(400);
+          point2 = (unsigned char *)util::wutil::walloc(400);
 
           planes[l1][60 - l2][l3][0] =
                   std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_8");
@@ -2906,7 +2906,7 @@ void load_level() {
         infan_last_shot[l] = 0;
         infan_state[l] = 0;
         infan_country[l] = leveldata.struct_owner[l];
-        infan_frame[l] = wrandom(12);
+        infan_frame[l] = util::wutil::wrandom(12);
         continue;
       }
 
@@ -3110,7 +3110,7 @@ void init_data() {
 
   for (l = 0; l < MAX_FLAGS; l++) {
     flags_state[l] = 0;
-    flags_frame[l] = wrandom(10);
+    flags_frame[l] = util::wutil::wrandom(10);
   }
 
   for (l = 0; l < MAX_ITGUN_SHOTS; l++)
@@ -3415,7 +3415,7 @@ int main(int argc, char *argv[]) {
   }
 
   main_engine_random_seed = time(0);
-  wrandom_sanity_check();
+  util::wutil::wrandom_sanity_check();
 
   main_version = MAIN_VERSION;
   sub_version = SUB_VERSION;

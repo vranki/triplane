@@ -143,7 +143,7 @@ void model_planes() {
     mass += player_gas[c] / 160;
 
     if (player_y[c] < 0 && !player_spinning[c]) {
-      spinning_remaining[c] = wrandom(10) + 25;
+      spinning_remaining[c] = util::wutil::wrandom(10) + 25;
     }
 
     if (controls_power[c]) {
@@ -235,7 +235,7 @@ void model_planes() {
       int speedIncrease = (plane_power[c] << 8);
 
       // If plane is badly damaged, decrease speed
-      if (wrandom(plane_mass[c] >> 4) >= player_endurance[c] && wrandom(2)) {
+      if (util::wutil::wrandom(plane_mass[c] >> 4) >= player_endurance[c] && util::wutil::wrandom(2)) {
         speedIncrease = speedIncrease / 4;
       }
 
@@ -288,8 +288,8 @@ void model_planes() {
     }
 
     player_x_speed[c] =
-        (cosinit[player_angle[c] >> 8] * player_speed[c]) / SPEED;
-    player_y_speed[c] = (sinit[player_angle[c] >> 8] * player_speed[c]) / SPEED;
+        (util::wutil::cosinit[player_angle[c] >> 8] * player_speed[c]) / SPEED;
+    player_y_speed[c] = (util::wutil::sinit[player_angle[c] >> 8] * player_speed[c]) / SPEED;
     player_x[c] += player_x_speed[c] >> 8;
     if (!(player_on_airfield[c] && player_speed[c] < 768))
       player_y[c] -= player_y_speed[c] >> 8;
@@ -305,8 +305,8 @@ void model_planes() {
       }
 
       plane_tire_y = (player_y[c]) +
-                     (((-xxx * sinit[player_angle[c] >> 8] +
-                        yyy * cosinit[player_angle[c] >> 8] + 128) >>
+                     (((-xxx * util::wutil::sinit[player_angle[c] >> 8] +
+                        yyy * util::wutil::cosinit[player_angle[c] >> 8] + 128) >>
                        8)
                       << 8) +
                      256;

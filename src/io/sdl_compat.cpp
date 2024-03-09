@@ -30,8 +30,8 @@
 #include <SDL/SDL_mixer.h>
 #endif
 
-#include "io/dksfile.h"
-#include "io/timing.h"
+#include "../io/dksfile.h"
+#include "../io/timing.h"
 #include "sdl_compat.h"
 #include "../util/wutil.h"
 #include <cassert>
@@ -165,14 +165,14 @@ sb_sample *sdl_sample_load(const char *name) {
   }
 
   len = dkssize();
-  p = (uint8_t *)walloc(len);
+  p = (uint8_t *)util::wutil::walloc(len);
 
   ret = dksread(p, len);
   assert(ret == 1);
 
   dksclose();
 
-  sample = (sb_sample *)walloc(sizeof(sb_sample));
+  sample = (sb_sample *)util::wutil::walloc(sizeof(sb_sample));
 
   sample->chunk = Mix_LoadWAV_RW(SDL_RWFromConstMem(p, len), 1);
   if (sample->chunk == nullptr) {
@@ -212,14 +212,14 @@ sb_mod_file *sdl_load_mod_file(const char *name) {
   }
 
   len = dkssize();
-  p = (uint8_t *)walloc(len);
+  p = (uint8_t *)util::wutil::walloc(len);
 
   ret = dksread(p, len);
   assert(ret == 1);
 
   dksclose();
 
-  mod = (sb_mod_file *)walloc(sizeof(sb_mod_file));
+  mod = (sb_mod_file *)util::wutil::walloc(sizeof(sb_mod_file));
 
   rwops = SDL_RWFromConstMem(p, len);
   mod->music = Mix_LoadMUS_RW(rwops);

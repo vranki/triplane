@@ -513,12 +513,12 @@ void ai_do_bombing(int number) {
   // bomb_speed[l]=player_speed[player];
   // bomb_angle[l]=player_angle[player];
   fake_x_speed =
-      (cosinit[player_angle[number] >> 8] * player_speed[number]) >> 2;
-  fake_y_speed = (sinit[player_angle[number] >> 8] * player_speed[number]) >> 2;
+      (util::wutil::cosinit[player_angle[number] >> 8] * player_speed[number]) >> 2;
+  fake_y_speed = (util::wutil::sinit[player_angle[number] >> 8] * player_speed[number]) >> 2;
   fake_x = player_x[number] + (9 - player_upsidedown[number] * 18) *
-                                  sinit[player_angle[number] >> 8];
+                                      util::wutil::sinit[player_angle[number] >> 8];
   fake_y = player_y[number] + (9 - player_upsidedown[number] * 18) *
-                                  cosinit[player_angle[number] >> 8];
+                                      util::wutil::cosinit[player_angle[number] >> 8];
 
   while (1) {
 
@@ -574,17 +574,20 @@ void start_itgun_explosion(int number) {
   }
 
   for (l = 0; l < 16; l++) {
-    if (!plane_present[l])
-      continue;
+    if (!plane_present[l]) {
+        continue;
+    }
 
-    calculate_difference(itgun_shot_x[number] >> 8, itgun_shot_y[number] >> 8,
+    util::wutil::calculate_difference(itgun_shot_x[number] >> 8, itgun_shot_y[number] >> 8,
                          player_x_8[l], player_y_8[l], &distance);
 
-    if (distance <= 10)
-      cause_damage(80, l);
+    if (distance <= 10) {
+        cause_damage(80, l);
+    }
 
-    if (distance >= 40)
-      continue;
+    if (distance >= 40) {
+        continue;
+    }
 
     cause_damage(40 - distance, l);
   }
@@ -596,15 +599,16 @@ void start_it_shot(int x, int y, int angle) {
   int l;
 
   for (l = 0; l < MAX_ITGUN_SHOTS; l++)
-    if (!itgun_shot_x[l])
-      break;
+    if (!itgun_shot_x[l]) {
+        break;
+    }
 
   if (l != MAX_ITGUN_SHOTS) {
-    itgun_shot_age[l] = wrandom(ITGUN_AGE_VARIETY) + ITGUN_BASE_AGE;
+    itgun_shot_age[l] = util::wutil::wrandom(ITGUN_AGE_VARIETY) + ITGUN_BASE_AGE;
     itgun_shot_x[l] = (x << 8);
     itgun_shot_y[l] = (y << 8);
-    itgun_shot_x_speed[l] = (cosinit[angle] * ITGUN_SHOT_SPEED) >> 2;
-    itgun_shot_y_speed[l] = (sinit[angle] * ITGUN_SHOT_SPEED) >> 2;
+    itgun_shot_x_speed[l] = (util::wutil::cosinit[angle] * ITGUN_SHOT_SPEED) >> 2;
+    itgun_shot_y_speed[l] = (util::wutil::sinit[angle] * ITGUN_SHOT_SPEED) >> 2;
     itgun_shot_x[l] += itgun_shot_x_speed[l] >> 6;
     itgun_shot_y[l] -= itgun_shot_y_speed[l] >> 6;
   }
@@ -629,24 +633,27 @@ void do_it_shots() {
                               (itgun_shot_y[l] >> 8) * 2400])) > 119)
         itgun_shot_x[l] = 0;
 
-      if (!(itgun_shot_age[l]--))
-        start_itgun_explosion(l);
+      if (!(itgun_shot_age[l]--)) {
+          start_itgun_explosion(l);
+      }
 
       for (l2 = 0; l2 < 16; l2++) {
-        if (plane_present[l2])
+        if (plane_present[l2]){
           if (((player_x[l2] + 2304) > itgun_shot_x[l]) &&
               ((player_x[l2] - 2304) < itgun_shot_x[l]) &&
               ((player_y[l2] + 2304) > itgun_shot_y[l]) &&
-              ((player_y[l2] - 2304) < itgun_shot_y[l]))
-            if (plane_p[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]]
-                       [player_upsidedown[l2]]
-                       [(itgun_shot_x[l] >> 8) - (player_x_8[l2]) + 10 +
-                        ((itgun_shot_y[l] >> 8) - (player_y_8[l2]) + 10) *
-                            20] != 255) {
-              start_itgun_explosion(l);
-              break;
+              ((player_y[l2] - 2304) < itgun_shot_y[l])) {
+              if (plane_p[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]]
+                  [player_upsidedown[l2]]
+                  [(itgun_shot_x[l] >> 8) - (player_x_8[l2]) + 10 +
+                   ((itgun_shot_y[l] >> 8) - (player_y_8[l2]) + 10) *
+                   20] != 255) {
+                  start_itgun_explosion(l);
+                  break;
+              }
+          }
             }
-      }
+        }
     }
   }
 }
@@ -657,19 +664,15 @@ void infan_to_plane(int l) {
   int distance;
 
   for (l2 = 0; l2 < 16; l2++) {
-    if (!plane_present[l2])
-      continue;
+    if (!plane_present[l2]) { continue; }
 
-    if (l2 == infan_country[l])
-      continue;
+    if (l2 == infan_country[l]) { continue; }
 
-    if (player_sides[infan_country[l]] == player_sides[l2])
-      continue;
+    if (player_sides[infan_country[l]] == player_sides[l2]) { continue; }
 
-    if (abs(player_x_8[l2] - infan_x[l]) > 150)
-      continue;
+    if (abs(player_x_8[l2] - infan_x[l]) > 150) { continue; }
 
-    calculate_difference(infan_x[l] + 7, infan_y[l] + 7,
+      util::wutil::calculate_difference(infan_x[l] + 7, infan_y[l] + 7,
                          ((player_x[l2] + (player_x_speed[l2] >> 6)) >> 8),
                          ((player_y[l2] - (player_y_speed[l2] >> 7)) >> 8),
                          &distance, &angle);
@@ -683,7 +686,7 @@ void infan_to_plane(int l) {
         infan_last_shot[l] = 0;
         infan_state[l] = 2;
 
-        angle += wrandom(INFANTRY_AIM_RANDOM) - (INFANTRY_AIM_RANDOM >> 1);
+        angle += util::wutil::wrandom(INFANTRY_AIM_RANDOM) - (INFANTRY_AIM_RANDOM >> 1);
 
         if (angle >= 360)
           angle -= 360;
@@ -695,17 +698,13 @@ void infan_to_plane(int l) {
       }
 
       if (angle >= 270 || angle <= 90) {
-        if (angle >= 270)
-          infan_frame[l] = 0;
-        else
-          infan_frame[l] = angle >> 4;
+        if (angle >= 270) { infan_frame[l] = 0; }
+        else { infan_frame[l] = angle >> 4; }
 
         infan_direction[l] = 1;
       } else {
-        if (angle > 180)
-          infan_frame[l] = 0;
-        else
-          infan_frame[l] = (180 - angle) >> 4;
+        if (angle > 180) { infan_frame[l] = 0; }
+        else { infan_frame[l] = (180 - angle) >> 4; }
 
         infan_direction[l] = 0;
       }
@@ -721,19 +720,15 @@ void infan_to_infan(int l) {
   int distance;
 
   for (l2 = 0; l2 < MAX_INFANTRY; l2++) {
-    if (!infan_x[l2])
-      continue;
+    if (!infan_x[l2]) { continue; }
 
-    if (infan_country[l2] == infan_country[l])
-      continue;
+    if (infan_country[l2] == infan_country[l]) { continue; }
 
-    if (player_sides[infan_country[l]] == player_sides[infan_country[l2]])
-      continue;
+    if (player_sides[infan_country[l]] == player_sides[infan_country[l2]]) { continue; }
 
-    if (abs(infan_x[l2] - infan_x[l]) > 50)
-      continue;
+    if (abs(infan_x[l2] - infan_x[l]) > 50) { continue; }
 
-    calculate_difference(infan_x[l] + 7, infan_y[l] + 7, infan_x[l2] + 7,
+    util::wutil::calculate_difference(infan_x[l] + 7, infan_y[l] + 7, infan_x[l2] + 7,
                          infan_y[l2] + 7, &distance, &angle);
 
     if (angle <= 180) {
@@ -742,29 +737,23 @@ void infan_to_infan(int l) {
         infan_last_shot[l] = 0;
         infan_state[l] = 2;
 
-        angle += wrandom(INFANTRY_AIM_RANDOM) - (INFANTRY_AIM_RANDOM >> 1);
+        angle += util::wutil::wrandom(INFANTRY_AIM_RANDOM) - (INFANTRY_AIM_RANDOM >> 1);
 
-        if (angle >= 360)
-          angle -= 360;
-        if (angle < 0)
-          angle += 360;
+        if (angle >= 360) { angle -= 360; }
+        if (angle < 0) { angle += 360; }
 
         start_shot(infan_x[l] + 7, infan_y[l] + 7, angle, INFANT_SHOTS_SPEED,
                    infan_country[l]);
       }
 
       if (angle >= 270 || angle <= 90) {
-        if (angle >= 270)
-          infan_frame[l] = 0;
-        else
-          infan_frame[l] = angle >> 4;
+        if (angle >= 270) { infan_frame[l] = 0; }
+        else { infan_frame[l] = angle >> 4; }
 
         infan_direction[l] = 1;
       } else {
-        if (angle > 180)
-          infan_frame[l] = 0;
-        else
-          infan_frame[l] = (180 - angle) >> 4;
+        if (angle > 180) { infan_frame[l] = 0; }
+        else { infan_frame[l] = (180 - angle) >> 4; }
 
         infan_direction[l] = 0;
       }
@@ -785,15 +774,12 @@ void infan_to_struct(int l) {
       if (infan_x[l] + 15 >= kkbase_x[l2] &&
           infan_x[l] <= (kkbase_x[l2] + 26)) {
 
-        if (config.flames)
-          start_flame(kkbase_x[l2], kkbase_y[l2] + 21, 26);
+        if (config.flames) { start_flame(kkbase_x[l2], kkbase_y[l2] + 21, 26); }
 
         if (playing_solo) {
-          if (leveldata.struct_type[kkbase_number[l2]] == 1)
-            solo_dest_remaining--;
+          if (leveldata.struct_type[kkbase_number[l2]] == 1) { solo_dest_remaining--; }
 
-          if (leveldata.struct_type[kkbase_number[l2]] == 2)
-            solo_failed = 1;
+          if (leveldata.struct_type[kkbase_number[l2]] == 2) { solo_failed = 1; }
         }
 
         kkbase_status[l2] = 2;
@@ -815,11 +801,9 @@ void infan_to_struct(int l) {
                       struct_width[l2]);
 
         if (playing_solo) {
-          if (leveldata.struct_type[l2] == 1)
-            solo_dest_remaining--;
+          if (leveldata.struct_type[l2] == 1) { solo_dest_remaining--; }
 
-          if (leveldata.struct_type[l2] == 2)
-            solo_failed = 1;
+          if (leveldata.struct_type[l2] == 2) { solo_failed = 1; }
         }
 
         struct_state[l2] = 1;
@@ -863,7 +847,7 @@ void infan_take_hits(int l) {
   int l2;
   int soundi;
 
-  for (l2 = wrandom(3); l2 < MAX_SHOTS; l2 += 3) {
+  for (l2 = util::wutil::wrandom(3); l2 < MAX_SHOTS; l2 += 3) {
     if (!shots_flying_x[l2])
       continue;
 
@@ -876,32 +860,27 @@ void infan_take_hits(int l) {
       //   continue;
 
       if (playing_solo) {
-        if (leveldata.struct_type[l] == 1)
-          solo_dest_remaining--;
+        if (leveldata.struct_type[l] == 1) { solo_dest_remaining--; }
 
-        if (leveldata.struct_type[l] == 2)
-          solo_failed = 1;
+        if (leveldata.struct_type[l] == 2) { solo_failed = 1; }
       }
 
       if (shots_flying_x_speed[l2] > 0) {
-        if (infan_direction[l])
-          infan_state[l] = 5;
-        else
-          infan_state[l] = 3;
+        if (infan_direction[l]) { infan_state[l] = 5; }
+        else { infan_state[l] = 3; }
       } else {
-        if (!infan_direction[l])
-          infan_state[l] = 5;
-        else
-          infan_state[l] = 3;
+        if (!infan_direction[l]) { infan_state[l] = 5; }
+        else { infan_state[l] = 3; }
       }
 
       start_rifle(infan_x[l], infan_y[l]);
 
       if (config.infantry_sounds && config.sound_on && config.sfx_on) {
-        soundi = wrandom(18);
-        if (soundi < 9)
-          play_2d_sample(sample_die[soundi], player_x_8[solo_country],
-                         infan_x[l]);
+        soundi = util::wutil::wrandom(18);
+        if (soundi < 9) {
+            play_2d_sample(sample_die[soundi], player_x_8[solo_country],
+                           infan_x[l]);
+        }
       }
 
       infan_frame[l] = 0;
@@ -922,7 +901,7 @@ void do_infan() {
       continue;
 
     if (infan_state[l] == 1 || infan_state[l] == 2) {
-      infan_direction[l] = wrandom(2);
+      infan_direction[l] = util::wutil::wrandom(2);
       infan_state[l] = 0;
     }
 
@@ -975,7 +954,7 @@ void do_infan() {
 
     for (l2 = 0; l2 < 8; l2++) {
       if ((infan_x[l] + (infan_direction[l] ? 1 : -1)) == infan_stop[l2]) {
-        wtoggle(&infan_direction[l]);
+        util::wutil::wtoggle(&infan_direction[l]);
         break;
       }
     }
@@ -984,7 +963,7 @@ void do_infan() {
         ((terrain_level[infan_x[l] + (infan_direction[l] ? 14 : 0)] - 2) >
          terrain_level[infan_x[l] + (infan_direction[l] ? 14 : 0) +
                        (infan_direction[l] ? 1 : -1)])) {
-      wtoggle(&infan_direction[l]);
+      util::wutil::wtoggle(&infan_direction[l]);
 
     } else {
       infan_x[l] += (infan_direction[l] ? 1 : -1);
@@ -1042,10 +1021,10 @@ void do_kkbase() {
           continue;
 
         if (abs(kkbase_x[l] - player_x_8[l2]) < 150) {
-          calculate_difference(kkbase_x[l] + 13, kkbase_y[l] + 10,
+          util::wutil::calculate_difference(kkbase_x[l] + 13, kkbase_y[l] + 10,
                                player_x_8[l2], player_y_8[l2], &tdistance,
                                &angle);
-          calculate_difference(kkbase_x[l] + 13, kkbase_y[l] + 10,
+          util::wutil::calculate_difference(kkbase_x[l] + 13, kkbase_y[l] + 10,
                                ((player_x[l2] + ((player_x_speed[l2] >> 8) *
                                                  (tdistance << 8) / 1700)) >>
                                 8),
@@ -1115,7 +1094,7 @@ void ai_turn_down(int number) {
     flaggy = 0;
 
   if (!player_upsidedown[number])
-    wtoggle(&flaggy);
+    util::wutil::wtoggle(&flaggy);
 
   controls_down[number] = flaggy;
   controls_up[number] = (1 ^ flaggy) & 1;
@@ -1130,7 +1109,7 @@ void ai_turn_up(int number) {
     flaggy = 0;
 
   if (!player_upsidedown[number])
-    wtoggle(&flaggy);
+    util::wutil::wtoggle(&flaggy);
 
   controls_down[number] = (1 ^ flaggy) & 1;
   controls_up[number] = flaggy;
@@ -1217,7 +1196,7 @@ void do_ai(int number) {
       continue;
 
     // calculate_difference(player_x[number]>>8,player_y_8[number]>>8,(player_x[flaggy]>>8),(player_y[flaggy]>>8),&distance_enemy[flaggy],&angle_enemy[flaggy]);
-    calculate_difference(
+    util::wutil::calculate_difference(
         player_x_8[number], player_y_8[number],
         ((player_x[flaggy] + (player_x_speed[flaggy] >> 7)) >> 8),
         ((player_y[flaggy] - (player_y_speed[flaggy] >> 7)) >> 8),

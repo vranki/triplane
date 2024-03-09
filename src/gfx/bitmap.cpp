@@ -78,7 +78,7 @@ void all_bitmaps_refresh() {
 /* Make a copy of the image data in source, enlarged zoom times */
 static unsigned char *duplicate_enlarged(const unsigned char *source, int width,
                                          int height, int zoom) {
-  uint8_t *target = (uint8_t *)walloc(width * height * zoom * zoom);
+  uint8_t *target = (uint8_t *)util::wutil::walloc(width * height * zoom * zoom);
   int i, j, k;
   const uint8_t *in = source;
   uint8_t *out = target;
@@ -173,7 +173,7 @@ void Bitmap::refresh_sdlsurface() {
 
   SDL_FreeSurface(tmps);
   if (pixel_multiplier > 1) {
-    wfree(imgmult);
+      util::wutil::wfree(imgmult);
   }
 }
 
@@ -209,10 +209,10 @@ Bitmap::Bitmap(const char *image_name, int transparent) {
   xx = width;
   yy = height;
 
-  image_data = (unsigned char *)walloc(xx * yy);
+  image_data = (unsigned char *)util::wutil::walloc(xx * yy);
   external_image_data = 0;
 
-  pointteri2 = (unsigned char *)walloc((unsigned int)koko);
+  pointteri2 = (unsigned char *)util::wutil::walloc((unsigned int)koko);
 
   dksread(pointteri2, koko);
   dksclose();
@@ -381,7 +381,7 @@ Bitmap::Bitmap(int x1, int y1, int xl, int yl, std::unique_ptr<Bitmap>& source_i
     laskx = xl;
     lasky = yl;
 
-    image_data = (unsigned char *)walloc(laskx * lasky);
+    image_data = (unsigned char *)util::wutil::walloc(laskx * lasky);
     external_image_data = 0;
 
     lahtopointti = source_image->info(&kokox, &kokoy);
@@ -409,7 +409,7 @@ Bitmap::Bitmap(int x, int y, int w, int h) {
 
   width = w;
   height = h;
-  image_data = (unsigned char *)walloc(w * h);
+  image_data = (unsigned char *)util::wutil::walloc(w * h);
   external_image_data = 0;
 
   for (fromy = y, toy = 0; toy < h; fromy++, toy++)
@@ -458,12 +458,12 @@ std::unique_ptr<Bitmap> rotate_bitmap(std::unique_ptr<Bitmap>& picture, int degr
     int count, count2;
 
     old_picture_data = picture->info(&xl, &yl);
-    picture_data = (unsigned char *)walloc(xl * yl);
+    picture_data = (unsigned char *)util::wutil::walloc(xl * yl);
 
     nxl = xl << 1;
     nyl = yl << 1;
 
-    temp_data = (unsigned char *)walloc(nxl * nyl);
+    temp_data = (unsigned char *)util::wutil::walloc(nxl * nyl);
 
     for (count = 0; count < (nxl * nyl); count++)
         temp_data[count] = 255;
@@ -478,11 +478,11 @@ std::unique_ptr<Bitmap> rotate_bitmap(std::unique_ptr<Bitmap>& picture, int degr
         for (count2 = (-(yl >> 1)); count2 < (yl >> 1); count2++) {
 
             picture_data[(xl >> 1) + count + ((yl >> 1) + count2) * xl] =
-                    temp_data[(xl + (((count * cosinit[degrees]) -
-                                      (count2 * sinit[degrees]) + 128) >>
+                    temp_data[(xl + (((count * util::wutil::cosinit[degrees]) -
+                                      (count2 * util::wutil::sinit[degrees]) + 128) >>
                                                                        8)) +
-                              (yl + (((count * sinit[degrees]) +
-                                      (count2 * cosinit[degrees]) + 128) >>
+                              (yl + (((count * util::wutil::sinit[degrees]) +
+                                      (count2 * util::wutil::cosinit[degrees]) + 128) >>
                                                                          8)) *
                               nxl];
         }
