@@ -21,25 +21,29 @@
 #ifndef FONT_H
 #define FONT_H
 
-class Font {
-private:
-  Bitmap *glyphs[256];
-  int width;
-  int height;
-  int char_width[256];
-  int char_start[256];
-  int scaled;
-  int scaled_space;
+namespace gfx::font {
 
-public:
-  Font(const char *font_name);
-  ~Font();
-  int printf(int x, int y, const char *fmt, ...);
-  int scanf(int x, int y, char *str, int max_len);
-  void scale();
-  void unscale();
-  void count_scale();
-  void set_space(int space);
-};
+    class Font {
+    private:
+        Bitmap *glyphs[256];
+        int width;
+        int height;
+        int char_width[256];
+        int char_start[256];
+        int scaled;
+        int scaled_space;
+
+    public:
+        Font(const char *font_name);
+        ~Font();
+        int printf(int x, int y, const char *fmt, ...);
+        int scanf(int x, int y, char *str, int max_len);
+        void scale();
+        void unscale();
+        void count_scale();
+        void set_space(int space);
+    };
+
+} // namespace gfx::font
 
 #endif

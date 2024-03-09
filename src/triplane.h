@@ -118,9 +118,9 @@ extern int struct_heigth[MAX_STRUCTURES];
 
 //\ Fonts
 
-extern std::unique_ptr<Font> fontti;
-extern std::unique_ptr<Font> frost;
-extern std::unique_ptr<Font> grid2;
+extern std::unique_ptr<gfx::font::Font> fontti;
+extern std::unique_ptr<gfx::font::Font> frost;
+extern std::unique_ptr<gfx::font::Font> grid2;
 
 //\ Parameter control
 

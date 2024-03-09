@@ -2844,7 +2844,7 @@ void credits_menu() {
   int x, y, n1, n2;
   int kohta1, kohta2;
 
-  std::unique_ptr<Font> grid3(new Font("G3FONT"));
+  std::unique_ptr<gfx::font::Font> grid3(new gfx::font::Font("G3FONT"));
   std::unique_ptr<Bitmap> credi1(new Bitmap("CREDI1"));
 
   grid3->scale();

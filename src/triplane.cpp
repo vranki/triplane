@@ -144,9 +144,9 @@ int struct_heigth[MAX_STRUCTURES];
 
 //\ Fonts
 
-std::unique_ptr<Font> fontti;
-std::unique_ptr<Font> frost;
-std::unique_ptr<Font> grid2;
+std::unique_ptr<gfx::font::Font> fontti;
+std::unique_ptr<gfx::font::Font> frost;
+std::unique_ptr<gfx::font::Font> grid2;
 
 //\ Parameter control
 
@@ -2307,10 +2307,10 @@ void load_up() {
   if (!findparameter("-debugnofonts")) {
 
     loading_text("Loading fonts.");
-    frost = std::make_unique<Font>("GRFONT");
+    frost = std::make_unique<gfx::font::Font>("GRFONT");
     frost->scale();
-    fontti = std::make_unique<Font>("FONTT");
-    grid2 = std::make_unique<Font>("G2FONT");
+    fontti = std::make_unique<gfx::font::Font>("FONTT");
+    grid2 = std::make_unique<gfx::font::Font>("G2FONT");
     grid2->scale();
   }
 
