@@ -22,30 +22,34 @@
 #include <SDL/SDL.h>
 #include <cassert>
 
-static int enabled = 1;
+namespace io::timing {
 
-void nopeuskontrolli(int fps) {
-  static uint32_t viimeinen_aika = 0;
-  uint32_t target_tick;
+    static int enabled = 1;
 
-  if (!enabled) {
-    return;
-  }
+    void nopeuskontrolli(int fps) {
+        static uint32_t viimeinen_aika = 0;
+        uint32_t target_tick;
 
-  target_tick = viimeinen_aika + 1000 / fps;
-  while (SDL_GetTicks() <= target_tick) {
-    uint32_t diff = target_tick - SDL_GetTicks();
-    if (diff > 10 && diff < 1000) {
-      SDL_Delay(diff);
+        if (!enabled) {
+            return;
+        }
+
+        target_tick = viimeinen_aika + 1000 / fps;
+        while (SDL_GetTicks() <= target_tick) {
+            uint32_t diff = target_tick - SDL_GetTicks();
+            if (diff > 10 && diff < 1000) {
+                SDL_Delay(diff);
+            }
+        }
+
+        viimeinen_aika += 1000 / fps;
+
+        // Recover from stopped process
+        if (SDL_GetTicks() > viimeinen_aika + 1000 / fps) {
+            viimeinen_aika = SDL_GetTicks();
+        }
     }
-  }
 
-  viimeinen_aika += 1000 / fps;
+    void nopeuskontrolli_enable(int enable) { enabled = enable; }
 
-  // Recover from stopped process
-  if (SDL_GetTicks() > viimeinen_aika + 1000 / fps) {
-    viimeinen_aika = SDL_GetTicks();
-  }
-}
-
-void nopeuskontrolli_enable(int enable) { enabled = enable; }
+} // namespace io::timing

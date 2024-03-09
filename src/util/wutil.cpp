@@ -19,7 +19,7 @@
  */
 
 #include "wutil.h"
-#include "io/dksfile.h"
+#include "../io/dksfile.h"
 #include "random.h"
 #include "../triplane.h"
 #include <SDL/SDL.h>
@@ -28,181 +28,185 @@
 #include <cstdio>
 #include <cstdlib>
 
-constexpr int32_t SIN_COS_NRO = 361;
-constexpr int32_t ASIN_NRO = 257;
+namespace util::wutil {
 
-int32_t cosinit[SIN_COS_NRO];
-int32_t sinit[SIN_COS_NRO];
-int32_t asinit[ASIN_NRO];
+    constexpr int32_t SIN_COS_NRO = 361;
+    constexpr int32_t ASIN_NRO = 257;
 
-static int trigs_initialized = 0;
+    int32_t cosinit[SIN_COS_NRO];
+    int32_t sinit[SIN_COS_NRO];
+    int32_t asinit[ASIN_NRO];
 
-void setwrandom(int seed) { triplane_srandom(seed); }
+    static int trigs_initialized = 0;
 
-int wrandom(int limit) { return ((triplane_random() % limit)); }
+    void setwrandom(int seed) { random::triplane_srandom(seed); }
 
-static int wrandom_test_data[] = {
-    0x0029187a, 0x1e2582ce, 0x5ad57f9a, 0x11a8b5fc, 0x5f5d7d81, 0x0043f46b,
-    0x1dc84952, 0x31b69ea3, 0x6f6e3e14, 0x733318dd, 0x05dbeb00, 0x08151371,
-    0x61d2c131, 0x3e04fb7f, 0x5ef51817, 0x0d53f52d, 0x4a7ca460, 0x4dc8160f,
-    0x4812493d, 0x1ed40d5f, 0x053b721c, 0x5309d13a, 0x63d17356, 0x79d39300,
-    0x473ada6d, 0x0aa7fa76, 0x00ebaabc, 0x0771c671, 0x179951d1, 0x1ae3430a,
-    0x57b136ca, 0x79bbd8ad};
+    int wrandom(int limit) { return ((random::triplane_random() % limit)); }
 
-void wrandom_sanity_check() {
-  int i;
+    static int wrandom_test_data[] = {
+            0x0029187a, 0x1e2582ce, 0x5ad57f9a, 0x11a8b5fc, 0x5f5d7d81, 0x0043f46b,
+            0x1dc84952, 0x31b69ea3, 0x6f6e3e14, 0x733318dd, 0x05dbeb00, 0x08151371,
+            0x61d2c131, 0x3e04fb7f, 0x5ef51817, 0x0d53f52d, 0x4a7ca460, 0x4dc8160f,
+            0x4812493d, 0x1ed40d5f, 0x053b721c, 0x5309d13a, 0x63d17356, 0x79d39300,
+            0x473ada6d, 0x0aa7fa76, 0x00ebaabc, 0x0771c671, 0x179951d1, 0x1ae3430a,
+            0x57b136ca, 0x79bbd8ad};
 
-  setwrandom(7);
-  for (i = 0; i < 32; i++) {
-    int ret;
-    ret = wrandom(2147483647);
-    if (ret != wrandom_test_data[i]) {
-      printf("Internal error. wrandom returned 0x%08x but "
-             "wrandom_test_data[%d] has 0x%08x\n",
-             ret, i, wrandom_test_data[i]);
-      exit(1);
+    void wrandom_sanity_check() {
+        int i;
+
+        setwrandom(7);
+        for (i = 0; i < 32; i++) {
+            int ret;
+            ret = wrandom(2147483647);
+            if (ret != wrandom_test_data[i]) {
+                printf("Internal error. wrandom returned 0x%08x but "
+                       "wrandom_test_data[%d] has 0x%08x\n",
+                       ret, i, wrandom_test_data[i]);
+                exit(1);
+            }
+        }
     }
-  }
-}
 
-void *walloc(size_t size) {
-  void *ptr;
-  ptr = malloc(size);
+    void *walloc(size_t size) {
+        void *ptr;
+        ptr = malloc(size);
 
-  if (ptr == nullptr) {
-    printf("\nError in memory allocation: %d bytes.\n", (int)size);
-    exit(1);
-  }
+        if (ptr == nullptr) {
+            printf("\nError in memory allocation: %d bytes.\n", (int) size);
+            exit(1);
+        }
 
-  return ptr;
-}
+        return ptr;
+    }
 
-void wfree(void *ptr) {
-  assert(ptr != nullptr);
-  free(ptr);
-}
+    void wfree(void *ptr) {
+        assert(ptr != nullptr);
+        free(ptr);
+    }
 
-void wtoggle(int *what) {
-  if (*what)
-    *what = 0;
-  else
-    *what = 1;
-}
+    void wtoggle(int *what) {
+        if (*what)
+            *what = 0;
+        else
+            *what = 1;
+    }
 
-void init_trigs() {
-  int i;
+    void init_trigs() {
+        int i;
 
-  dksopen("trigdt");
-  dksread(sinit, 1444);
-  dksread(cosinit, 1444);
-  dksclose();
+        dksopen("trigdt");
+        dksread(sinit, 1444);
+        dksread(cosinit, 1444);
+        dksclose();
 
-  dksopen("arcsin");
-  dksread(asinit, 1028);
-  dksclose();
+        dksopen("arcsin");
+        dksread(asinit, 1028);
+        dksclose();
 
-  for (i = 0; i < SIN_COS_NRO; i++) {
-    sinit[i] = SDL_SwapLE32(sinit[i]);
-    cosinit[i] = SDL_SwapLE32(cosinit[i]);
-  }
+        for (i = 0; i < SIN_COS_NRO; i++) {
+            sinit[i] = SDL_SwapLE32(sinit[i]);
+            cosinit[i] = SDL_SwapLE32(cosinit[i]);
+        }
 
-  for (i = 0; i < ASIN_NRO; i++) {
-    asinit[i] = SDL_SwapLE32(asinit[i]);
-  }
+        for (i = 0; i < ASIN_NRO; i++) {
+            asinit[i] = SDL_SwapLE32(asinit[i]);
+        }
 
-  trigs_initialized = 1;
-}
+        trigs_initialized = 1;
+    }
 
-int arcsinit(int luku) {
-  assert(trigs_initialized);
+    int arcsinit(int luku) {
+        assert(trigs_initialized);
 
-  if (luku <= 0)
-    luku = 0;
+        if (luku <= 0)
+            luku = 0;
 
-  if (luku > 256)
-    luku = 256;
+        if (luku > 256)
+            luku = 256;
 
-  return asinit[luku];
-}
+        return asinit[luku];
+    }
 
 // #1 is the observer and #2 is the target
-void calculate_difference(int x1, int y1, int x2, int y2, int *distance,
-                          int *angle) {
-  int xdiff, ydiff;
+    void calculate_difference(int x1, int y1, int x2, int y2, int *distance,
+                              int *angle) {
+        int xdiff, ydiff;
 
-  xdiff = x2 - x1; // negative is left
-  ydiff = y1 - y2; // negative is down
+        xdiff = x2 - x1; // negative is left
+        ydiff = y1 - y2; // negative is down
 
-  if (!xdiff) {
-    *distance = abs(ydiff);
+        if (!xdiff) {
+            *distance = abs(ydiff);
 
-    if (angle == nullptr)
-      return;
-    if (ydiff > 0)
-      *angle = 90;
-    else
-      *angle = 270;
+            if (angle == nullptr)
+                return;
+            if (ydiff > 0)
+                *angle = 90;
+            else
+                *angle = 270;
 
-    return;
-  }
+            return;
+        }
 
-  if (!ydiff) {
-    *distance = abs(xdiff);
+        if (!ydiff) {
+            *distance = abs(xdiff);
 
-    if (angle == nullptr)
-      return;
-    if (xdiff > 0)
-      *angle = 0;
-    else
-      *angle = 180;
+            if (angle == nullptr)
+                return;
+            if (xdiff > 0)
+                *angle = 0;
+            else
+                *angle = 180;
 
-    return;
-  }
+            return;
+        }
 
-  *distance = squareroot(xdiff * xdiff + ydiff * ydiff);
-  if (*distance == 0) {
-    *angle = 0;
-    *distance = 1;
-  }
-  if (angle == nullptr)
-    return;
+        *distance = squareroot(xdiff * xdiff + ydiff * ydiff);
+        if (*distance == 0) {
+            *angle = 0;
+            *distance = 1;
+        }
+        if (angle == nullptr)
+            return;
 
-  if (xdiff > 0 && ydiff > 0) {
-    *angle = arcsinit((ydiff << 8) / (*distance));
-    return;
-  }
+        if (xdiff > 0 && ydiff > 0) {
+            *angle = arcsinit((ydiff << 8) / (*distance));
+            return;
+        }
 
-  if (xdiff > 0 && ydiff < 0) {
-    *angle = 360 - arcsinit((-(ydiff << 8)) / (*distance));
-    if (*angle == 360)
-      *angle = 0;
-    return;
-  }
+        if (xdiff > 0 && ydiff < 0) {
+            *angle = 360 - arcsinit((-(ydiff << 8)) / (*distance));
+            if (*angle == 360)
+                *angle = 0;
+            return;
+        }
 
-  if (xdiff < 0 && ydiff > 0) {
-    *angle = 180 - arcsinit((ydiff << 8) / (*distance));
-    return;
-  }
+        if (xdiff < 0 && ydiff > 0) {
+            *angle = 180 - arcsinit((ydiff << 8) / (*distance));
+            return;
+        }
 
-  if (xdiff < 0 && ydiff < 0) {
-    *angle = 180 + arcsinit((-(ydiff << 8)) / (*distance));
-    return;
-  }
-}
+        if (xdiff < 0 && ydiff < 0) {
+            *angle = 180 + arcsinit((-(ydiff << 8)) / (*distance));
+            return;
+        }
+    }
 
-int squareroot(int number) {
-  int l, old_result, new_result;
+    int squareroot(int number) {
+        int l, old_result, new_result;
 
-  if (!(old_result = new_result = number >> 1))
-    return 1;
+        if (!(old_result = new_result = number >> 1))
+            return 1;
 
-  for (l = 0; l < 14; l++) {
-    new_result = (old_result + number / old_result + 1) >> 1;
-    if (new_result == old_result || !new_result)
-      return new_result;
+        for (l = 0; l < 14; l++) {
+            new_result = (old_result + number / old_result + 1) >> 1;
+            if (new_result == old_result || !new_result)
+                return new_result;
 
-    old_result = new_result;
-  }
+            old_result = new_result;
+        }
 
-  return new_result;
-}
+        return new_result;
+    }
+
+} //  namespace util::wutil

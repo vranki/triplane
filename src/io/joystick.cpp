@@ -18,9 +18,9 @@
  * tjt@users.sourceforge.net
  */
 
-#include "io/joystick.h"
+#include "../io/joystick.h"
 #include "sdl_compat.h"
-#include "settings.h"
+#include "../settings.h"
 #include "../util/wutil.h"
 #include <SDL/SDL.h>
 #include <cassert>
@@ -275,7 +275,7 @@ int joystick_has_roll_button(int t) {
 
 /** Allocate enough memory to hold state of axes of given joy. */
 Sint16 *allocate_axis_state(int joy) {
-  return (Sint16 *)walloc(SDL_JoystickNumAxes(joydev[joy]) * sizeof(Sint16));
+  return (Sint16 *)util::wutil::walloc(SDL_JoystickNumAxes(joydev[joy]) * sizeof(Sint16));
 }
 
 /** Save state of all axes of a given joystick */
@@ -341,7 +341,7 @@ int find_changed_button(struct joystick_action *act, int joy) {
 void set_disabled_action(struct joystick_action *act) { act->type = 0; }
 
 char *get_joy_action_string(struct joystick_action *act) {
-  char *buf = (char *)walloc(15);
+  char *buf = (char *)util::wutil::walloc(15);
 
   if (act->type == 0) {
     strcpy(buf, "-");

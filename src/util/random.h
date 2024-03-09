@@ -22,7 +22,12 @@
 #define RANDOM_H
 #include <cstdint>
 
-uint32_t triplane_random();
-void triplane_srandom(uint64_t x);
+namespace util::random {
+
+    uint32_t triplane_random();
+
+    void triplane_srandom(uint64_t x);
+
+} // namespace util::random
 
 #endif

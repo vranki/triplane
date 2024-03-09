@@ -449,7 +449,7 @@ void load_descriptions(const int number) {
     exit(1);
   }
 
-  temp_storage = (char *)walloc(dkssize());
+  temp_storage = (char *)util::wutil::walloc(dkssize());
   dksread(temp_storage, dkssize());
 
   for (c = 0; c <= number; c++) {
@@ -525,7 +525,7 @@ void load_descriptions(const int number) {
 
   tyhjaa_vircr();
 
-  wfree(temp_storage);
+  util::wutil::wfree(temp_storage);
 }
 
 int solo_player_menu() {
@@ -622,7 +622,7 @@ int solo_player_menu() {
   }
 
   if (flag == 1)
-    random_fade_out();
+    gfx::fades::random_fade_out();
   else {
     tyhjaa_vircr();
     do_all();
@@ -710,7 +710,7 @@ void roster_menu() {
       if (!(ch = getch())) {
         ch = getch();
         if (ch == 59)
-          wtoggle(&help_on);
+          util::wutil::wtoggle(&help_on);
 
       } else {
         if (ch == 27)
@@ -760,13 +760,13 @@ void roster_menu() {
                         "Power [%s]\nBombs [%s]\nGuns [%s]\nBreak [%s]", powers,
                         bombss, gunss, brakes);
 
-          wfree(ups);
-          wfree(downs);
-          wfree(rolls);
-          wfree(powers);
-          wfree(gunss);
-          wfree(bombss);
-          wfree(brakes);
+          util::wutil::wfree(ups);
+          util::wutil::wfree(downs);
+          util::wutil::wfree(rolls);
+          util::wutil::wfree(powers);
+          util::wutil::wfree(gunss);
+          util::wutil::wfree(bombss);
+          util::wutil::wfree(brakes);
         }
       }
     } else {
@@ -927,7 +927,7 @@ void roster_menu() {
 
       case 2:
         if (n1)
-          random_fade_out();
+          gfx::fades::random_fade_out();
         else {
           tyhjaa_vircr();
           do_all();
@@ -962,7 +962,7 @@ void roster_menu() {
         cursor->blit(x - 10, y - 10);
         do_all();
         wait_mouse_relase();
-        wtoggle(&keysetmode);
+        util::wutil::wtoggle(&keysetmode);
         break;
 
       case 7:
@@ -1609,7 +1609,7 @@ void options_menu() {
 
       case 2:
         if (n1)
-          random_fade_out();
+          gfx::fades::random_fade_out();
         else {
           tyhjaa_vircr();
           do_all();
@@ -1840,7 +1840,7 @@ void transfer_menu() {
 
       case 2:
         if (n1)
-          random_fade_out();
+          gfx::fades::random_fade_out();
         else {
           tyhjaa_vircr();
           do_all();
@@ -1918,8 +1918,8 @@ static void joystick_setup(int joy, std::unique_ptr<Bitmap>& controlme) {
   }
 
 joystick_setup_exit:
-  wfree(idle);
-  wfree(current);
+  util::wutil::wfree(idle);
+  util::wutil::wfree(current);
 
   open_close_joysticks(0, 0, 0, 0);
 }
@@ -1977,8 +1977,8 @@ void joystick_roster_setup(Bitmap *controlme) {
   }
 
 joystick_setup_exit:
-  wfree(idle);
-  wfree(current);
+  util::wutil::wfree(idle);
+  util::wutil::wfree(current);
 
   open_close_joysticks(0, 0, 0, 0);
 }
@@ -2004,7 +2004,7 @@ void controls_menu() {
       if (!(ch = getch())) {
         ch = getch();
         if (ch == 59)
-          wtoggle(&help_on);
+          util::wutil::wtoggle(&help_on);
 
       } else {
         if (ch == 27)
@@ -2117,13 +2117,13 @@ void controls_menu() {
       frost->printf(170, 100, "Pwr [%s] Bmb [%s] Gun [%s] Brk [%s]", powers,
                     bombss, gunss, brakes);
 
-      wfree(ups);
-      wfree(downs);
-      wfree(rolls);
-      wfree(powers);
-      wfree(gunss);
-      wfree(bombss);
-      wfree(brakes);
+      util::wutil::wfree(ups);
+      util::wutil::wfree(downs);
+      util::wutil::wfree(rolls);
+      util::wutil::wfree(powers);
+      util::wutil::wfree(gunss);
+      util::wutil::wfree(bombss);
+      util::wutil::wfree(brakes);
     }
 
     cursor->blit(x - 10, y - 10);
@@ -2134,7 +2134,7 @@ void controls_menu() {
 
       case 2:
         if (n1)
-          random_fade_out();
+          gfx::fades::random_fade_out();
         exit_flag = 1;
         break;
 
@@ -2280,7 +2280,7 @@ void assign_menu() {
       if (!(ch = getch())) {
         ch = getch();
         if (ch == 59)
-          wtoggle(&help_on);
+          util::wutil::wtoggle(&help_on);
 
       } else {
         if (ch == 27)
@@ -2421,7 +2421,7 @@ void assign_menu() {
 
       case 2:
         if (n1)
-          random_fade_out();
+          gfx::fades::random_fade_out();
         exit_flag = 1;
         break;
 
@@ -2579,7 +2579,7 @@ void aces_menu() {
       if (!(ch = getch())) {
         ch = getch();
         if (ch == 59)
-          wtoggle(&help_on);
+          util::wutil::wtoggle(&help_on);
 
       } else {
         if (ch == 27)
@@ -2688,7 +2688,7 @@ void aces_menu() {
 
   standard_background = nullptr;
   if (n1)
-    random_fade_out();
+    gfx::fades::random_fade_out();
 
   wait_mouse_relase();
 }
@@ -2787,7 +2787,7 @@ int kangas_menu() {
         exit->blit(54, 191);
         do_all();
         if (n1)
-          random_fade_out();
+          gfx::fades::random_fade_out();
         exit_flag = 1;
         break;
 
@@ -2807,7 +2807,7 @@ int kangas_menu() {
 
       case 5:
         wait_mouse_relase();
-        wtoggle(&showing_texts);
+        util::wutil::wtoggle(&showing_texts);
       }
     }
 
@@ -2844,7 +2844,7 @@ void credits_menu() {
   int x, y, n1, n2;
   int kohta1, kohta2;
 
-  std::unique_ptr<Font> grid3(new Font("G3FONT"));
+  std::unique_ptr<gfx::font::Font> grid3(new gfx::font::Font("G3FONT"));
   std::unique_ptr<Bitmap> credi1(new Bitmap("CREDI1"));
 
   grid3->scale();
@@ -2882,7 +2882,7 @@ void credits_menu() {
     if (n1 || n2) {
 
       if (n1)
-        random_fade_out();
+        gfx::fades::random_fade_out();
       exit_flag = 1;
       break;
     }
@@ -2942,7 +2942,7 @@ void letter_menu() {
     if (n1 || n2) {
 
       if (n1)
-        random_fade_out();
+        gfx::fades::random_fade_out();
       exit_flag = 1;
       break;
     }
@@ -2979,7 +2979,7 @@ void main_menu() {
     if (kbhit()) {
       ch = getch();
       if (ch == SDLK_F1) {
-        wtoggle(&help_on);
+        util::wutil::wtoggle(&help_on);
       } else {
         if (ch == SDLK_ESCAPE)
           exit_flag = 1;
@@ -3216,7 +3216,7 @@ void main_menu() {
           sdl_stop_music();
         }
         if (n1)
-          random_fade_out();
+          gfx::fades::random_fade_out();
 
         wait_mouse_relase();
 
@@ -3278,13 +3278,13 @@ void main_menu() {
 
       case 2:
         if (n1)
-          random_fade_out();
+          gfx::fades::random_fade_out();
         exit_flag = 1;
         break;
 
       case 3:
         if (n1)
-          random_fade_out();
+          gfx::fades::random_fade_out();
         wait_mouse_relase();
         roster_menu();
 
@@ -3292,7 +3292,7 @@ void main_menu() {
 
       case 4:
         if (n1)
-          random_fade_out();
+          gfx::fades::random_fade_out();
         wait_mouse_relase();
         aces_menu();
 
@@ -3300,7 +3300,7 @@ void main_menu() {
 
       case 5:
         if (n1)
-          random_fade_out();
+          gfx::fades::random_fade_out();
         wait_mouse_relase();
         controls_menu();
 
@@ -3308,7 +3308,7 @@ void main_menu() {
 
       case 6:
         if (n1)
-          random_fade_out();
+          gfx::fades::random_fade_out();
         wait_mouse_relase();
         options_menu();
 
@@ -3316,7 +3316,7 @@ void main_menu() {
 
       case 7:
         if (n1)
-          random_fade_out();
+          gfx::fades::random_fade_out();
         wait_mouse_relase();
         transfer_menu();
 
@@ -3324,7 +3324,7 @@ void main_menu() {
 
       case 8:
         if (n1)
-          random_fade_out();
+          gfx::fades::random_fade_out();
         wait_mouse_relase();
         assign_menu();
         hiiri_to(254, 120);
@@ -3332,7 +3332,7 @@ void main_menu() {
 
       case 9:
         if (n1)
-          random_fade_out();
+          gfx::fades::random_fade_out();
         wait_mouse_relase();
         credits_menu();
 

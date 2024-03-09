@@ -60,7 +60,7 @@ std::unique_ptr<Bitmap> lappu2;
 int picture_width[MAX_STRUCTURES];
 int picture_height[MAX_STRUCTURES];
 
-std::unique_ptr<Font> fontti;
+std::unique_ptr<gfx::font::Font> fontti;
 
 const char hitting_names[2][16] = {"UNHITTABLE", "HITTABLE"};
 
@@ -125,7 +125,7 @@ void edit_level() {
 
   std::unique_ptr<Bitmap> pointti(new Bitmap(1, 1, &colori));
 
-  while (!(ch == SDLK_ESCAPE)) {
+  while (ch != SDLK_ESCAPE) {
     colori++;
     pb_picture->blit(-kohta, 0);
     for (c = 0; c < MAX_STRUCTURES; c++) {
@@ -511,7 +511,7 @@ int main(int argc, char **argv) {
   }
 
   printf("Loading font \"FROST\"\n\r");
-  fontti = std::make_unique<Font>("G2FONT");
+  fontti = std::make_unique<gfx::font::Font>("G2FONT");
 
   printf("Loading cursor\n\r");
   hiirik = std::make_unique<Bitmap>("FONTT1");

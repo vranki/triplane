@@ -57,7 +57,7 @@ SDL_Color curpal[256];
  * @param reverse = 1 to read colors in reverse order (pal[n-1] to pal[0])
  */
 void setpal_range(const char pal[][3], int firstcolor, int n, int reverse) {
-  SDL_Color *cc = (SDL_Color *)walloc(n * sizeof(SDL_Color));
+  SDL_Color *cc = (SDL_Color *)util::wutil::walloc(n * sizeof(SDL_Color));
   int i, from = (reverse ? n - 1 : 0);
 
   for (i = 0; i < n; i++) {
@@ -83,7 +83,7 @@ void setpal_range(const char pal[][3], int firstcolor, int n, int reverse) {
                    firstcolor, n);
   }
   memcpy(&curpal[firstcolor], cc, n * sizeof(SDL_Color));
-  wfree(cc);
+  util::wutil::wfree(cc);
 }
 
 static Uint32 getcolor(unsigned char c) {
@@ -194,7 +194,7 @@ void init_video() {
     SDL_ShowCursor(SDL_DISABLE);
 
     if (!draw_with_vircr_mode) {
-      vircr = (unsigned char *)walloc(screen_width * screen_height);
+      vircr = (unsigned char *)util::wutil::walloc(screen_width * screen_height);
     }
   }
 }
@@ -216,7 +216,7 @@ static int init_mode(int new_mode, const char *paletname) {
     mode_flags |= SDL_FULLSCREEN;
 
   if (draw_with_vircr_mode && pixel_multiplier > 1)
-    wfree(vircr);
+      util::wutil::wfree(vircr);
 
   pixel_multiplier =
       (new_mode == SVGA_MODE) ? pixel_multiplier_svga : pixel_multiplier_vga;
@@ -227,7 +227,7 @@ static int init_mode(int new_mode, const char *paletname) {
 
   if (draw_with_vircr_mode) {
     if (pixel_multiplier > 1) {
-      vircr = (uint8_t *)walloc(w * h);
+      vircr = (uint8_t *)util::wutil::walloc(w * h);
     } else {
       vircr = (uint8_t *)video_state.surface->pixels;
     }

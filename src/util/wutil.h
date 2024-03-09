@@ -23,22 +23,23 @@
 
 #include <cstdlib>
 
-void setwrandom(int seed);
-int wrandom(int limit);
-void wrandom_sanity_check();
+namespace util::wutil {
 
-void *walloc(size_t size);
-void wfree(void *);
+    void setwrandom(int seed);
+    int wrandom(int limit);
+    void wrandom_sanity_check();
+    void *walloc(size_t size);
+    void wfree(void *);
+    void wtoggle(int *);
+    void init_trigs();
+    int arcsinit(int luku);
+    void calculate_difference(int x1, int y1, int x2, int y2, int *distance,
+                              int *angle = nullptr);
+    int squareroot(int number);
 
-void wtoggle(int *);
+    extern int cosinit[361];
+    extern int sinit[361];
 
-void init_trigs();
-int arcsinit(int luku);
-void calculate_difference(int x1, int y1, int x2, int y2, int *distance,
-                          int *angle = nullptr);
-int squareroot(int number);
-
-extern int cosinit[361];
-extern int sinit[361];
+} // namespace util::wutil
 
 #endif

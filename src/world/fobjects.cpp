@@ -82,7 +82,7 @@ void do_flames() {
       continue;
     }
 
-    start_one_flame(flame_x[l] + wrandom(flame_width[l]), flame_y[l]);
+    start_one_flame(flame_x[l] + util::wutil::wrandom(flame_width[l]), flame_y[l]);
   }
 }
 
@@ -149,7 +149,7 @@ void do_shots() {
                             20] != 255) {
 
               if (config.sound_on && config.sfx_on)
-                play_2d_sample(sample_hit[wrandom(4)], player_x_8[solo_country],
+                play_2d_sample(sample_hit[util::wutil::wrandom(4)], player_x_8[solo_country],
                                player_x_8[l2]);
 
               shots_flying_x[l] = 0;
@@ -174,7 +174,7 @@ void do_shots() {
                     player_shots_down[shots_flying_owner[l]][l2]++;
                   }
                 }
-                if (wrandom(4) && (!player_on_airfield[l2]))
+                if (util::wutil::wrandom(4) && (!player_on_airfield[l2]))
                   player_spinning[l2] = 1;
                 else {
                   in_closing[l2] = 2;
@@ -200,8 +200,8 @@ void start_shot(int x, int y, int angle, int speed, int infan) {
     shots_flying_age[l] = 0;
     shots_flying_x[l] = (x << 8);
     shots_flying_y[l] = (y << 8);
-    shots_flying_x_speed[l] = (cosinit[angle] * speed) >> 2;
-    shots_flying_y_speed[l] = (sinit[angle] * speed) >> 2;
+    shots_flying_x_speed[l] = (util::wutil::cosinit[angle] * speed) >> 2;
+    shots_flying_y_speed[l] = (util::wutil::sinit[angle] * speed) >> 2;
     shots_flying_x[l] += shots_flying_x_speed[l] >> 6;
     shots_flying_y[l] -= shots_flying_y_speed[l] >> 6;
     shots_flying_owner[l] = -1;
@@ -227,18 +227,18 @@ void start_shot(int player) {
   if (l != MAX_SHOTS) {
     shots_flying_age[l] = 0;
     shots_flying_x[l] =
-        player_x[player] + 12 * cosinit[player_angle[player] >> 8];
+        player_x[player] + 12 * util::wutil::cosinit[player_angle[player] >> 8];
     shots_flying_y[l] =
-        player_y[player] - 12 * sinit[player_angle[player] >> 8];
-    shots_flying_x_speed[l] = (cosinit[player_angle[player] >> 8] *
+        player_y[player] - 12 * util::wutil::sinit[player_angle[player] >> 8];
+    shots_flying_x_speed[l] = (util::wutil::cosinit[player_angle[player] >> 8] *
                                (player_speed[player] + SHOTS_SPEED)) >>
                               2;
-    shots_flying_y_speed[l] = (sinit[player_angle[player] >> 8] *
+    shots_flying_y_speed[l] = (util::wutil::sinit[player_angle[player] >> 8] *
                                (player_speed[player] + SHOTS_SPEED)) >>
                               2;
 
-    shots_flying_x_speed[l] += wrandom(SHOT_RANDOMNESS) - SHOT_RANDOMNESS / 2;
-    shots_flying_y_speed[l] += wrandom(SHOT_RANDOMNESS) - SHOT_RANDOMNESS / 2;
+    shots_flying_x_speed[l] += util::wutil::wrandom(SHOT_RANDOMNESS) - SHOT_RANDOMNESS / 2;
+    shots_flying_y_speed[l] += util::wutil::wrandom(SHOT_RANDOMNESS) - SHOT_RANDOMNESS / 2;
 
     shots_flying_owner[l] = player;
     shots_flying_infan[l] = -1;
@@ -288,7 +288,7 @@ void do_fobjects() {
                           ((fobjects[l].y >> 8) - (player_y_8[l2]) + 10) *
                               20] != 255) {
                 fobjects[l].x = 0;
-                player_endurance[l2] -= wrandom(FOBJECTS_DAMAGE);
+                player_endurance[l2] -= util::wutil::wrandom(FOBJECTS_DAMAGE);
                 if (player_endurance[l2] < 1) {
                   if ((fobjects[l].owner != -1) && (!player_spinning[l2])) {
                     player_shots_down[fobjects[l].owner][l2]++;
@@ -298,7 +298,7 @@ void do_fobjects() {
                       player_points[fobjects[l].owner]--;
                   }
 
-                  if (wrandom(2) == 1 && (!player_on_airfield[l2]))
+                  if (util::wutil::wrandom(2) == 1 && (!player_on_airfield[l2]))
                     player_spinning[l2] = 1;
                   else {
                     in_closing[l2] = 2;
@@ -421,8 +421,8 @@ void start_smoke(int player) {
       break;
 
   if (l != MAX_FLYING_OBJECTS) {
-    fobjects[l].x = player_x[player] - 12 * cosinit[player_angle[player] >> 8];
-    fobjects[l].y = player_y[player] + 12 * sinit[player_angle[player] >> 8];
+    fobjects[l].x = player_x[player] - 12 * util::wutil::cosinit[player_angle[player] >> 8];
+    fobjects[l].y = player_y[player] + 12 * util::wutil::sinit[player_angle[player] >> 8];
 
     fobjects[l].x_speed = 0;
     fobjects[l].y_speed = 0;
@@ -444,7 +444,7 @@ void start_ssmoke(int x, int y) {
   if (l != MAX_FLYING_OBJECTS) {
 
     fobjects[l].x = x;
-    fobjects[l].y = y - 1024 + wrandom(2048);
+    fobjects[l].y = y - 1024 + util::wutil::wrandom(2048);
 
     fobjects[l].x_speed = 0;
     fobjects[l].y_speed = 256 * 256 * 3;
@@ -461,7 +461,7 @@ void start_explox(int x, int y) {
   int l2;
   int number_of_exps;
 
-  number_of_exps = wrandom(EXPLOX_RANDOM) + EXPLOX_CONST;
+  number_of_exps = util::wutil::wrandom(EXPLOX_RANDOM) + EXPLOX_CONST;
 
   for (l2 = 0; l2 < number_of_exps; l2++) {
 
@@ -470,8 +470,8 @@ void start_explox(int x, int y) {
         break;
 
     if (l != MAX_FLYING_OBJECTS) {
-      fobjects[l].x = x + wrandom(EXPLOX_VARIETY) - (EXPLOX_VARIETY / 2);
-      fobjects[l].y = y + wrandom(EXPLOX_VARIETY) - (EXPLOX_VARIETY / 2);
+      fobjects[l].x = x + util::wutil::wrandom(EXPLOX_VARIETY) - (EXPLOX_VARIETY / 2);
+      fobjects[l].y = y + util::wutil::wrandom(EXPLOX_VARIETY) - (EXPLOX_VARIETY / 2);
 
       fobjects[l].x_speed = 0;
       fobjects[l].y_speed = 0;
@@ -479,8 +479,8 @@ void start_explox(int x, int y) {
       fobjects[l].width = 9;
       fobjects[l].height = 9;
       fobjects[l].type = FOBJECTS_EXPLOX;
-      fobjects[l].subtype = wrandom(4);
-      fobjects[l].phase = 0 - wrandom(EXPLOX_PHASE_DIFF);
+      fobjects[l].subtype = util::wutil::wrandom(4);
+      fobjects[l].phase = 0 - util::wutil::wrandom(EXPLOX_PHASE_DIFF);
     }
   }
 }
@@ -492,8 +492,8 @@ void detect_damage() {
     if (!player_exists[l])
       continue;
 
-    if (wrandom(plane_mass[l] >> 4) >= player_endurance[l])
-      if (wrandom(2))
+    if (util::wutil::wrandom(plane_mass[l] >> 4) >= player_endurance[l])
+      if (util::wutil::wrandom(2))
         start_smoke(l);
   }
 }
@@ -503,13 +503,13 @@ void start_parts(int player) {
   int xxx, yyy;
   int xsss;
 
-  limit = wrandom(NUMBER_OF_EXPLOSION_PARTS);
+  limit = util::wutil::wrandom(NUMBER_OF_EXPLOSION_PARTS);
 
   start_explox(player_x[player], player_y[player]);
 
-  xxx = player_x[player] - 12 * cosinit[player_angle[player] >> 8];
-  yyy = player_y[player] + 12 * sinit[player_angle[player] >> 8];
-  xsss = (cosinit[player_angle[player] >> 8] * (player_speed[player])) >> 2;
+  xxx = player_x[player] - 12 * util::wutil::cosinit[player_angle[player] >> 8];
+  yyy = player_y[player] + 12 * util::wutil::sinit[player_angle[player] >> 8];
+  xsss = (util::wutil::cosinit[player_angle[player] >> 8] * (player_speed[player])) >> 2;
 
   for (l2 = 0; l2 < limit; l2++) {
     for (l = 0; l < MAX_FLYING_OBJECTS; l++)
@@ -519,13 +519,13 @@ void start_parts(int player) {
     if (l != MAX_FLYING_OBJECTS) {
       fobjects[l].x = xxx;
       fobjects[l].y = yyy;
-      fobjects[l].x_speed = xsss + wrandom(PARTS_SPEED) - (PARTS_SPEED >> 1);
-      fobjects[l].y_speed = (wrandom(PARTS_SPEED) - (PARTS_SPEED >> 1));
+      fobjects[l].x_speed = xsss + util::wutil::wrandom(PARTS_SPEED) - (PARTS_SPEED >> 1);
+      fobjects[l].y_speed = (util::wutil::wrandom(PARTS_SPEED) - (PARTS_SPEED >> 1));
       fobjects[l].hit_plane = 1;
       fobjects[l].width = 10;
       fobjects[l].height = 10;
       fobjects[l].type = FOBJECTS_PARTS;
-      fobjects[l].phase = wrandom(NUMBER_OF_BITES);
+      fobjects[l].phase = util::wutil::wrandom(NUMBER_OF_BITES);
       fobjects[l].owner = -1;
     }
   }
@@ -541,8 +541,8 @@ void start_rifle(int x, int y) {
   if (l != MAX_FLYING_OBJECTS) {
     fobjects[l].x = x << 8;
     fobjects[l].y = y << 8;
-    fobjects[l].x_speed = 256 * 128 * 5 - wrandom(2560 * 128);
-    fobjects[l].y_speed = wrandom(256 * 5 * 128);
+    fobjects[l].x_speed = 256 * 128 * 5 - util::wutil::wrandom(2560 * 128);
+    fobjects[l].y_speed = util::wutil::wrandom(256 * 5 * 128);
     fobjects[l].hit_plane = 0;
     fobjects[l].width = 8;
     fobjects[l].height = 8;
@@ -569,12 +569,12 @@ void drop_bomb(int player, int target) {
 
   bomb_speed[l] = player_speed[player];
   bomb_angle[l] = player_angle[player];
-  bomb_x_speed[l] = (cosinit[bomb_angle[l] >> 8] * bomb_speed[l]) >> 2;
-  bomb_y_speed[l] = (sinit[bomb_angle[l] >> 8] * bomb_speed[l]) >> 2;
+  bomb_x_speed[l] = (util::wutil::cosinit[bomb_angle[l] >> 8] * bomb_speed[l]) >> 2;
+  bomb_y_speed[l] = (util::wutil::sinit[bomb_angle[l] >> 8] * bomb_speed[l]) >> 2;
   bomb_x[l] = player_x[player] + (9 - player_upsidedown[player] * 18) *
-                                     sinit[player_angle[player] >> 8];
+                                     util::wutil::sinit[player_angle[player] >> 8];
   bomb_y[l] = player_y[player] + (9 - player_upsidedown[player] * 18) *
-                                     cosinit[player_angle[player] >> 8];
+                                     util::wutil::cosinit[player_angle[player] >> 8];
   bomb_age[l] = 0;
   bomb_owner[l] = player;
 }
@@ -699,19 +699,19 @@ void start_bomb_explo(int bb, int hitted) {
     }
   }
 
-  limit = wrandom(MAX_BOMB_PARTS - MIN_BOMB_PARTS);
+  limit = util::wutil::wrandom(MAX_BOMB_PARTS - MIN_BOMB_PARTS);
   limit += MIN_BOMB_PARTS;
 
   if ((level_bitmap[(bomb_x[bb] >> 8) + (bomb_y[bb] >> 8) * 2400] >= 224) &&
       (level_bitmap[(bomb_x[bb] >> 8) + (bomb_y[bb] >> 8) * 2400] <= 231)) {
     start_wave(bomb_x[bb] >> 8);
     if (config.splash && config.sound_on && config.sfx_on)
-      play_2d_sample(sample_splash[wrandom(3)], player_x_8[solo_country],
+      play_2d_sample(sample_splash[util::wutil::wrandom(3)], player_x_8[solo_country],
                      bomb_x[bb] >> 8);
   } else {
     start_explox(bomb_x[bb], bomb_y[bb]);
     if (config.explosion_sounds && config.sound_on && config.sfx_on)
-      play_2d_sample(sample_bomb[wrandom(3) + 1], player_x_8[solo_country],
+      play_2d_sample(sample_bomb[util::wutil::wrandom(3) + 1], player_x_8[solo_country],
                      bomb_x[bb] >> 8);
   }
 
@@ -864,13 +864,13 @@ void start_bomb_explo(int bb, int hitted) {
       if (l != MAX_FLYING_OBJECTS) {
         fobjects[l].x = bomb_x[bb];
         fobjects[l].y = bomb_y[bb];
-        fobjects[l].x_speed = wrandom(PARTS_SPEED) - PARTS_SPEED / 2;
-        fobjects[l].y_speed = (wrandom(PARTS_SPEED) - PARTS_SPEED / 2);
+        fobjects[l].x_speed = util::wutil::wrandom(PARTS_SPEED) - PARTS_SPEED / 2;
+        fobjects[l].y_speed = (util::wutil::wrandom(PARTS_SPEED) - PARTS_SPEED / 2);
         fobjects[l].hit_plane = 1;
         fobjects[l].width = 10;
         fobjects[l].height = 10;
         fobjects[l].type = FOBJECTS_PARTS;
-        fobjects[l].phase = wrandom(NUMBER_OF_BITES);
+        fobjects[l].phase = util::wutil::wrandom(NUMBER_OF_BITES);
         fobjects[l].owner = bomb_owner[bb];
       }
     }

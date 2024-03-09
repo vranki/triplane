@@ -57,7 +57,7 @@ void kkbase_sound(const int type, const int kkbase_sound_x) {
 
 void itgun_sound(int itgun_x) {
   if (config.ground_i_sounds && config.sound_on && config.sfx_on) {
-    play_2d_sample(sample_itexp[wrandom(3)], player_x_8[solo_country], itgun_x);
+    play_2d_sample(sample_itexp[util::wutil::wrandom(3)], player_x_8[solo_country], itgun_x);
   }
 }
 

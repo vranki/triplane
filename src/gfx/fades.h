@@ -21,6 +21,10 @@
 #ifndef FADES_H
 #define FADES_H
 
-void random_fade_out();
+namespace gfx::fades {
+
+    void random_fade_out();
+
+} // namespace gfx::fades
 
 #endif

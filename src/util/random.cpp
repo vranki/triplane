@@ -22,13 +22,17 @@
 
 /* Simple LCG */
 
-static uint64_t state;
-static const uint64_t a = 0x5DEECE66DLL;
-static const uint32_t c = 0xB;
+namespace util::random {
 
-void triplane_srandom(uint64_t seed) { state = seed & ((1LL << 48) - 1); }
+    static uint64_t state;
+    static const uint64_t a = 0x5DEECE66DLL;
+    static const uint32_t c = 0xB;
 
-uint32_t triplane_random() {
-  state = (a * state + c) & ((1LL << 48) - 1);
-  return state >> 16;
-}
+    void triplane_srandom(uint64_t seed) { state = seed & ((1LL << 48) - 1); }
+
+    uint32_t triplane_random() {
+        state = (a * state + c) & ((1LL << 48) - 1);
+        return state >> 16;
+    }
+
+} // namespace util::random
