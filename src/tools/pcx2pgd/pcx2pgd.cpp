@@ -35,7 +35,8 @@ void gotoxy(int x, int y) {}
 
 int wherey() { return 0; }
 
-constexpr int32_t RAJA 192 unsigned char getpixel(int x, int y);
+constexpr int32_t RAJA = 192;
+unsigned char getpixel(int x, int y);
 unsigned char *vkuva;
 unsigned char *kuvadata;
 char paletti[256][3];

@@ -125,7 +125,7 @@ void edit_level() {
 
   std::unique_ptr<Bitmap> pointti(new Bitmap(1, 1, &colori));
 
-  while (!(ch == SDLK_ESCAPE)) {
+  while (ch != SDLK_ESCAPE) {
     colori++;
     pb_picture->blit(-kohta, 0);
     for (c = 0; c < MAX_STRUCTURES; c++) {
