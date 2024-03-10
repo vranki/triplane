@@ -144,7 +144,7 @@ int struct_heigth[MAX_STRUCTURES];
 
 //\ Fonts
 
-std::unique_ptr<gfx::font::Font> fontti;
+//std::unique_ptr<gfx::font::Font> fontti;
 std::unique_ptr<gfx::font::Font> frost;
 std::unique_ptr<gfx::font::Font> grid2;
 
@@ -227,7 +227,7 @@ int player_bomb_hits[16];
 
 char levelname[80];
 
-struct level_struct leveldata;
+//struct level_struct leveldata;
 
 //\ Bombs
 
@@ -1610,7 +1610,7 @@ void main_engine() {
   mission_interrupted = 0;
 
   if (playing_solo) {
-    init_exeptions(solo_country, solo_mission);
+    world::tmexept::init_exeptions(solo_country, solo_mission);
     tyhjaa_vircr();
   }
   //// Open joysticks
@@ -1748,14 +1748,12 @@ void main_engine() {
       do_mekan();
     }
 
-    if (config.svga)
-      vesa_terrain_to_screen();
+    if (config.svga) { world::terrain::vesa_terrain_to_screen(); }
     else {
-      if (solo_mode == -1)
-        terrain_to_screen();
+      if (solo_mode == -1) { world::terrain::terrain_to_screen(); }
       else {
         solo_do_all();
-        solo_terrain_to_screen();
+        world::terrain::solo_terrain_to_screen();
       }
     }
 
@@ -1765,31 +1763,24 @@ void main_engine() {
 
     } else {
       for (l = 0; l < 16; l++) {
-        if (!player_exists[l])
-          continue;
+        if (!player_exists[l]) { continue; }
 
         player_last_shot[l]++;
-        if (!playing_solo && config.stop)
-          if (get_player_points(l) >= config.stop)
-            flag = 0;
+        if (!playing_solo && config.stop) { if (get_player_points(l) >= config.stop) { flag = 0; }}
 
-        if (in_closing[l])
-          plane_present[l] = 0;
+        if (in_closing[l]) { plane_present[l] = 0; }
       }
 
-      if (playing_solo)
-        game_exeptions(solo_country, solo_mission);
+      if (playing_solo) { world::tmexept::game_exeptions(solo_country, solo_mission); }
     }
 
     if (playing_solo) {
       for (l = 0; l < 12; l++) {
-        if (player_exists[l] && player_sides[l] == 1)
-          break;
+        if (player_exists[l] && player_sides[l] == 1) { break; }
       }
 
       if (l == 12) {
-        if (!solo_dest_remaining)
-          solo_success = 1;
+        if (!solo_dest_remaining) { solo_success = 1; }
       }
 
       if (key[SDLK_F1] && key[SDLK_F2] && key[SDLK_F3]) {
@@ -1797,30 +1788,26 @@ void main_engine() {
                       solo_dest_remaining, l);
       }
 
-      if (number_of_planes[solo_country] < 0)
-        solo_failed = 1;
+      if (number_of_planes[solo_country] < 0) { solo_failed = 1; }
 
-      endgame_exeptions(solo_country, solo_mission);
+      world::tmexept::endgame_exeptions(solo_country, solo_mission);
 
       if ((solo_success || solo_failed) && player_on_airfield[solo_country] &&
-          !player_speed[solo_country])
-        flag = 0;
+          !player_speed[solo_country]) { flag = 0; }
 
-      if (miss_pl_x[solo_country] && solo_failed)
-        flag = 0;
+      if (miss_pl_x[solo_country] && solo_failed) { flag = 0; }
     }
 
     do_debug_trace();
 
     if (current_mode == SVGA_MODE) {
-      do_all_clear(0); ///
+      do_all_clear(0);
     }
 
     rotate_water_palet();
 
     if (current_mode == VGA_MODE) {
-      if (solo_mode == -1)
-        do_all(1);
+      if (solo_mode == -1) { do_all(1); }
     }
 
     if (playing_solo && hangarmenu_active[solo_country]) {

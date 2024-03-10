@@ -457,7 +457,7 @@ void edit_level() {
   }
 }
 
-int main(int argc, char **argv) {
+/*int main(int argc, char **argv) {
 
   FILE *faili;
   int c;
@@ -539,4 +539,4 @@ int main(int argc, char **argv) {
   swap_byte_order();
 
   return 0;
-}
+}*/

@@ -20,6 +20,7 @@
 
 /* Terrain drawing code */
 
+#include "terrain.h"
 #include "../menus/tripmenu.h"
 #include "../triplane.h"
 #include "../world/constants.h"
@@ -65,14 +66,8 @@ extern int player_x_8[16];
 extern int player_y_8[16];
 extern int number_of_planes[16];
 
-void terrain_to_screen();
-void solo_terrain_to_screen();
-void kangas_terrain_to_screen(int leftx);
-void tboxi(int x1, int y1, int x2, int y2, unsigned char vari);
 
-void vesa_terrain_to_screen();
-void vesa_icons(int l);
-void vesa_solo_icons(int l);
+namespace world::terrain {
 
 void tboxi(int x1, int y1, int x2, int y2, unsigned char vari) {
   if (x2 < 5 || y2 < 8 || x1 > 315 || y1 > 178)
@@ -1083,20 +1078,20 @@ void kangas_terrain_to_screen(int left_x) {
       l3 = 2;
 
       for (l = color_frame; l < 3; l++) {
-        tboxi((kkbase_x[l2]) + left_x - l3,
-              kkbase_y[l2] - PROJECTOR_Y_ADJUSTMENT - l3,
-              (kkbase_x[l2]) + left_x + 25 + l3,
-              kkbase_y[l2] - PROJECTOR_Y_ADJUSTMENT + 21 + l3,
-              (kkbase_mission[l2] - 1) * 7 + 240 + l);
+        world::terrain::tboxi((kkbase_x[l2]) + left_x - l3,
+                              kkbase_y[l2] - PROJECTOR_Y_ADJUSTMENT - l3,
+                              (kkbase_x[l2]) + left_x + 25 + l3,
+                              kkbase_y[l2] - PROJECTOR_Y_ADJUSTMENT + 21 + l3,
+                              (kkbase_mission[l2] - 1) * 7 + 240 + l);
         l3++;
       }
 
       for (l = 0; l < color_frame; l++) {
-        tboxi((kkbase_x[l2]) + left_x - l3,
-              kkbase_y[l2] - PROJECTOR_Y_ADJUSTMENT - l3,
-              (kkbase_x[l2]) + left_x + 25 + l3,
-              kkbase_y[l2] - PROJECTOR_Y_ADJUSTMENT + 21 + l3,
-              (kkbase_mission[l2] - 1) * 7 + 240 + l);
+        world::terrain::tboxi((kkbase_x[l2]) + left_x - l3,
+                              kkbase_y[l2] - PROJECTOR_Y_ADJUSTMENT - l3,
+                              (kkbase_x[l2]) + left_x + 25 + l3,
+                              kkbase_y[l2] - PROJECTOR_Y_ADJUSTMENT + 21 + l3,
+                              (kkbase_mission[l2] - 1) * 7 + 240 + l);
 
         l3++;
       }
@@ -1112,22 +1107,24 @@ void kangas_terrain_to_screen(int left_x) {
         l3 = 2;
 
         for (l = color_frame; l < 3; l++) {
-          tboxi((leveldata.struct_x[l2]) + left_x - l3,
-                leveldata.struct_y[l2] - PROJECTOR_Y_ADJUSTMENT - l3,
-                (leveldata.struct_x[l2]) + left_x + struct_width[l2] + l3 - 1,
-                leveldata.struct_y[l2] - PROJECTOR_Y_ADJUSTMENT +
-                    struct_heigth[l2] + l3,
-                (leveldata.struct_type[l2] - 1) * 7 + 240 + l);
+          world::terrain::tboxi(
+              (leveldata.struct_x[l2]) + left_x - l3,
+              leveldata.struct_y[l2] - PROJECTOR_Y_ADJUSTMENT - l3,
+              (leveldata.struct_x[l2]) + left_x + struct_width[l2] + l3 - 1,
+              leveldata.struct_y[l2] - PROJECTOR_Y_ADJUSTMENT +
+                  struct_heigth[l2] + l3,
+              (leveldata.struct_type[l2] - 1) * 7 + 240 + l);
           l3++;
         }
 
         for (l = 0; l < color_frame; l++) {
-          tboxi((leveldata.struct_x[l2]) + left_x - l3,
-                leveldata.struct_y[l2] - PROJECTOR_Y_ADJUSTMENT - l3,
-                (leveldata.struct_x[l2]) + left_x + struct_width[l2] + l3 - 1,
-                leveldata.struct_y[l2] - PROJECTOR_Y_ADJUSTMENT +
-                    struct_heigth[l2] + l3,
-                (leveldata.struct_type[l2] - 1) * 7 + 240 + l);
+          world::terrain::tboxi(
+              (leveldata.struct_x[l2]) + left_x - l3,
+              leveldata.struct_y[l2] - PROJECTOR_Y_ADJUSTMENT - l3,
+              (leveldata.struct_x[l2]) + left_x + struct_width[l2] + l3 - 1,
+              leveldata.struct_y[l2] - PROJECTOR_Y_ADJUSTMENT +
+                  struct_heigth[l2] + l3,
+              (leveldata.struct_type[l2] - 1) * 7 + 240 + l);
           l3++;
         }
       }
@@ -1499,11 +1496,11 @@ void vesa_terrain_to_screen() {
   }
 
   // Icons
-  if (playing_solo)
-    vesa_solo_icons(solo_mode);
-  else
+  if (playing_solo) {
+    world::terrain::vesa_solo_icons(solo_mode);
+  } else
     for (l = 0; l < 4; l++) {
-      vesa_icons(l);
+      world::terrain::vesa_icons(l);
     }
 
   for (l = 0; l < 16; l++)
@@ -1645,3 +1642,5 @@ void vesa_solo_icons(int l) {
     }
   }
 }
+
+} // namespace world::terrain

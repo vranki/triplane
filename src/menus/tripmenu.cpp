@@ -38,6 +38,7 @@
 #include "../gfx/fades.h"
 #include "../gfx/font.h"
 #include "../io/dksfile.h"
+#include "../world/terrain.h"
 
 extern int miss_pl_x[16];
 extern int miss_pl_y[16];
@@ -2739,7 +2740,7 @@ int kangas_menu() {
 
     koords(&x, &y, &n1, &n2);
     kangas->blit_fullscreen();
-    kangas_terrain_to_screen(place_x);
+      world::terrain::kangas_terrain_to_screen(place_x);
 
     if (showing_texts)
       show_descriptions(solo_mission + solo_country * 6);

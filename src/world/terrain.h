@@ -20,11 +20,14 @@
 
 /* Terrain drawing code header */
 
-extern void terrain_to_screen();
-extern void solo_terrain_to_screen();
-extern void vesa_terrain_to_screen();
-extern void kangas_terrain_to_screen(int leftx);
+namespace world::terrain {
 
-#ifdef REGISTERED
-extern void vesa_terrain_to_screen();
-#endif
+void kangas_terrain_to_screen(int leftx);
+void solo_terrain_to_screen();
+void tboxi(int x1, int y1, int x2, int y2, unsigned char vari);
+void terrain_to_screen();
+void vesa_terrain_to_screen();
+void vesa_icons(int l);
+void vesa_solo_icons(int l);
+
+} // namespace world::terrain

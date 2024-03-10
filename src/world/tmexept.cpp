@@ -20,33 +20,73 @@
 
 /* Solomission exceptions code */
 
-#include "tripai.h"
+#include "tmexept.h"
 #include "../triplane.h"
 #include "../world/constants.h"
 #include "../world/plane.h"
-
+#include "tripai.h"
 extern int number_of_planes[16];
 
-void init_exeptions(int country, int mission);
-void game_exeptions(int country, int mission);
-void endgame_exeptions(int country, int mission);
-
-void german_init_exeptions(int mission);
-void finnish_init_exeptions(int mission);
-void english_init_exeptions(int mission);
-void japanese_init_exeptions(int mission);
-
-void german_game_exeptions(int mission);
-void finnish_game_exeptions(int mission);
-void english_game_exeptions(int mission);
-void japanese_game_exeptions(int mission);
-
-void german_end_exeptions(int mission);
-void finnish_end_exeptions(int mission);
-void english_end_exeptions(int mission);
-void japanese_end_exeptions(int mission);
-
 /******************************************************************************/
+
+namespace world::tmexept {
+
+void init_exeptions(int country, int mission) {
+  switch (country) {
+  case GERMANY:
+    german_init_exeptions(mission);
+    break;
+
+  case FINLAND:
+    finnish_init_exeptions(mission);
+    break;
+
+  case ENGLAND:
+    english_init_exeptions(mission);
+    break;
+
+  case JAPAN:
+    japanese_init_exeptions(mission);
+  }
+}
+
+void game_exeptions(int country, int mission) {
+  switch (country) {
+  case GERMANY:
+    german_game_exeptions(mission);
+    break;
+
+  case FINLAND:
+    finnish_game_exeptions(mission);
+    break;
+
+  case ENGLAND:
+    english_game_exeptions(mission);
+    break;
+
+  case JAPAN:
+    japanese_game_exeptions(mission);
+  }
+}
+
+void endgame_exeptions(int country, int mission) {
+  switch (country) {
+  case GERMANY:
+    german_end_exeptions(mission);
+    break;
+
+  case FINLAND:
+    finnish_end_exeptions(mission);
+    break;
+
+  case ENGLAND:
+    english_end_exeptions(mission);
+    break;
+
+  case JAPAN:
+    japanese_end_exeptions(mission);
+  }
+}
 
 void german_init_exeptions(int mission) {
   switch (mission) {
@@ -136,25 +176,6 @@ void japanese_init_exeptions(int mission) {
 
   case 5:
     break;
-  }
-}
-
-void init_exeptions(int country, int mission) {
-  switch (country) {
-  case GERMANY:
-    german_init_exeptions(mission);
-    break;
-
-  case FINLAND:
-    finnish_init_exeptions(mission);
-    break;
-
-  case ENGLAND:
-    english_init_exeptions(mission);
-    break;
-
-  case JAPAN:
-    japanese_init_exeptions(mission);
   }
 }
 
@@ -286,25 +307,6 @@ void japanese_game_exeptions(int mission) {
   }
 }
 
-void game_exeptions(int country, int mission) {
-  switch (country) {
-  case GERMANY:
-    german_game_exeptions(mission);
-    break;
-
-  case FINLAND:
-    finnish_game_exeptions(mission);
-    break;
-
-  case ENGLAND:
-    english_game_exeptions(mission);
-    break;
-
-  case JAPAN:
-    japanese_game_exeptions(mission);
-  }
-}
-
 void german_end_exeptions(int mission) {
   switch (mission) {
   case 0:
@@ -393,21 +395,4 @@ void japanese_end_exeptions(int mission) {
   }
 }
 
-void endgame_exeptions(int country, int mission) {
-  switch (country) {
-  case GERMANY:
-    german_end_exeptions(mission);
-    break;
-
-  case FINLAND:
-    finnish_end_exeptions(mission);
-    break;
-
-  case ENGLAND:
-    english_end_exeptions(mission);
-    break;
-
-  case JAPAN:
-    japanese_end_exeptions(mission);
-  }
-}
+} // namespace world::tmexept
