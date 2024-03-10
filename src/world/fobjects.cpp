@@ -28,6 +28,21 @@
 #include "../world/plane.h"
 #include "../world/tripaudio.h"
 
+//sb_sample *sample_itexp[3];
+extern sb_sample *sample_bomb[4];
+//sb_sample *sample_hitti;
+extern sb_sample *sample_konsu[4];
+//sb_sample *sample_propelli;
+extern sb_sample *sample_hit[4];
+//sb_sample *sample_aagun;
+extern sb_sample *sample_splash[3];
+//sb_sample *sample_spcrash;
+//sb_sample *sample_hurr;
+//sb_sample *sample_itshot;
+//sb_sample *sample_crash[2];
+//sb_sample *sample_alku;
+//sb_sample *sample_die[9];
+
 void do_shots();
 void start_shot(int player);
 void start_shot(int x, int y, int angle, int speed, int infan = -1);

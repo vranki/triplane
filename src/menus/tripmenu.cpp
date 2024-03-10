@@ -38,9 +38,15 @@
 #include "../gfx/fades.h"
 #include "../gfx/font.h"
 #include "../io/dksfile.h"
+#include "../world/terrain.h"
 
 extern int miss_pl_x[16];
 extern int miss_pl_y[16];
+
+extern sb_mod_file *triplane_mod;
+extern sb_mod_file *aces_mod;
+extern sb_sample *sample_hurr;
+
 
 char mission_description[80 * 16];
 char mission_lines[16][80];
@@ -1747,8 +1753,7 @@ void options_menu() {
     }
   }
 
-  if (config.sound_on && (is_there_sound == 0))
-    init_sounds();
+  if (config.sound_on && (is_there_sound == 0)) { init_sounds(); }
 
   if (is_there_sound && config.music_on && (!music_loaded)) {
 
@@ -1758,14 +1763,12 @@ void options_menu() {
 
   if (music_loaded && (!is_there_sound || !config.music_on)) {
     sdl_stop_music();
-    clear_music();
+      clear_music();
   }
 
-  if (is_there_sound && config.sfx_on && (!sfx_loaded))
-    load_sfx();
+  if (is_there_sound && config.sfx_on && (!sfx_loaded)) { load_sfx(); }
 
-  if (sfx_loaded && (!is_there_sound || !config.sfx_on))
-    clear_sfx();
+  if (sfx_loaded && (!is_there_sound || !config.sfx_on)) { clear_sfx(); }
 
   if (!config.sound_on && (is_there_sound == 1))
     uninit_sounds();
@@ -2739,7 +2742,7 @@ int kangas_menu() {
 
     koords(&x, &y, &n1, &n2);
     kangas->blit_fullscreen();
-    kangas_terrain_to_screen(place_x);
+      world::terrain::kangas_terrain_to_screen(place_x);
 
     if (showing_texts)
       show_descriptions(solo_mission + solo_country * 6);

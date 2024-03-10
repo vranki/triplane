@@ -26,8 +26,10 @@
 #include "../world/plane.h"
 #include "../world/tripaudio.h"
 #include <cstdint>
+#include "tripai.h"
 
-constexpr int32_t SPEED = 4;
+
+extern sb_sample *sample_die[9];
 
 int infan_x[MAX_INFANTRY];
 int infan_y[MAX_INFANTRY];
@@ -48,54 +50,9 @@ int itgun_shot_age[MAX_ITGUN_SHOTS];
 
 int bomb_target;
 
-void do_infan();
-
-void infan_to_plane(int l);
-void infan_to_infan(int l);
-void infan_to_struct(int l);
-void infan_take_hits(int l);
-
-void do_kkbase();
-void start_it_shot(int x, int y, int angle);
-void do_it_shots();
-void start_itgun_explosion(int number);
-
-void do_ai(int number);
-void ai_turn_down(int number);
-void ai_turn_up(int number);
-void ai_evade_terrain(int number);
-void ai_turnplus(int number);
-void ai_turnminus(int number);
-void ai_do_bombing(int number);
-int check_structs(int x, int y, int number);
-void do_mekan();
-void do_doors();
-
-constexpr int32_t MEKAN_DIRECTION_LEFT = 0;
-constexpr int32_t MEKAN_DIRECTION_RIGHT = 1;
-
-constexpr int32_t MEKAN_MISSION_IDLE = 0;
-constexpr int32_t MEKAN_MISSION_RETURN = 1;
-constexpr int32_t MEKAN_MISSION_PUSH_OUT = 2;
-constexpr int32_t MEKAN_MISSION_PUSH_IN = 3;
-
-/* Submissions of MEKAN_MISSION_PUSH_IN */
-constexpr int32_t MEKAN_PUSH_IN_MOVE_TO_PLANE = 0;
-constexpr int32_t MEKAN_PUSH_IN_PUSH = 1;
-constexpr int32_t MEKAN_PUSH_IN_WAIT_DOOR_CLOSE = 2;
-
-/* Submissions of MEKAN_MISSION_PUSH_OUT */
-constexpr int32_t MEKAN_PUSH_OUT_WAIT_DOOR_OPEN = 0;
-constexpr int32_t MEKAN_PUSH_OUT_MOVE_TO_PLANE = 1;
-constexpr int32_t MEKAN_PUSH_OUT_PUSH = 2;
-
-/* These only affect graphics. */
-constexpr int32_t MEKAN_ANIMATION_INVISIBLE = 0;
-constexpr int32_t MEKAN_ANIMATION_WALK = 1;
-constexpr int32_t MEKAN_ANIMATION_PUSH_PROPELLER = 2;
-constexpr int32_t MEKAN_ANIMATION_PUSH_TAIL = 3;
-
 /******************************************************************************/
+
+namespace world::tripai {
 
 void do_doors() {
   int l;
@@ -551,9 +508,8 @@ void ai_do_bombing(int number) {
   }
 }
 
-void start_itgun_explosion(int number) {
-  int l;
-  int distance;
+void start_itgun_explosion(const int number) {
+  int l, distance;
 
   itgun_sound(itgun_shot_x[number] >> 8);
 
@@ -1037,14 +993,11 @@ void do_kkbase() {
             tempframe = (135 - angle) / 13;
 
             if (abs(tempframe - kkbase_frame[l]) > 1) {
-              if (tempframe > kkbase_frame[l])
-                kkbase_frame[l]++;
-              else
-                kkbase_frame[l]--;
+              if (tempframe > kkbase_frame[l]) { kkbase_frame[l]++; }
+              else { kkbase_frame[l]--; }
 
               break;
-            } else
-              kkbase_frame[l] = tempframe;
+            } else { kkbase_frame[l] = tempframe; }
 
             if (++kkbase_last_shot[l] >
                 (kkbase_type[l] ? ITGUN_SHOT_RATE : 7)) {
@@ -1052,22 +1005,18 @@ void do_kkbase() {
                 kkbase_last_shot[l] = 0;
                 kkbase_shot_number[l] = 0;
               } else {
-                if (kkbase_shot_number[l] == 1)
-                  kkbase_sound(kkbase_type[l], kkbase_x[l]);
+                if (kkbase_shot_number[l] == 1) { kkbase_sound(kkbase_type[l], kkbase_x[l]); }
 
                 if (kkbase_type[l]) {
                   if (kkbase_shot_number[l] == 1) {
                     kkbase_status[l] = 1;
                     start_it_shot(kkbase_x[l] + 13, kkbase_y[l] + 10, angle);
-                  } else
-                    kkbase_status[l] = 0;
+                  } else { kkbase_status[l] = 0; }
 
                 } else {
 
-                  if (kkbase_shot_number[l] & 1)
-                    kkbase_status[l] = 1;
-                  else
-                    kkbase_status[l] = 0;
+                  if (kkbase_shot_number[l] & 1) { kkbase_status[l] = 1; }
+                  else { kkbase_status[l] = 0; }
 
                   start_shot(kkbase_x[l] + 13, kkbase_y[l] + 10, angle,
                              AA_MG_SHOT_SPEED);
@@ -1080,7 +1029,6 @@ void do_kkbase() {
         }
       }
 
-    } else {
     }
   }
 }
@@ -1732,3 +1680,5 @@ void do_ai(int number) {
     }
   }
 }
+
+} // namespace world::tripai

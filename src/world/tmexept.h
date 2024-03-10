@@ -20,6 +20,25 @@
 
 /* Solomission exceptions code headerfile */
 
-extern void init_exeptions(int country, int mission);
-extern void game_exeptions(int country, int mission);
-extern void endgame_exeptions(int country, int mission);
+namespace world::tmexept {
+
+void init_exeptions(int country, int mission);
+void game_exeptions(int country, int mission);
+void endgame_exeptions(int country, int mission);
+
+void german_init_exeptions(int mission);
+void finnish_init_exeptions(int mission);
+void english_init_exeptions(int mission);
+void japanese_init_exeptions(int mission);
+
+void german_game_exeptions(int mission);
+void finnish_game_exeptions(int mission);
+void english_game_exeptions(int mission);
+void japanese_game_exeptions(int mission);
+
+void german_end_exeptions(int mission);
+void finnish_end_exeptions(int mission);
+void english_end_exeptions(int mission);
+void japanese_end_exeptions(int mission);
+
+} // namespace world::tmexept
