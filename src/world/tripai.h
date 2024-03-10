@@ -20,6 +20,32 @@
 
 #include "constants.h"
 
+constexpr int32_t SPEED = 4;
+
+constexpr int32_t MEKAN_DIRECTION_LEFT = 0;
+constexpr int32_t MEKAN_DIRECTION_RIGHT = 1;
+
+constexpr int32_t MEKAN_MISSION_IDLE = 0;
+constexpr int32_t MEKAN_MISSION_RETURN = 1;
+constexpr int32_t MEKAN_MISSION_PUSH_OUT = 2;
+constexpr int32_t MEKAN_MISSION_PUSH_IN = 3;
+
+/* Submissions of MEKAN_MISSION_PUSH_IN */
+constexpr int32_t MEKAN_PUSH_IN_MOVE_TO_PLANE = 0;
+constexpr int32_t MEKAN_PUSH_IN_PUSH = 1;
+constexpr int32_t MEKAN_PUSH_IN_WAIT_DOOR_CLOSE = 2;
+
+/* Submissions of MEKAN_MISSION_PUSH_OUT */
+constexpr int32_t MEKAN_PUSH_OUT_WAIT_DOOR_OPEN = 0;
+constexpr int32_t MEKAN_PUSH_OUT_MOVE_TO_PLANE = 1;
+constexpr int32_t MEKAN_PUSH_OUT_PUSH = 2;
+
+/* These only affect graphics. */
+constexpr int32_t MEKAN_ANIMATION_INVISIBLE = 0;
+constexpr int32_t MEKAN_ANIMATION_WALK = 1;
+constexpr int32_t MEKAN_ANIMATION_PUSH_PROPELLER = 2;
+constexpr int32_t MEKAN_ANIMATION_PUSH_TAIL = 3;
+
 extern int infan_x[MAX_INFANTRY];
 extern int infan_y[MAX_INFANTRY];
 extern int infan_direction[MAX_INFANTRY];
@@ -36,4 +62,44 @@ extern int itgun_shot_x_speed[MAX_ITGUN_SHOTS];
 extern int itgun_shot_y_speed[MAX_ITGUN_SHOTS];
 extern int itgun_shot_age[MAX_ITGUN_SHOTS];
 
-extern void do_mekan();
+namespace world::tripai {
+
+    void do_infan();
+
+    void infan_to_plane(int l);
+
+    void infan_to_infan(int l);
+
+    void infan_to_struct(int l);
+
+    void infan_take_hits(int l);
+
+    void do_kkbase();
+
+    void start_it_shot(int x, int y, int angle);
+
+    void do_it_shots();
+
+    void start_itgun_explosion(int number);
+
+    void do_ai(int number);
+
+    void ai_turn_down(int number);
+
+    void ai_turn_up(int number);
+
+    void ai_evade_terrain(int number);
+
+    void ai_turnplus(int number);
+
+    void ai_turnminus(int number);
+
+    void ai_do_bombing(int number);
+
+    int check_structs(int x, int y, int number);
+
+    void do_mekan();
+
+    void do_doors();
+
+} // namespace world::tripai

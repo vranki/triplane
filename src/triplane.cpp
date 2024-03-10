@@ -38,6 +38,7 @@ constexpr int32_t SUB_VERSION = 3;
 #include "world/terrain.h"
 #include "world/tmexept.h"
 #include "world/tripaudio.h"
+#include "world/tripai.h"
 #include <SDL/SDL.h>
 #include <SDL/SDL_endian.h>
 #include <cstdint>
@@ -402,19 +403,8 @@ int get_player_fired(int player);
 int get_player_hits(int player);
 int get_player_shots_down(int player, int player2);
 
-extern void do_infan();
-extern void do_kkbase();
 extern void start_it_shot(int x, int y, int angle);
-extern void do_it_shots();
 extern void init_mission(int country, int number);
-extern void do_mekan();
-
-extern void do_ai(int number);
-extern void ai_turn_down(int number);
-extern void ai_turn_up(int number);
-extern void ai_evade_terrain(int number);
-extern void ai_turnplus(int number);
-extern void ai_turnminus(int number);
 
 extern "C" {
 extern void init_alkucallback();
@@ -934,7 +924,7 @@ void controls() {
         continue;
 
       if (computer_active[l]) {
-        do_ai(l);
+        world::tripai::do_ai(l);
         continue;
       }
 
@@ -1476,9 +1466,9 @@ void main_engine() {
                                      leveldata.struct_y[l]);
   }
 
-  if (config.flags)
-    do_flags();
-  do_kkbase();
+  if (config.flags) { do_flags(); }
+
+  world::tripai::do_kkbase();
 
   if (preview_mode) {
     if (!kangas_menu()) {
@@ -1698,7 +1688,7 @@ void main_engine() {
       do_shots();
       do_shots();
 
-      do_it_shots();
+      world::tripai::do_it_shots();
 
       airfield_checks();
 
@@ -1737,15 +1727,13 @@ void main_engine() {
 
       detect_damage();
 
-      if (config.flames)
-        do_flames();
+      if (config.flames) { do_flames(); }
       do_fobjects();
 
-      if (config.flags)
-        do_flags();
-      do_infan();
-      do_kkbase();
-      do_mekan();
+      if (config.flags) { do_flags(); }
+      world::tripai::do_infan();
+      world::tripai::do_kkbase();
+      world::tripai::do_mekan();
     }
 
     if (config.svga) { world::terrain::vesa_terrain_to_screen(); }

@@ -43,6 +43,11 @@
 extern int miss_pl_x[16];
 extern int miss_pl_y[16];
 
+extern sb_mod_file *triplane_mod;
+extern sb_mod_file *aces_mod;
+extern sb_sample *sample_hurr;
+
+
 char mission_description[80 * 16];
 char mission_lines[16][80];
 int mission_pixels[16];
@@ -1748,8 +1753,7 @@ void options_menu() {
     }
   }
 
-  if (config.sound_on && (is_there_sound == 0))
-    init_sounds();
+  if (config.sound_on && (is_there_sound == 0)) { init_sounds(); }
 
   if (is_there_sound && config.music_on && (!music_loaded)) {
 
@@ -1759,14 +1763,12 @@ void options_menu() {
 
   if (music_loaded && (!is_there_sound || !config.music_on)) {
     sdl_stop_music();
-    clear_music();
+      clear_music();
   }
 
-  if (is_there_sound && config.sfx_on && (!sfx_loaded))
-    load_sfx();
+  if (is_there_sound && config.sfx_on && (!sfx_loaded)) { load_sfx(); }
 
-  if (sfx_loaded && (!is_there_sound || !config.sfx_on))
-    clear_sfx();
+  if (sfx_loaded && (!is_there_sound || !config.sfx_on)) { clear_sfx(); }
 
   if (!config.sound_on && (is_there_sound == 1))
     uninit_sounds();
