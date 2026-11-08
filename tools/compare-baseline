@@ -60,11 +60,14 @@ if [ ! -x "$base_dir/build/triplane" ] || [ ! -f "$base_dir/build/fokker.dks" ];
     rm -rf "$base_dir"
     mkdir -p "$base_dir/src"
     git archive "$sha" | tar -x -C "$base_dir/src"
+    # Only the game and its data file are needed, not the tools.
     if ! { "$cmake" -S "$base_dir/src" -B "$base_dir/build" \
                -DCMAKE_BUILD_TYPE=RelWithDebInfo &&
-           "$cmake" --build "$base_dir/build" --parallel; } \
+           "$cmake" --build "$base_dir/build" --parallel \
+               --target triplane data; } \
              > "$base_dir/build.log" 2>&1; then
-        echo "Baseline build failed, see $base_dir/build.log" >&2
+        echo "Baseline build failed, see $base_dir/build.log:" >&2
+        tail -n 30 "$base_dir/build.log" >&2
         exit 2
     fi
 fi
