@@ -24,6 +24,9 @@
 #include <cstring>
 #include <sys/stat.h>
 #include <sys/types.h>
+#ifdef _WIN32
+#include <direct.h>
+#endif
 #include "triplane.h"
 #include <unistd.h>
 
@@ -71,8 +74,8 @@ static void find_settings_directory(char *dir) {
     strncat(dir, "/.triplane", FILENAME_MAX - 1);
     ret = stat(dir, &st);
     if (ret) {
-#ifdef WIN
-      ret = mkdir(dir); //, 0755);
+#ifdef _WIN32
+      ret = mkdir(dir);
 #else
       ret = mkdir(dir, 0755);
 #endif

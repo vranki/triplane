@@ -51,8 +51,6 @@ struct video_state_t {
 extern struct video_state_t video_state;
 extern SDL_Color curpal[256];
 
-void alusta_naytto(const char *paletin_nimi);
-void setpal(int vari, char R, char G, char B);
 void setpal_range(const char pal[][3], int firstcolor, int n, int reverse = 0);
 void fillrect(int x, int y, int w, int h, int c);
 void do_all(int do_retrace = 0);

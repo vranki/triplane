@@ -130,8 +130,6 @@ extern int parametri_kpl;
 
 //\ Shots control
 
-extern int pohja;
-extern int play_shot[16];
 extern int shots_flying_x[MAX_SHOTS];
 extern int shots_flying_y[MAX_SHOTS];
 extern int shots_flying_x_speed[MAX_SHOTS];
@@ -281,8 +279,6 @@ extern int bombs_going[100];
 
 extern short joystick_exists;
 
-extern int modem_com_port;
-extern int modem_com_speed;
 
 extern unsigned char *level_bitmap;
 extern int current_mode;
@@ -324,7 +320,6 @@ extern int findparameter(const char *jono);
 extern void kangas_terrain_to_screen(int leftx);
 extern void main_engine();
 extern void do_aftermath(int show_it_all);
-extern void clear_level();
 extern void init_player(int l, int pommit = 1);
 extern void cause_damage(int amount, int plane);
 extern void do_flags();

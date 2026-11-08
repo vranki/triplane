@@ -188,27 +188,4 @@ int dksread(void *mihin, unsigned long int koko) {
     return 0;
 }
 
-int dksseek(int offset, int mode) {
-  switch (mode) {
-  case SEEK_SET:
-    return (fseek(dks_faili, dirri[nykyinen_faili].offset + offset, SEEK_SET));
-    break;
 
-  case SEEK_CUR:
-    return (fseek(dks_faili, offset, SEEK_CUR));
-    break;
-
-  case SEEK_END:
-    return (fseek(dks_faili,
-                  dirri[nykyinen_faili].offset + dirri[nykyinen_faili].koko +
-                      offset,
-                  SEEK_SET));
-    break;
-  }
-
-  return 1;
-}
-
-int dksgetc() { return (fgetc(dks_faili)); }
-
-long dkstell() { return (ftell(dks_faili) - dirri[nykyinen_faili].offset); }

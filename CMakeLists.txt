@@ -17,23 +17,46 @@ find_package(SDL3 REQUIRED CONFIG COMPONENTS SDL3)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(MIKMOD REQUIRED IMPORTED_TARGET libmikmod)
 
-# --- Game -------------------------------------------------------------------
-set(SRCS
+# --- Common settings ----------------------------------------------------------
+add_library(triplane_options INTERFACE)
+target_include_directories(triplane_options INTERFACE ${PROJECT_SOURCE_DIR}/src)
+target_compile_definitions(triplane_options INTERFACE
+  TRIPLANE_DATA="${CMAKE_INSTALL_PREFIX}/share/games/triplane"
+  TRIPLANE_VERSION="${VERSION}")
+if(NOT MSVC)
+  target_compile_options(triplane_options INTERFACE -Wall -Wextra -pedantic -Wshadow -Werror)
+endif()
+if(APPLE)
+  # The macOS SDK marks sprintf() and friends as deprecated.
+  target_compile_options(triplane_options INTERFACE -Wno-deprecated-declarations)
+endif()
+
+# --- Engine: graphics, input, sound and data file access --------------------
+# Shared by the game and the tools below.
+add_library(triplane_engine STATIC
         src/gfx/bitmap.cpp
         src/gfx/font.cpp
         src/gfx/gfx.cpp
-        src/gfx/fades.cpp
-        src/gfx/extra.cpp
         src/util/wutil.cpp
         src/util/random.cpp
-        src/io/joystick.cpp
         src/io/keys.cpp
-        src/io/sound.cpp
         src/io/sdl_compat.cpp
         src/io/video.cpp
         src/io/mouse.cpp
         src/io/dksfile.cpp
         src/io/timing.cpp
+)
+target_link_libraries(triplane_engine PUBLIC triplane_options SDL3::SDL3 PkgConfig::MIKMOD)
+
+# --- Game -------------------------------------------------------------------
+add_executable(triplane
+        src/triplane.cpp
+        src/settings.cpp
+        src/gfx/fades.cpp
+        src/gfx/extra.cpp
+        src/io/joystick.cpp
+        src/io/sound.cpp
+        src/menus/tripmenu.cpp
         src/world/tripai.cpp
         src/world/tripmis.cpp
         src/world/plane.cpp
@@ -41,23 +64,21 @@ set(SRCS
         src/world/terrain.cpp
         src/world/fobjects.cpp
         src/world/tmexept.cpp
-        src/menus/tripmenu.cpp
-        src/tools/lvledit/lvledit.cpp
-        src/triplane.cpp
-        src/settings.cpp
 )
+target_link_libraries(triplane PRIVATE triplane_engine)
 
-add_executable(triplane ${SRCS})
-target_include_directories(triplane PRIVATE ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/src/tools/dksbuild)
-target_compile_definitions(triplane PRIVATE
-  TRIPLANE_DATA="${CMAKE_INSTALL_PREFIX}/share/games/triplane"
-  TRIPLANE_VERSION="${VERSION}")
-target_compile_options(triplane PRIVATE -Wall -Wextra -pedantic -Wshadow -Werror)
-if(APPLE)
-  # The macOS SDK marks sprintf() and friends as deprecated.
-  target_compile_options(triplane PRIVATE -Wno-deprecated-declarations)
-endif()
-target_link_libraries(triplane PRIVATE SDL3::SDL3 PkgConfig::MIKMOD)
+# --- Tools --------------------------------------------------------------------
+# Level editor (see doc/lvledit-keys.txt).
+add_executable(lvledit src/tools/lvledit/lvledit.cpp)
+target_link_libraries(lvledit PRIVATE triplane_engine)
+
+# Viewer for .pgd images inside fokker.dks.
+add_executable(pgdview src/tools/pgdview/pgdview.cpp)
+target_link_libraries(pgdview PRIVATE triplane_engine)
+
+# Converts PCX images to .pgd (used by tools/build-data-from-source).
+add_executable(pcx2pgd src/tools/pcx2pgd/pcx2pgd.cpp)
+target_link_libraries(pcx2pgd PRIVATE triplane_options)
 
 # --- Data file --------------------------------------------------------------
 add_executable(dksbuild src/tools/dksbuild/dksbuild.cc)

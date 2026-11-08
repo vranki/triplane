@@ -28,9 +28,7 @@ extern sb_mod_file *aces_mod;
 
 extern sb_sample *sample_itexp[3];
 extern sb_sample *sample_bomb[4];
-extern sb_sample *sample_hitti;
 extern sb_sample *sample_konsu[4];
-extern sb_sample *sample_propelli;
 extern sb_sample *sample_hit[4];
 extern sb_sample *sample_aagun;
 extern sb_sample *sample_splash[3];

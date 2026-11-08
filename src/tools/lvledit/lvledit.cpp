@@ -26,7 +26,6 @@
 #include <SDL3/SDL.h>
 #include <cstdio>
 #include <cstring>
-#include <utility>
 
 constexpr int32_t MAX_STRUCTURES = 100;
 constexpr int32_t MAX_TYPES = 3;
@@ -50,7 +49,7 @@ struct level_struct {
 
 std::unique_ptr<Bitmap> pb_picture;
 std::unique_ptr<Bitmap> struct_picture[MAX_STRUCTURES];
-std::unique_ptr<Bitmap> hiirikursori = nullptr;
+Bitmap *hiirikursori = nullptr; /* points at one of the bitmaps below */
 std::unique_ptr<Bitmap> hiirik;
 std::unique_ptr<Bitmap> lappu1;
 std::unique_ptr<Bitmap> lappu2;
@@ -167,7 +166,7 @@ void edit_level() {
     hiirikursori->blit(x, y);
 
     if (airfield_set != -1 && (n1 || n2)) {
-      hiirikursori = std::move(hiirik);
+      hiirikursori = hiirik.get();
       leveldata.airfield_x[airfield_set] = x + kohta;
       leveldata.airfield_y[airfield_set] = y;
       if (n1)
@@ -180,7 +179,7 @@ void edit_level() {
     if (n1 && (current != -1)) {
       leveldata.struct_x[current] = x + kohta;
       leveldata.struct_y[current] = y;
-      hiirikursori = std::move(hiirik);
+      hiirikursori = hiirik.get();
       current = -1;
     } else if (n1 && (active == -1)) {
       for (c = 0; c < MAX_STRUCTURES; c++) {
@@ -233,7 +232,7 @@ void edit_level() {
           break;
 
         struct_picture[c] = std::make_unique<Bitmap>(leveldata.pd_name[c]);
-        hiirikursori = std::move(struct_picture[c]);
+        hiirikursori = struct_picture[c].get();
         hiirikursori->info(&picture_width[c], &picture_height[c]);
         current = c;
         break;
@@ -257,7 +256,7 @@ void edit_level() {
         leveldata.struct_owner[c] = 0;
         leveldata.struct_type[c] = 0;
         struct_picture[c] = std::make_unique<Bitmap>(leveldata.pd_name[c]);
-        hiirikursori = std::move(struct_picture[c]);
+        hiirikursori = struct_picture[c].get();
         hiirikursori->info(&picture_width[c], &picture_height[c]);
         current = c;
         break;
@@ -280,7 +279,7 @@ void edit_level() {
         leveldata.struct_owner[c] = 1;
         leveldata.struct_type[c] = 0;
         struct_picture[c] = std::make_unique<Bitmap>(leveldata.pd_name[c]);
-        hiirikursori = std::move(struct_picture[c]);
+        hiirikursori = struct_picture[c].get();
         hiirikursori->info(&picture_width[c], &picture_height[c]);
         current = c;
         break;
@@ -303,7 +302,7 @@ void edit_level() {
         leveldata.struct_owner[c] = 2;
         leveldata.struct_type[c] = 0;
         struct_picture[c] = std::make_unique<Bitmap>(leveldata.pd_name[c]);
-        hiirikursori = std::move(struct_picture[c]);
+        hiirikursori = struct_picture[c].get();
         hiirikursori->info(&picture_width[c], &picture_height[c]);
         current = c;
         break;
@@ -326,7 +325,7 @@ void edit_level() {
         leveldata.struct_owner[c] = 3;
         leveldata.struct_type[c] = 0;
         struct_picture[c] = std::make_unique<Bitmap>(leveldata.pd_name[c]);
-        hiirikursori = std::move(struct_picture[c]);
+        hiirikursori = struct_picture[c].get();
         hiirikursori->info(&picture_width[c], &picture_height[c]);
         current = c;
         break;
@@ -447,7 +446,7 @@ void edit_level() {
       default:
         if ((ch >= TK_1) && (ch <= TK_4)) {
           airfield_set = ch - TK_1;
-          hiirikursori = std::move(pointti);
+          hiirikursori = pointti.get();
         }
         break;
       }
@@ -455,7 +454,7 @@ void edit_level() {
   }
 }
 
-/*int main(int argc, char **argv) {
+int main(int argc, char **argv) {
 
   FILE *faili;
   int c;
@@ -513,7 +512,7 @@ void edit_level() {
 
   printf("Loading cursor\n\r");
   hiirik = std::make_unique<Bitmap>("FONTT1");
-  hiirikursori = std::move(hiirik);
+  hiirikursori = hiirik.get();
 
   if (leveldata.pb_name[0]) {
     printf("Loading background picture\n\r");
@@ -537,4 +536,4 @@ void edit_level() {
   swap_byte_order();
 
   return 0;
-}*/
+}

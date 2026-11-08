@@ -144,7 +144,7 @@ int struct_heigth[MAX_STRUCTURES];
 
 //\ Fonts
 
-//std::unique_ptr<gfx::font::Font> fontti;
+std::unique_ptr<gfx::font::Font> fontti;
 std::unique_ptr<gfx::font::Font> frost;
 std::unique_ptr<gfx::font::Font> grid2;
 
@@ -155,8 +155,6 @@ int parametri_kpl;
 
 //\ Shots control
 
-int pohja = 0;
-int play_shot[16];
 int shots_flying_x[MAX_SHOTS];
 int shots_flying_y[MAX_SHOTS];
 int shots_flying_x_speed[MAX_SHOTS];
@@ -182,7 +180,6 @@ int hangarmenu_max_ammo[16];
 int hangarmenu_max_bombs[16];
 
 /* Timing */
-short int viimeiset_framet = 0;
 short int frame_laskuri = 0;
 /* Timing*/
 
@@ -227,7 +224,7 @@ int player_bomb_hits[16];
 
 char levelname[80];
 
-//struct level_struct leveldata;
+struct level_struct leveldata;
 
 //\ Bombs
 
@@ -302,8 +299,6 @@ int bombs_going[100];
 
 short joystick_exists;
 
-int modem_com_port = 2;
-int modem_com_speed = 9600;
 
 // Solo mode success/failure text blinking variables
 int status_frames = 0;
@@ -386,7 +381,6 @@ void itgun_sound(int itgun_x);
 void rotate_water_palet();
 void cause_damage(int amount, int plane);
 int small_warning(const char *message);
-int big_warning(const char *message);
 void load_all_samples();
 void init_sologame();
 void write_files();
@@ -598,13 +592,6 @@ int small_warning(const char *message) {
     koords(&x, &y, &n1, &n2);
 
   return response;
-}
-
-int big_warning(const char *message) {
-  if (message == nullptr)
-    return 0;
-  else
-    return 0;
 }
 
 void cause_damage(int amount, int plane) {

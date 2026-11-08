@@ -79,7 +79,6 @@ namespace gfx::font {
                 delete glyphs[temp];
     }
 
-    void Font::set_space(int space) { scaled_space = space; }
 
     int Font::printf(int x, int y, const char *fmt, ...) {
         int temp = 0;

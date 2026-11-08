@@ -66,25 +66,6 @@ char rank_names[6][10] = {"2nd Lt.", "1st Lt.", "Capt.",
 /**************************** Functions ***************************************/
 void joystick_roster_setup(Bitmap *controlme);
 
-void show_feat5() {
-  std::unique_ptr<Bitmap> feat5(new Bitmap("FEAT5"));
-  int n1 = 0, n2 = 0;
-  int x, y;
-
-  wait_mouse_relase();
-
-  feat5->info(&x, &y);
-
-  feat5->blit((320 - x) >> 1, (200 - y) >> 1);
-  do_all();
-
-  while (!(n1 || n2)) {
-    koords(&x, &y, &n1, &n2);
-  }
-
-  wait_mouse_relase();
-}
-
 int get_rank(const int player) {
   int l, l2, l3;
 

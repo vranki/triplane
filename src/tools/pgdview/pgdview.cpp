@@ -61,7 +61,10 @@ int main(int argv, char *argc[]) {
   strcpy(nimi, argc[1]);
   strcat(nimi, ".dks");
 
-  dksinit(nimi);
+  if (!dksinit(nimi)) {
+    printf("Cannot open %s\n", nimi);
+    exit(1);
+  }
 
   if (argv == 3) {
     init_vga("PALET1");

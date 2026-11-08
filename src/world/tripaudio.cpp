@@ -29,9 +29,7 @@ sb_mod_file *aces_mod;
 
 sb_sample *sample_itexp[3];
 sb_sample *sample_bomb[4];
-sb_sample *sample_hitti;
 sb_sample *sample_konsu[4];
-sb_sample *sample_propelli;
 sb_sample *sample_hit[4];
 sb_sample *sample_aagun;
 sb_sample *sample_splash[3];
@@ -42,7 +40,6 @@ sb_sample *sample_crash[2];
 sb_sample *sample_alku;
 sb_sample *sample_die[9];
 
-int alku_sample_over = 0;
 int sfx_loaded = 0;
 int music_loaded = 0;
 

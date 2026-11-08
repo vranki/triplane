@@ -28,9 +28,6 @@ int dksopen(const char *nimi);
 int extdksopen(const char *nimi);
 void dksclose();
 int dksread(void *mihin, unsigned long int koko);
-int dksseek(int offset, int mode);
-int dksgetc();
-long dkstell();
 int dkssize();
 
 extern FILE *dks_faili;
