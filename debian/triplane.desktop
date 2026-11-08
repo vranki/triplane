@@ -2,7 +2,7 @@
 Name=Triplane Classic
 Comment=side-scrolling dogfighting game
 Exec=triplane
-Icon=triplane.png
+Icon=triplane
 StartupNotify=false
 Terminal=false
 Type=Application

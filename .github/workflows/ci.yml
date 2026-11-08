@@ -79,3 +79,44 @@ jobs:
         run: tools/smoke-test build
       - name: Compare against base
         run: tools/ci-compare "${{ github.event.pull_request.base.sha || github.event.before }}"
+
+  deb:
+    name: Debian package (trixie)
+    runs-on: ubuntu-latest
+    container: debian:trixie
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential debhelper cmake pkg-config git ca-certificates \
+            libsdl3-dev libmikmod-dev
+      - uses: actions/checkout@v4
+      - name: Trust the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Build the package
+        run: |
+          dpkg-buildpackage -us -uc -b
+          mkdir -p dist && mv ../triplane_*.deb dist/
+          ls -l dist
+      - name: Install and run the packaged game
+        # The package installs into /usr/games, which is not on PATH here.
+        run: |
+          apt-get install -y --no-install-recommends ./dist/triplane_*.deb
+          dpkg -L triplane | grep -E 'games/|man6'
+          /usr/games/triplane -help | head -3
+          home=$(mktemp -d)
+          cp -R triplane-testsuite/multi2/. "$home"
+          SDL_VIDEODRIVER=dummy SDL_AUDIO_DRIVER=dummy TRIPLANE_HOME="$home" \
+            timeout 300 /usr/games/triplane $(cat "$home/args") < /dev/null \
+            > "$home/out" 2> "$home/err" || true
+          frames=$(grep -cE '^[0-9]+ [0-9a-f]{8}$' "$home/out" || true)
+          echo "installed game replayed $frames frames"
+          if [ "$frames" -eq 0 ]; then cat "$home/err"; exit 1; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: triplane-deb
+          path: dist/*.deb

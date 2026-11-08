@@ -195,7 +195,11 @@ int main(int argc, char **argv) {
       if ((strstr(info[vaihe].tiedosto, ".pgd")) ||
           (strstr(info[vaihe].tiedosto, ".PGD"))) {
         fseek(in, 8, SEEK_SET);
-        fread(info[vaihe].nimi, sizeof(info[vaihe].nimi), 1, in);
+        if (fread(info[vaihe].nimi, sizeof(info[vaihe].nimi), 1, in) != 1) {
+          printf("\nError: cannot read the name of %s.\n", info[vaihe].tiedosto);
+          fclose(in);
+          exit(1);
+        }
         fseek(in, 0, SEEK_SET);
       } else {
         printf("\nError: file %s is not named.\n", info[vaihe].tiedosto);

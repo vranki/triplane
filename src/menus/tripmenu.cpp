@@ -2421,9 +2421,10 @@ void main_menu() {
 
         if (findparameter("-playback")) {
           rfile = settings_open("record.ran", "rb");
-          fread(&full_seed, sizeof(full_seed), 1, rfile);
-
-          fclose(rfile);
+          if (rfile == nullptr || fread(&full_seed, sizeof(full_seed), 1, rfile) != 1)
+            printf("record.ran is missing or damaged\n");
+          if (rfile != nullptr)
+            fclose(rfile);
         }
 
         ////

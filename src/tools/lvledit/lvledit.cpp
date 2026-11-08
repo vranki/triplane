@@ -504,7 +504,10 @@ int main(int argc, char **argv) {
 
   } else {
     printf("Loading existing level.\n\r");
-    fread(&leveldata, sizeof(leveldata), 1, faili);
+    if (fread(&leveldata, sizeof(leveldata), 1, faili) != 1) {
+      printf("Cannot read %s\n", filename);
+      exit(1);
+    }
     fclose(faili);
 
     for (c = 0; c < MAX_STRUCTURES; c++) {

@@ -132,8 +132,14 @@ int load_joysticks_data(const char *filename) {
   fp = settings_open(filename, "rb");
 
   if (fp != nullptr) {
-    fread(&joystick_config, sizeof(joystick_configuration), 5, fp);
+    joystick_configuration loaded[5];
+    size_t got = fread(loaded, sizeof(joystick_configuration), 5, fp);
     fclose(fp);
+    if (got != 5) {
+      printf("%s is damaged, using the default joystick settings\n", filename);
+      return 0;
+    }
+    memcpy(joystick_config, loaded, sizeof(joystick_config));
     return 1;
   }
 

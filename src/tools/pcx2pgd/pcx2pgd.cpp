@@ -217,8 +217,10 @@ void pcx_load(char *file_name, short int *xl, short int *yl) {
   }
 
   fseek(fp, 8, SEEK_SET);
-  fread(xl, 2, 1, fp);
-  fread(yl, 2, 1, fp);
+  if (fread(xl, 2, 1, fp) != 1 || fread(yl, 2, 1, fp) != 1) {
+    printf("Error reading the PCX header of %s\n", file_name);
+    exit(1);
+  }
   (*xl)++;
   (*yl)++;
 

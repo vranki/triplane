@@ -67,7 +67,9 @@ that each draws frames and ends without a crash; it needs no baseline.
 GitHub Actions (.github/workflows/ci.yml) runs the build, the smoke test
 and the baseline comparison against the previous commit on Linux
 (Debian trixie), macOS and Windows (MSYS2) for every push and pull
-request.
+request. A fourth job builds the Debian package, installs it and
+replays a recorded game with the installed binary; the .deb is kept as
+a workflow artifact.
 
 Regenerating data/
 ------------------

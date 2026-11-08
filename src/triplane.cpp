@@ -1550,7 +1550,10 @@ void main_engine() {
       fprintf(stderr, "No recording (record.dta) in the settings directory\n");
       exit(1);
     }
-    fread(record_data, RECORD_FRAMES, 16, record_file);
+    if (fread(record_data, RECORD_FRAMES, 16, record_file) != 16) {
+      fprintf(stderr, "record.dta is damaged or truncated\n");
+      exit(1);
+    }
     fclose(record_file);
 
     record_file = settings_open("record.000", "rb");
@@ -1558,7 +1561,10 @@ void main_engine() {
       fprintf(stderr, "No recording (record.000) in the settings directory\n");
       exit(1);
     }
-    fread(record_random, RECORD_FRAMES, 4, record_file);
+    if (fread(record_random, RECORD_FRAMES, 4, record_file) != 4) {
+      fprintf(stderr, "record.000 is damaged or truncated\n");
+      exit(1);
+    }
     record_random_swap_endianess();
     fclose(record_file);
   }
