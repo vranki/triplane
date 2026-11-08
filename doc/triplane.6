@@ -1,40 +1,81 @@
-.TH "TRIPLANE" "6"
-.SH "NAME" 
+.TH "TRIPLANE" "6" "2026-11-08" "Triplane Classic 1.0.8" "Games"
+.SH "NAME"
 Triplane \- a side-scrolling dogfighting game.
-.SH "SYNOPSIS" 
-.PP 
+.SH "SYNOPSIS"
 .B triplane
 [\fIOPTION\fR]...
-.SH "DESCRIPTION" 
-.PP 
+.SH "DESCRIPTION"
 \fBTriplane Classic\fR is a side-scrolling dogfighting game featuring
 solo missions and multiplayer mode with up to four players. It is a
 port of the original \fBTriplane Turmoil\fR game for DOS and aims to
 match the original game exactly so that high scores remain comparable
 to the original.
 .SH "OPTIONS"
-.PP
-.IP "\fB\-fullscreen\fP"
+.IP "\fB\-help\fP, \fB\-h\fP, \fB\-?\fP"
+Print the list of options and exit.
+.IP "\fB\-fullscreen\fP, \fB\-f\fP"
 Start the game in fullscreen mode (this is the default).
-.IP "\fB\-nofullscreen\fP"
-Start the game in windowed mode.
-.IP "\fB\-nosound\fP"
-Start the game without sounds.  Note: This option also disables sounds
-in the configuration file so sounds will be disabled also the next
-time you start triplane.  To enable sounds set Physical
-Examination->Hearing->Sounds on in the game menus.
-.IP "\fB\-2, -3, -4\fP"
-Scale the 320x200-pixel game window 2x, 3x or 4x using software
-scaling.  This helps you play Triplane on displays that cannot switch to
-such low resolutions.
+.IP "\fB\-nofullscreen\fP, \fB\-w\fP"
+Start the game in a window.  The window can be resized; the picture
+keeps its aspect ratio.
+.IP "\fB\-nosound\fP, \fB\-s\fP"
+Start the game without sounds.  This is saved in the configuration
+file, so sounds stay off the next time too.  To enable them again, use
+\fB\-sound\fP or set Physical Examination->Hearing->Sounds on in the
+game menus.
+.IP "\fB\-sound\fP, \fB\-l\fP"
+Start the game with sounds.  This is saved in the configuration file.
+.IP "\fB\-nomusic\fP"
+Do not play music in the menus.
+.IP "\fB\-reverse\fP"
+Swap the left and right sound channels.
+.IP "\fB\-2\fP, \fB\-3\fP, \fB\-4\fP"
+Open the 320x200-pixel game window two, three or four times as large.
+Without these the window is the largest whole multiple that fits
+1280x800 pixels.  In fullscreen mode the picture always fills the
+screen.
 .IP "\fB\-2svga\fP"
-Scale the 800x600-pixel window 2x using software scaling, to
-produce a 1600x1200-pixel window.  This resolution is used only in
-multiplayer mode.
+Open the 800x600-pixel window at 1600x1200.  This resolution is used
+in solo missions and, optionally, in multiplayer mode.
+.IP "\fB\-1split\fP"
+Use a 1200x404-pixel window with one split instead of 800x600.
+.IP "\fB\-nosplit\fP"
+Use a 2400x208-pixel window with no splits.
+.IP "\fB\-nosplash\fP"
+Skip the splash screens.
+.IP "\fB\-autostart\fP"
+Skip the menus and start the game configured in the Assign Players
+menu at once.
+.IP "\fB\-autoquit\fP"
+Quit when that game ends.
+.IP "\fB\-solomenumission\fP \fIN\fP"
+Start solo mission \fIN\fP (0 to 5) with \fB\-autostart\fP.
+.IP "\fB\-level\fP\fIname\fP"
+Play level \fIname\fP from the data file, or from a file of that name
+in the current directory.  Note that there is no space after
+\fB\-level\fP.
+.IP "\fB\-loadtexts\fP"
+Print loading progress.
+.IP "\fB\-writehsfile\fP"
+Also write the solo high scores to \fIhigsscor.txt\fP in the
+configuration directory.
 .PP
 Note that triplane does not warn about unknown options.
+.SH "REPLAYS"
+A game can be recorded and played back.  Recording writes the players'
+controls and the random numbers used to \fIrecord.dta\fP,
+\fIrecord.000\fP and \fIrecord.ran\fP in the configuration directory.
+.IP "\fB\-record\fP"
+Record the game.
+.IP "\fB\-playback\fP"
+Replay a recorded game.  The configuration files must be the ones the
+game was recorded with.
+.IP "\fB\-speed\fP"
+Run without the frame rate limit, for replaying quickly.
+.IP "\fB\-debugtrace\fP"
+Print the frame number and a checksum of every frame.  The source
+tree's regression test compares these between two builds.
 .SH "GETTING STARTED"
-.PP
 After starting the game, click through the splash screens to see the
 main menu.  Then click \fBROSTER\fP and click the pen on the right to
 create a new pilot entry.  Type your name and press enter.  Click the
@@ -96,8 +137,9 @@ six controls needed to fly.  The order is Up, Down, Roll, Engine power,
 Bombs and Guns.  Remember that brake is always Up+Down simultaneously.
 
 Joystick configuration is still a bit experimental and it is not easy
-to play the game with a joystick.  Start by clicking Joystick 1 or
-Joystick 2 and follow the on-screen instructions.  There are two types
+to play the game with a joystick.  Up to four joysticks are supported.
+Start by clicking one of the Joystick buttons and follow the on-screen
+instructions.  There are two types
 of joystick actions.  You can hold down a joystick button and press
 Space on the keyboard.  Alternatively you can move a joystick to a
 different position (left, right, up or down) and press Space.  Finally,
@@ -118,7 +160,6 @@ to the hangar, just press Roll or Bomb, and the mechanic will push
 your plane into the hangar.
 
 .SH "ASSIGN PLAYERS MENU"
-.PP
 This menu is used to select players for solo and multiplayer
 modes.  There are four boxes, one for each country.
 
@@ -264,7 +305,6 @@ If activated, the plane will still fly even when you have run out of
 fuel, but you always have to take the full load of fuel when leaving
 the hangar.
 
-.PP
 .SH "PLANE TYPES"
 .TS
 l l l l l.
@@ -350,7 +390,6 @@ time.  But remember, it is not impossible to gain it, you just need
 play a little longer.
 
 .SH "TIPS AND TRICKS"
-.PP
 .IP "\(bu Remember that stalling is a VERY good way to brake fast, but do not even think about it unless you can handle the plane very well." 4
 .IP "\(bu When flying the Finnish plane remember to deactivate the power when turning." 4
 .IP "\(bu There are several \fBAce missions\fP which are quite easy to complete, but great effort is needed for receiving a higher score.  Patriot Flight is a very good example of this, it is possible to get at least 169 points in it." 4
@@ -363,7 +402,6 @@ play a little longer.
 .IP "\(bu Remember that Japanese plane will always run out of fuel, particularly with six bombs." 4
 
 .SH "FILES"
-.PP
 Triplane finds its configuration directory by searching the following
 directories in this order:
 .IP "\(bu 1) $TRIPLANE_HOME" 4
@@ -377,12 +415,16 @@ Main configuration file.
 High score file.
 .IP "\(bu keyset.dta" 4
 Keyboard configuration file.
+.IP "\(bu joystic.dta" 4
+Joystick configuration file.
+.IP "\(bu record.dta, record.000, record.ran" 4
+A recorded game, see REPLAYS.
 
 .PP
 Triplane tries to locate its data directory by looking at which of the
 following directories exist, in the following order:
 .IP "\(bu 1) $TRIPLANE_DATA" 4
-.IP "\(bu 2) TRIPLANE_DATA set at compilation time (if step 2 fails)" 4
+.IP "\(bu 2) TRIPLANE_DATA set at compilation time (if step 1 fails)" 4
 .IP "\(bu 3) current directory." 4
 .PP
 The data directory contains only one file:
@@ -390,7 +432,6 @@ The data directory contains only one file:
 Game data file containing levels, graphics and sounds.
 
 .SH "HISTORY"
-.PP
 The original \fBTriplane Turmoil\fR was developed by Markku Rankala, Teemu
 J. Takanen and Henrikki Merikallio. Some work was also contributed by
 Risto Puhakka, Antti Lehtoranta and Mikko Kinnunen. 

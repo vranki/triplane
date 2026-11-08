@@ -1697,13 +1697,13 @@ void main_engine() {
     do_debug_trace();
 
     if (current_mode == SVGA_MODE) {
-      do_all_clear(0);
+      do_all_clear();
     }
 
     rotate_water_palet();
 
     if (current_mode == VGA_MODE) {
-      if (solo_mode == -1) { do_all(1); }
+      if (solo_mode == -1) { do_all(); }
     }
 
     if (playing_solo && hangarmenu_active[solo_country]) {
@@ -3055,21 +3055,38 @@ int main(int argc, char *argv[]) {
     printf("the GNU General Public License version 3 or (at your option) a "
            "later version.\n");
     printf("This program has absolutely no warranty.\n\n");
-    printf("-help,-h         Help on options\n");
+    printf("-help,-h,-?      Help on options\n");
     printf("-fullscreen,-f   Start game in fullscreen mode (default)\n");
     printf("-nofullscreen,-w Start game in windowed mode\n");
-    printf("-nosound,-s      Start game without sounds and it will be saved in "
-           "the setting\n");
-    printf("-sound,-l        Start game with sounds and it will be saved in "
-           "the setting\n");
-    printf(
-        "-2, -3, -4       Zoom the 320x200-pixel game window 2x, 3x or 4x\n");
-    printf("-2svga           Zoom the 800x600-pixel window 2x to produce "
-           "1600x1200-pixel window\n");
-    printf("-nosplit         Use the 2400x200-pixel window instead of 800x600 "
-           "to have window with no splits\n");
-    printf("-1split          Use the 1200x400-pixel window instead of 800x600 "
-           "to have window with 1 split only\n\n");
+    printf("-nosound,-s      Start without sounds; saved in the settings\n");
+    printf("-sound,-l        Start with sounds; saved in the settings\n");
+    printf("-nomusic         Do not play music in the menus\n");
+    printf("-reverse         Swap the left and right sound channels\n");
+    printf("-2, -3, -4       Open the 320x200 game window 2x, 3x or 4x as "
+           "large\n");
+    printf("                 (default: the largest whole multiple up to "
+           "1280x800)\n");
+    printf("-2svga           Open the 800x600 window at 1600x1200\n");
+    printf("-1split          Use a 1200x404 window with one split instead of "
+           "800x600\n");
+    printf("-nosplit         Use a 2400x208 window with no splits\n");
+    printf("-nosplash        Skip the splash screens\n");
+    printf("-autostart       Skip the menus and start the configured game\n");
+    printf("-autoquit        Quit when that game ends\n");
+    printf("-solomenumission N  Start solo mission N (0-5) with "
+           "-autostart\n");
+    printf("-level<name>     Play level <name> from the data file or a "
+           "file\n");
+    printf("-loadtexts       Print loading progress\n");
+    printf("-record          Record the game into the settings directory\n");
+    printf("-playback        Replay a recorded game\n");
+    printf("-speed           Run without the frame rate limit (for "
+           "replays)\n");
+    printf("-debugtrace      Print a checksum of every frame\n");
+    printf("-sdldraw         Draw with SDL surfaces instead of the frame "
+           "buffer\n");
+    printf("-writehsfile     Also write the solo high scores to "
+           "higsscor.txt\n\n");
     exit(0);
   }
 

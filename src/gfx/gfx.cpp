@@ -97,8 +97,6 @@ void tyhjaa_vircr() {
       assert(current_mode == SVGA_MODE);
       fill_vircr(0, 0, screen_width_less, screen_height_less, 0);
     }
-
-    do_isa_clear();
   }
 }
 
@@ -115,7 +113,7 @@ static void do_isa_clear() {
   }
 }
 
-void do_all_clear(int /*do_retrace*/) {
+void do_all_clear() {
   do_all();
   do_isa_clear();
 }

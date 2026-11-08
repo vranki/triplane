@@ -46,14 +46,13 @@ struct video_state_t {
   SDL_Renderer *renderer{};
   SDL_Texture *texture{};
   int init_done{};
-  int haverealpalette{};
 };
 extern struct video_state_t video_state;
 extern SDL_Color curpal[256];
 
 void setpal_range(const char pal[][3], int firstcolor, int n, int reverse = 0);
 void fillrect(int x, int y, int w, int h, int c);
-void do_all(int do_retrace = 0);
+void do_all();
 int init_vesa(const char *paletname);
 void init_vga(const char *paletname);
 void init_video();
@@ -61,7 +60,7 @@ void init_video();
 extern unsigned char *vircr;
 extern std::unique_ptr<Bitmap> standard_background;
 extern int current_mode;
-extern int pixel_multiplier;
+extern int pixel_multiplier; /* window zoom (-2, -3, -4, -2svga) */
 extern int update_vircr_mode;
 extern int draw_with_vircr_mode;
 extern int pixel_multiplier_vga, pixel_multiplier_svga;

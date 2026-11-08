@@ -41,7 +41,6 @@ constexpr int32_t MAX_BITMAPS = 8192;
 Bitmap *all_bitmaps[MAX_BITMAPS];
 int all_bitmaps_n = 0;
 
-unsigned char *pointti;
 
 static void all_bitmaps_add(Bitmap *b) {
   if (draw_with_vircr_mode)
@@ -77,69 +76,7 @@ void all_bitmaps_refresh() {
     all_bitmaps[i]->refresh_sdlsurface();
 }
 
-/* Make a copy of the image data in source, enlarged zoom times */
-static unsigned char *duplicate_enlarged(const unsigned char *source, int width,
-                                         int height, int zoom) {
-  uint8_t *target = (uint8_t *)util::wutil::walloc(width * height * zoom * zoom);
-  int i, j, k;
-  const uint8_t *in = source;
-  uint8_t *out = target;
-
-  /* optimized versions using 32-bit and 16-bit writes when possible */
-  if (zoom == 4 && sizeof(char *) >= 4) { /* word size >= 4 */
-    uint32_t cccc;
-    for (j = 0; j < height * zoom; j += zoom) {
-      for (i = 0; i < width * zoom; i += zoom) {
-        cccc = *in | (*in << 8) | (*in << 16) | (*in << 24);
-        in++;
-        for (k = 0; k < zoom; k++) {
-          *(uint32_t *)(&out[(j + k) * (width * zoom) + i]) = cccc;
-        }
-      }
-    }
-  } else if (zoom == 3) {
-    uint16_t cc, c;
-    for (j = 0; j < height * zoom; j += zoom) {
-      for (i = 0; i < width * zoom; i += zoom) {
-        c = *in++;
-        cc = c | (c << 8);
-        for (k = 0; k < zoom; k++) {
-          *(uint16_t *)(&out[(j + k) * (width * zoom) + i]) = cc;
-          out[(j + k) * (width * zoom) + i + 2] = c;
-        }
-      }
-    }
-  } else if (zoom == 2) {
-    uint16_t cc;
-    for (j = 0; j < height * zoom; j += zoom) {
-      for (i = 0; i < width * zoom; i += zoom) {
-        cc = *in | (*in << 8);
-        in++;
-        for (k = 0; k < zoom; k++) {
-          *(uint16_t *)(&out[(j + k) * (width * zoom) + i]) = cc;
-        }
-      }
-    }
-  } else { /* unoptimized version */
-    int l;
-    uint8_t c;
-    for (j = 0; j < height * zoom; j += zoom) {
-      for (i = 0; i < width * zoom; i += zoom) {
-        c = *in++;
-        for (k = 0; k < zoom; k++) {
-          for (l = 0; l < zoom; l++) {
-            out[(j + k) * (width * zoom) + (i + l)] = c;
-          }
-        }
-      }
-    }
-  }
-
-  return target;
-}
-
 void Bitmap::refresh_sdlsurface() {
-  unsigned char *imgmult = nullptr;
   SDL_Surface *tmps;
 
   if (sdlsurface != nullptr) {
@@ -150,16 +87,8 @@ void Bitmap::refresh_sdlsurface() {
   if (draw_with_vircr_mode)
     return; /* sdlsurfaces are not used */
 
-  if (pixel_multiplier > 1) {
-    imgmult = duplicate_enlarged(image_data, width, height, pixel_multiplier);
-    tmps = SDL_CreateSurfaceFrom(width * pixel_multiplier,
-                                 height * pixel_multiplier,
-                                 SDL_PIXELFORMAT_INDEX8, imgmult,
-                                 width * pixel_multiplier);
-  } else {
-    tmps = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_INDEX8,
-                                 image_data, width);
-  }
+  tmps = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_INDEX8,
+                               image_data, width);
 
   if (tmps == nullptr) {
     fprintf(stderr, "SDL_CreateSurfaceFrom: %s\n", SDL_GetError());
@@ -176,9 +105,6 @@ void Bitmap::refresh_sdlsurface() {
   if (hastransparency)
     SDL_SetSurfaceColorKey(sdlsurface, true, 0xff);
   SDL_DestroySurface(tmps);
-  if (pixel_multiplier > 1) {
-      util::wutil::wfree(imgmult);
-  }
 }
 
 Bitmap::Bitmap(const char *image_name, int transparent) {
@@ -274,7 +200,6 @@ Bitmap::~Bitmap() {
 void Bitmap::blit_fullscreen() {
   assert(current_mode == VGA_MODE);
   assert(!hastransparency);
-  pointti = image_data;
 
   if (update_vircr_mode)
     memcpy(vircr, image_data, 320 * 200);
@@ -349,14 +274,6 @@ void Bitmap::blit(int xx, int yy, int rx, int ry, int rx2, int ry2) {
     clip.h = ry2 - ry + 1;
     pos.x = xx;
     pos.y = yy;
-    if (pixel_multiplier > 1) {
-      clip.x *= pixel_multiplier;
-      clip.y *= pixel_multiplier;
-      clip.w *= pixel_multiplier;
-      clip.h *= pixel_multiplier;
-      pos.x *= pixel_multiplier;
-      pos.y *= pixel_multiplier;
-    }
     SDL_SetSurfaceClipRect(video_state.surface, &clip);
     if (!SDL_BlitSurface(sdlsurface, nullptr, video_state.surface, &pos)) {
       fprintf(stderr, "SDL_BlitSurface: %s\n", SDL_GetError());

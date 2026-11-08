@@ -224,20 +224,12 @@ void get_joystick_action(int t, int inmenu, int *down, int *up, int *power,
                          int power_reverse, unsigned char *controls_power2,
                          int in_closing, int *power_break_active) {
   /*
-   * Special joystick actions for hangar menu are disabled here because
-   * they are unintuitive on gamepads and other non-default joystick
-   * configurations. Comment out next line to re-enable.
-   * FIXME perhaps make this a command-line option or something?
+   * The hangar menu once had its own joystick mapping (guns/bombs as
+   * power/roll). It was unintuitive on gamepads and was removed; the menu
+   * uses the flight actions like the keyboard does.
    */
-  inmenu = 0;
-  if (inmenu) {
-    *down = is_joystick_action_active(t, &joystick_config[t].down);
-    *up = is_joystick_action_active(t, &joystick_config[t].up);
-    *power = is_joystick_action_active(t, &joystick_config[t].guns);
-    *roll = is_joystick_action_active(t, &joystick_config[t].bombs);
-    *guns = is_joystick_action_active(t, &joystick_config[t].power);
-    *bombs = is_joystick_action_active(t, &joystick_config[t].brake);
-  } else {
+  (void)inmenu;
+  {
     *roll = is_joystick_action_active(t, &joystick_config[t].roll);
     *guns = is_joystick_action_active(t, &joystick_config[t].guns);
     *bombs = is_joystick_action_active(t, &joystick_config[t].bombs);

@@ -31,7 +31,6 @@ void uninit_sounds();
 sb_sample *sample_load(const char *sample_name);
 
 extern int is_there_sound;
-extern int soundcard_type;
 extern int reverbed_channels;
 
 #endif

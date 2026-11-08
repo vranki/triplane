@@ -38,8 +38,10 @@ hit aeroplanes during it
  - 4 joysticks support in multiplayer
  - Joystick supports correctly 'power reverse option' now (like keyboard)
  - 5-12 planes support in multiplayer (additional planes are controlled by ai)
- - 1200x400 and 2400x200 resolutions support (start game with '-1split' or '-nosplit' command line option)
+ - 1200x404 and 2400x208 resolutions support (start game with '-1split' or '-nosplit' command line option)
  - Fixed ai for Finland and England on Cavern map in multiplayer
+ - Ported to SDL3 (SDL_mixer replaced by a built-in mixer and libmikmod);
+   see README.install for building
 
 
 These changes have been extensively play-tested in four player

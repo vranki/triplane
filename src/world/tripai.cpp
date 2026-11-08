@@ -1405,7 +1405,6 @@ void do_ai(int number) {
         ai_turnplus(number);
       }
     }
-    /// nysv�yslause
 
     if (controls_up[number] && player_speed[number] < (1800)) {
 

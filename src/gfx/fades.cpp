@@ -132,9 +132,6 @@ namespace gfx::fades {
                 break;
 
             case 1:
-                vertical_split();
-                break;
-
             case 2:
                 vertical_split();
                 break;

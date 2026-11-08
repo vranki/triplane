@@ -25,13 +25,6 @@
 
 constexpr int32_t SAMPLE_VOLUME = 20;
 
-#define PAUSE_KEY TK_PAUSE
-
-constexpr int32_t SOUNDCARD_NONE = 0;
-constexpr int32_t SOUNDCARD_GUS = 1;
-constexpr int32_t SOUNDCARD_SB = 2;
-constexpr int32_t SOUNDCARD_SDL = 3;
-
 int kbhit();
 int getch();
 

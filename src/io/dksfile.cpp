@@ -21,7 +21,7 @@
 /*******************************************************************************
 
    Purpose:
-        DKS-datafile handling routines for Wsystem 2.0 for DJGPP v.2.0�5
+        DKS-datafile handling routines for Wsystem 2.0 for DJGPP v.2.0
 
 *******************************************************************************/
 
@@ -109,7 +109,7 @@ int dksopen(const char *nimi) {
   int lask;
   int kohta = -1;
 
-  for (lask = 0; lask < DKS_MAX_ENTRIES; lask++) {
+  for (lask = 0; lask < DKS_MAX_ENTRIES && dirri[lask].nimi[0]; lask++) {
     if (!strcmp(dirri[lask].nimi, nimi)) {
       kohta = lask;
       break;
@@ -134,7 +134,7 @@ int extdksopen(const char *nimi) {
   int lask;
   int kohta = -1;
 
-  for (lask = 0; lask < DKS_MAX_ENTRIES; lask++) {
+  for (lask = 0; lask < DKS_MAX_ENTRIES && dirri[lask].nimi[0]; lask++) {
     if (!strcmp(dirri[lask].nimi, nimi)) {
       kohta = lask;
       break;

@@ -54,9 +54,17 @@ SDL_Color curpal[256];
  * @param pal the palette, specify nullptr to set all colors to black=(0,0,0)
  * @param reverse = 1 to read colors in reverse order (pal[n-1] to pal[0])
  */
+/* curpal as packed XRGB8888, for converting the frame buffer to the texture */
+static Uint32 palette_lut[256];
+
 void setpal_range(const char pal[][3], int firstcolor, int n, int reverse) {
-  SDL_Color *cc = (SDL_Color *)util::wutil::walloc(n * sizeof(SDL_Color));
+  SDL_Color cc[256];
   int i, from = (reverse ? n - 1 : 0);
+
+  if (firstcolor < 0 || n < 0 || firstcolor + n > 256) {
+    fprintf(stderr, "setpal_range: bad range %d+%d\n", firstcolor, n);
+    exit(1);
+  }
 
   for (i = 0; i < n; i++) {
     if (pal == nullptr) {
@@ -72,48 +80,34 @@ void setpal_range(const char pal[][3], int firstcolor, int n, int reverse) {
       from++;
   }
 
-  for (i = 0; i < n; i++)
+  for (i = 0; i < n; i++) {
     cc[i].a = SDL_ALPHA_OPAQUE;
+    palette_lut[firstcolor + i] = 0xff000000u | ((Uint32)cc[i].r << 16) |
+                                  ((Uint32)cc[i].g << 8) | (Uint32)cc[i].b;
+  }
   if (video_state.palette)
     SDL_SetPaletteColors(video_state.palette, cc, firstcolor, n);
   memcpy(&curpal[firstcolor], cc, n * sizeof(SDL_Color));
-  util::wutil::wfree(cc);
 }
-
-static Uint32 getcolor(unsigned char c) { return c; }
 
 void fillrect(const int x, const int y, const int w, const int h, const int c) {
-  SDL_Rect r;
-  r.x = x;
-  r.y = y;
-  r.w = w;
-  r.h = h;
-  if (pixel_multiplier > 1) {
-    r.x *= pixel_multiplier;
-    r.y *= pixel_multiplier;
-    r.w *= pixel_multiplier;
-    r.h *= pixel_multiplier;
-  }
-  SDL_FillSurfaceRect(video_state.surface, &r, getcolor(c));
+  SDL_Rect r = {x, y, w, h};
+  SDL_FillSurfaceRect(video_state.surface, &r, (Uint32)c);
 }
 
-/* Convert the paletted frame buffer to RGB and show it. */
+/* Convert the paletted frame buffer to RGB and show it. The renderer
+ * scales it to the window (and to pixel_multiplier times its size). */
 static void present_frame() {
   SDL_Surface *src = video_state.surface;
   void *pixels;
   int pitch;
-  Uint32 lut[256];
-
-  for (int i = 0; i < 256; i++)
-    lut[i] = 0xff000000u | ((Uint32)curpal[i].r << 16) |
-             ((Uint32)curpal[i].g << 8) | (Uint32)curpal[i].b;
 
   if (SDL_LockTexture(video_state.texture, nullptr, &pixels, &pitch)) {
     for (int y = 0; y < src->h; y++) {
       const uint8_t *in = (const uint8_t *)src->pixels + y * src->pitch;
       Uint32 *out = (Uint32 *)((uint8_t *)pixels + y * pitch);
       for (int x = 0; x < src->w; x++)
-        out[x] = lut[in[x]];
+        out[x] = palette_lut[in[x]];
     }
     SDL_UnlockTexture(video_state.texture);
   }
@@ -124,67 +118,7 @@ static void present_frame() {
   SDL_RenderPresent(video_state.renderer);
 }
 
-void do_all(int /*do_retrace*/) {
-  if (draw_with_vircr_mode) {
-    if (pixel_multiplier > 1) {
-      int i, j, k;
-      int w = (current_mode == VGA_MODE) ? 320 : screen_width;
-      int h = (current_mode == VGA_MODE) ? 200 : screen_height;
-      uint8_t *in = vircr, *out = (uint8_t *)video_state.surface->pixels;
-      /* optimized versions using 32-bit and 16-bit writes when possible */
-      if (pixel_multiplier == 4 && sizeof(char *) >= 4) { /* word size >= 4 */
-        uint32_t cccc;
-        for (j = 0; j < h * pixel_multiplier; j += pixel_multiplier) {
-          for (i = 0; i < w * pixel_multiplier; i += pixel_multiplier) {
-            cccc = *in | (*in << 8) | (*in << 16) | (*in << 24);
-            in++;
-            for (k = 0; k < pixel_multiplier; k++) {
-              *(uint32_t *)(&out[(j + k) * (w * pixel_multiplier) + i]) = cccc;
-            }
-          }
-        }
-      } else if (pixel_multiplier == 3) {
-        uint16_t cc, c;
-        for (j = 0; j < h * pixel_multiplier; j += pixel_multiplier) {
-          for (i = 0; i < w * pixel_multiplier; i += pixel_multiplier) {
-            c = *in++;
-            cc = c | (c << 8);
-            for (k = 0; k < pixel_multiplier; k++) {
-              *(uint16_t *)(&out[(j + k) * (w * pixel_multiplier) + i]) = cc;
-              out[(j + k) * (w * pixel_multiplier) + i + 2] = c;
-            }
-          }
-        }
-      } else if (pixel_multiplier == 2) {
-        uint16_t cc;
-        for (j = 0; j < h * pixel_multiplier; j += pixel_multiplier) {
-          for (i = 0; i < w * pixel_multiplier; i += pixel_multiplier) {
-            cc = *in | (*in << 8);
-            in++;
-            for (k = 0; k < pixel_multiplier; k++) {
-              *(uint16_t *)(&out[(j + k) * (w * pixel_multiplier) + i]) = cc;
-            }
-          }
-        }
-      } else { /* unoptimized version */
-        int l;
-        uint8_t c;
-        for (j = 0; j < h * pixel_multiplier; j += pixel_multiplier) {
-          for (i = 0; i < w * pixel_multiplier; i += pixel_multiplier) {
-            c = *in++;
-            for (k = 0; k < pixel_multiplier; k++) {
-              for (l = 0; l < pixel_multiplier; l++) {
-                out[(j + k) * (w * pixel_multiplier) + (i + l)] = c;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  present_frame();
-}
+void do_all() { present_frame(); }
 
 static void sigint_handler(int /*dummy*/) { _exit(1); }
 
@@ -230,13 +164,13 @@ static int init_mode(int new_mode, const char *paletname) {
 
   init_video();
 
-  if (draw_with_vircr_mode && pixel_multiplier > 1)
-      util::wutil::wfree(vircr);
-
   pixel_multiplier =
       (new_mode == SVGA_MODE) ? pixel_multiplier_svga : pixel_multiplier_vga;
 
-  int sw = w * pixel_multiplier, sh = h * pixel_multiplier;
+  /* The frame buffer stays at the game's resolution. pixel_multiplier only
+   * sets the logical size the renderer scales to (and the window size). */
+  int sw = w, sh = h;
+  int lw = w * pixel_multiplier, lh = h * pixel_multiplier;
 
   if (video_state.surface)
     SDL_DestroySurface(video_state.surface);
@@ -263,26 +197,25 @@ static int init_mode(int new_mode, const char *paletname) {
     exit(1);
   }
   SDL_SetTextureScaleMode(video_state.texture, SDL_SCALEMODE_NEAREST);
-  SDL_SetRenderLogicalPresentation(video_state.renderer, sw, sh,
+  SDL_SetRenderLogicalPresentation(video_state.renderer, lw, lh,
                                    SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
   if (!wantfullscreen) {
-    /* Show low resolution modes at a usable size, like 3x for 320x200. */
-    int scale = 1;
-    while (sw * (scale + 1) <= 1280 && sh * (scale + 1) <= 800)
-      scale++;
-    SDL_SetWindowSize(video_state.window, sw * scale, sh * scale);
-  }
-
-  if (draw_with_vircr_mode) {
     if (pixel_multiplier > 1) {
-      vircr = (uint8_t *)util::wutil::walloc(w * h);
+      /* -2, -3, -4, -2svga: exactly that many times the game size */
+      SDL_SetWindowSize(video_state.window, lw, lh);
     } else {
-      vircr = (uint8_t *)video_state.surface->pixels;
+      /* otherwise the largest whole multiple that fits 1280x800 */
+      int scale = 1;
+      while (sw * (scale + 1) <= 1280 && sh * (scale + 1) <= 800)
+        scale++;
+      SDL_SetWindowSize(video_state.window, sw * scale, sh * scale);
     }
   }
+
+  if (draw_with_vircr_mode)
+    vircr = (uint8_t *)video_state.surface->pixels;
   /* else vircr is preallocated in init_video */
-  video_state.haverealpalette = 1;
 
   dksopen(paletname);
 

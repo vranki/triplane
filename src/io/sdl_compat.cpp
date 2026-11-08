@@ -45,6 +45,12 @@ void pump_events() {
   keys_refresh();
 }
 
+/*
+ * Nonzero if a key release is waiting. Also paces the caller to the game's
+ * frame rate (the DOS game polled the keyboard in its menu loops) and
+ * handles at most one other event per call, which is plenty at 24 calls
+ * per second.
+ */
 int kbhit() {
   SDL_Event e;
 

@@ -1148,7 +1148,7 @@ void options_menu() {
     }
 
     cursor->blit(x - 10, y - 10);
-    do_all(1);
+    do_all();
 
     if ((n1 || n2) && menuselect) {
       if (menuselect == 2) {
@@ -1993,12 +1993,10 @@ int kangas_menu() {
   init_vga("PALET3");
 
   if (is_there_sound && config.sfx_on) {
-    if (soundcard_type != SOUNDCARD_GUS) {
-      sample_hurr->left_volume = SAMPLE_VOLUME - 5;
-      sample_hurr->right_volume = SAMPLE_VOLUME - 5;
-      sdl_stop_music();
-      sdl_play_sample(sample_hurr, 1);
-    }
+    sample_hurr->left_volume = SAMPLE_VOLUME - 5;
+    sample_hurr->right_volume = SAMPLE_VOLUME - 5;
+    sdl_stop_music();
+    sdl_play_sample(sample_hurr, 1);
   }
 
   hiiri_to(80, 195);
@@ -2051,7 +2049,7 @@ int kangas_menu() {
     }
 
     cursor->blit(x - 10, y - 10);
-    do_all(1);
+    do_all();
 
     if ((n1 || n2) && menuselect) {
       switch (menuselect) {
@@ -2098,9 +2096,7 @@ int kangas_menu() {
   }
 
   if (is_there_sound && config.sfx_on) {
-    if (soundcard_type != SOUNDCARD_GUS) {
-      sdl_stop_all_samples(); /* stop hurr sound */
-    }
+    sdl_stop_all_samples(); /* stop hurr sound */
   }
 
   if ((mission_re_fly == -1) && national_music_enabled()) {
@@ -2154,7 +2150,7 @@ void credits_menu() {
     grid3->printf(205, 110, "Code & Project management:\nTeemu J. Takanen");
     grid3->printf(kohta2, 140, "Special Thanks:");
     grid3->printf(45, 160, "Mikko Kinnunen\nNiko Salminen\nPekka Pulli");
-    grid3->printf(205, 160, "Antti Lehtoranta\nJuha Rytk�nen\nJoonas Joensuu");
+    grid3->printf(205, 160, "Antti Lehtoranta\nJuha Rytkonen\nJoonas Joensuu");
 
     do_all();
 

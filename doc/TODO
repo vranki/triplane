@@ -2,5 +2,4 @@ Add version number to configuration files?
 PDF manual
 Network game
 src/gfx/extra.cpp: embedded graphics, should read from data file instead
-investigate if http://scale2x.sourceforge.net/ could be used for scaling
 

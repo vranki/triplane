@@ -18,9 +18,8 @@
  * tjt@users.sourceforge.net
  */
 
-#include "sdl_compat.h"
+#include "timing.h"
 #include <SDL3/SDL.h>
-#include <cassert>
 
 namespace io::timing {
 
@@ -35,11 +34,15 @@ namespace io::timing {
         }
 
         target_tick = viimeinen_aika + 1000 / fps;
-        while ((uint32_t)SDL_GetTicks() <= target_tick) {
-            uint32_t diff = target_tick - (uint32_t)SDL_GetTicks();
-            if (diff > 10 && diff < 1000) {
-                SDL_Delay(diff);
-            }
+        for (;;) {
+            uint32_t now = (uint32_t)SDL_GetTicks();
+            if (now > target_tick)
+                break;
+            uint32_t diff = target_tick - now;
+            if (diff >= 1000)
+                break; /* the clock jumped; recovered below */
+            /* sleeps, with a short spin at the end for accuracy */
+            SDL_DelayPrecise((Uint64)(diff + 1) * SDL_NS_PER_MS);
         }
 
         viimeinen_aika += 1000 / fps;

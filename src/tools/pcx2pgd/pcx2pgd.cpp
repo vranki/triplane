@@ -21,7 +21,7 @@
 /*******************************************************************************
 
    Purpose:
-        .PCX to .PGD graphics converter for Wsystem 2.0 for DJGPP v.2.0�5
+        .PCX to .PGD graphics converter for Wsystem 2.0 for DJGPP v.2.0
 
 *******************************************************************************/
 
