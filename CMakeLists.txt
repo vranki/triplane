@@ -82,6 +82,7 @@ target_link_libraries(pcx2pgd PRIVATE triplane_options)
 
 # --- Data file --------------------------------------------------------------
 add_executable(dksbuild src/tools/dksbuild/dksbuild.cc)
+target_link_libraries(dksbuild PRIVATE triplane_options)
 
 file(STRINGS data/fokker.lst _dks_lines)
 set(DKS_INPUTS data/fokker.lst)

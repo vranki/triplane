@@ -87,7 +87,7 @@ namespace gfx::font {
         va_list arg;
 
         va_start(arg, fmt);
-        vsprintf(teksti, fmt, arg);
+        vsnprintf(teksti, sizeof(teksti), fmt, arg);
         va_end(arg);
 
         if (!scaled) {
@@ -130,7 +130,7 @@ namespace gfx::font {
     int Font::scanf(int x, int y, char *str, int max_len) {
         int kohta = 0;
         Bitmap *tausta_roska;
-        char ch;
+        int ch;
 
         tausta_roska = new Bitmap(x, y, (width + 1) * (max_len + 1), height);
 
@@ -143,9 +143,8 @@ namespace gfx::font {
             printf(printf(x, y, "%s", str), y, "_");
             do_all();
             ch = getch();
-            if (!ch) {
-                getch();
-                ch = 0;
+            if (ch >= 256) {
+                /* cursor, function and keypad keys have no glyph */
             } else if (ch != 13) {
                 if (ch == 8) {
                     if (kohta) {

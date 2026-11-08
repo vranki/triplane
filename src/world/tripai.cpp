@@ -54,6 +54,16 @@ int bomb_target;
 
 namespace world::tripai {
 
+/* Terrain height at x. Soldiers look a few pixels ahead of their position,
+ * which can point past the right edge of the 2400 pixel wide level. */
+static int terrain_level_at(int x) {
+  if (x < 0)
+    x = 0;
+  else if (x >= 2400)
+    x = 2399;
+  return terrain_level[x];
+}
+
 void do_doors() {
   int l;
 
@@ -589,9 +599,15 @@ void do_it_shots() {
                               (itgun_shot_y[l] >> 8) * 2400])) > 119)
         itgun_shot_x[l] = 0;
 
+      if (!itgun_shot_x[l])
+        continue; /* left the level or hit the ground */
+
       if (!(itgun_shot_age[l]--)) {
           start_itgun_explosion(l);
       }
+
+      if (!itgun_shot_x[l])
+        continue; /* exploded */
 
       for (l2 = 0; l2 < 16; l2++) {
         if (plane_present[l2]){
@@ -810,7 +826,7 @@ void infan_take_hits(int l) {
     if ((shots_flying_x[l2] >> 8) > infan_x[l] &&
         (shots_flying_x[l2] >> 8) < (infan_x[l] + 14) &&
         (shots_flying_y[l2] >> 8) > infan_y[l] &&
-        (shots_flying_y[l2] >> 8) < (infan_x[l] + 13) &&
+        (shots_flying_y[l2] >> 8) < (infan_y[l] + 13) &&
         shots_flying_infan[l2] != infan_country[l]) {
       // if(wrandom(3))
       //   continue;
@@ -879,8 +895,8 @@ void do_infan() {
           infan_x[l] += infan_x_speed[l];
       }
 
-      angle = terrain_level[infan_x[l] + 11] - 13;
-      distance = terrain_level[infan_x[l] + 3] - 13;
+      angle = terrain_level_at(infan_x[l] + 11) - 13;
+      distance = terrain_level_at(infan_x[l] + 3) - 13;
 
       angle = ((angle < distance) ? angle : distance) - infan_y[l];
 
@@ -916,9 +932,9 @@ void do_infan() {
     }
 
     if (l2 == 8 &&
-        ((terrain_level[infan_x[l] + (infan_direction[l] ? 14 : 0)] - 2) >
-         terrain_level[infan_x[l] + (infan_direction[l] ? 14 : 0) +
-                       (infan_direction[l] ? 1 : -1)])) {
+        ((terrain_level_at(infan_x[l] + (infan_direction[l] ? 14 : 0)) - 2) >
+         terrain_level_at(infan_x[l] + (infan_direction[l] ? 14 : 0) +
+                          (infan_direction[l] ? 1 : -1)))) {
       util::wutil::wtoggle(&infan_direction[l]);
 
     } else {
@@ -927,8 +943,8 @@ void do_infan() {
         infan_x[l] = 0;
     }
 
-    angle = terrain_level[infan_x[l] + 11] - 13;
-    distance = terrain_level[infan_x[l] + 3] - 13;
+    angle = terrain_level_at(infan_x[l] + 11) - 13;
+    distance = terrain_level_at(infan_x[l] + 3) - 13;
 
     diff = ((angle < distance) ? angle : distance) - infan_y[l];
 

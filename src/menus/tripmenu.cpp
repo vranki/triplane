@@ -426,7 +426,7 @@ void load_descriptions(const int number) {
   int c;
   int locator = 0;
   int index = 0;
-  char ch;
+  int ch;
   int desclenght;
   int wordcount;
 
@@ -499,8 +499,8 @@ void load_descriptions(const int number) {
   }
 
   for (index = line_going; index < 16; index++) {
-    mission_lines[line_going][0] = 0;
-    mission_pixels[line_going] = 0;
+    mission_lines[index][0] = 0;
+    mission_pixels[index] = 0;
   }
 
   for (index = 0; index < line_going; index++) {
@@ -650,9 +650,9 @@ void roster_menu() {
   static int number = -1;
   int keysetmode = 0;
   int help_on = 0;
-  char ch;
+  int ch;
   std::unique_ptr<Bitmap> help;
-  Bitmap *rosteri;
+  std::unique_ptr<Bitmap> rosteri;
   std::unique_ptr<Bitmap> buttl;
   std::unique_ptr<Bitmap> buttr;
   std::unique_ptr<Bitmap> setk1;
@@ -669,7 +669,7 @@ void roster_menu() {
       number = 0;
   }
 
-  rosteri = new Bitmap("ROSTER");
+  rosteri = std::make_unique<Bitmap>("ROSTER");
   buttl = std::make_unique<Bitmap>("BUTTL"); // 187,174
   buttr = std::make_unique<Bitmap>("BUTTR"); // 205,174
   setk1 = std::make_unique<Bitmap>("SETK1");
@@ -693,10 +693,9 @@ void roster_menu() {
 
   while (!exit_flag) {
     if (kbhit()) {
-      if (!(ch = getch())) {
-        ch = getch();
-        if (ch == 59)
-          util::wutil::wtoggle(&help_on);
+      ch = getch();
+      if (ch == TK_F1) {
+        util::wutil::wtoggle(&help_on);
 
       } else {
         if (ch == 27)
@@ -708,7 +707,7 @@ void roster_menu() {
 
     if (number != -1) {
       if (!keysetmode) {
-        print_clear_roster(rosteri);
+        print_clear_roster(rosteri.get());
         print_filled_roster(number);
         setk1->blit(286, 190);
 
@@ -869,7 +868,7 @@ void roster_menu() {
           break;
         }
 
-        print_clear_roster(rosteri);
+        print_clear_roster(rosteri.get());
         frost->printf(15, 24, "Type name of\nthe pilot\nand press\nenter.");
 
         roster[number].solo_mis_flown = 0;
@@ -938,7 +937,7 @@ void roster_menu() {
         do_all();
         wait_mouse_relase();
         number++;
-        if ((number == MAX_PLAYERS_IN_ROSTER) |
+        if ((number == MAX_PLAYERS_IN_ROSTER) ||
             (roster[number].pilotname[0] == 0))
           number--;
         break;
@@ -1009,7 +1008,7 @@ void roster_menu() {
       case 8:
         if (joystick_exists & JOY1) {
           config.joystick[4] = 1;
-          joystick_roster_setup(rosteri);
+          joystick_roster_setup(rosteri.get());
           save_joysticks_data(CALIBRATION_FILENAME);
           config.joystick_calibrated[4] = 1;
         } else {
@@ -1967,7 +1966,7 @@ joystick_setup_exit:
 }
 
 void controls_menu() {
-  char ch;
+  int ch;
   int help_on = 0;
   int exit_flag = 0;
   int x, y, n1, n2;
@@ -1984,10 +1983,9 @@ void controls_menu() {
 
   while (!exit_flag) {
     if (kbhit()) {
-      if (!(ch = getch())) {
-        ch = getch();
-        if (ch == 59)
-          util::wutil::wtoggle(&help_on);
+      ch = getch();
+      if (ch == TK_F1) {
+        util::wutil::wtoggle(&help_on);
 
       } else {
         if (ch == 27)
@@ -2243,7 +2241,7 @@ void assign_menu() {
   int lym[4] = {0, 11, 24, 36};
   int response;
   int help_on = 0;
-  char ch;
+  int ch;
 
   if (!roster[0].pilotname[0]) {
     response = small_warning("You have no pilots in the roster and\n"
@@ -2260,10 +2258,9 @@ void assign_menu() {
 
   while (!exit_flag) {
     if (kbhit()) {
-      if (!(ch = getch())) {
-        ch = getch();
-        if (ch == 59)
-          util::wutil::wtoggle(&help_on);
+      ch = getch();
+      if (ch == TK_F1) {
+        util::wutil::wtoggle(&help_on);
 
       } else {
         if (ch == 27)
@@ -2540,7 +2537,7 @@ void aces_menu() {
   int menuselect;
   int current_page = 0;
   int help_on = 0;
-  char ch;
+  int ch;
   std::unique_ptr<Bitmap> acesme(new Bitmap("ACESA"));
   std::unique_ptr<Bitmap> firstpage(new Bitmap("ACESB"));
   std::unique_ptr<Bitmap> buttl(new Bitmap("BUTTL"));
@@ -2559,10 +2556,9 @@ void aces_menu() {
   while (!exit_flag) {
 
     if (kbhit()) {
-      if (!(ch = getch())) {
-        ch = getch();
-        if (ch == 59)
-          util::wutil::wtoggle(&help_on);
+      ch = getch();
+      if (ch == TK_F1) {
+        util::wutil::wtoggle(&help_on);
 
       } else {
         if (ch == 27)

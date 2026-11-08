@@ -37,34 +37,10 @@
 #include <cstring>
 
 #include "../util/wutil.h"
+#include <SDL3/SDL_endian.h>
 
-constexpr int32_t MAX_ENTRIES = 8192;
-
-#pragma pack(1)
-struct main_directory_entry {
-  char nimi[7];
-  unsigned long int offset __attribute__((packed));
-  unsigned long int koko __attribute__((packed));
-};
-
-#pragma pack()
-
-main_directory_entry *dirri;
-
-class Dirrikka {
-public:
-  Dirrikka();
-  ~Dirrikka();
-};
-
-Dirrikka::Dirrikka() {
-  dirri = (main_directory_entry *)util::wutil::walloc(MAX_ENTRIES *
-                                         sizeof(main_directory_entry));
-}
-
-Dirrikka::~Dirrikka() { free(dirri); }
-
-Dirrikka dirrikka;
+static main_directory_entry directory[DKS_MAX_ENTRIES];
+main_directory_entry *dirri = directory;
 FILE *dks_faili;
 char dks_tiedosto[FILENAME_MAX];
 int nykyinen_faili;
@@ -86,9 +62,7 @@ static void get_datafile_path(const char *name, char *path) {
 
   data = getenv("TRIPLANE_DATA");
   if (data) {
-    strncpy(path, data, FILENAME_MAX - 1);
-    strncat(path, "/", FILENAME_MAX - 1);
-    strncat(path, name, FILENAME_MAX - 1);
+    snprintf(path, FILENAME_MAX, "%s/%s", data, name);
     return;
   }
 
@@ -99,14 +73,12 @@ static void get_datafile_path(const char *name, char *path) {
 
     ret = stat(data, &st);
     if (!ret) {
-      strncpy(path, data, FILENAME_MAX - 1);
-      strncat(path, "/", FILENAME_MAX - 1);
-      strncat(path, name, FILENAME_MAX - 1);
+      snprintf(path, FILENAME_MAX, "%s/%s", data, name);
       return;
     }
   }
 
-  strncpy(path, name, FILENAME_MAX - 1);
+  snprintf(path, FILENAME_MAX, "%s", name);
 }
 
 int dksinit(const char *tiedosto) {
@@ -117,8 +89,16 @@ int dksinit(const char *tiedosto) {
   if ((dks_faili = fopen(dks_tiedosto, "rb")) == nullptr)
     return (0);
 
-  fread(tekstia, sizeof(tekstia), 1, dks_faili);
-  fread(dirri, sizeof(main_directory_entry) * MAX_ENTRIES, 1, dks_faili);
+  if (fread(tekstia, sizeof(tekstia), 1, dks_faili) != 1 ||
+      fread(dirri, sizeof(main_directory_entry) * DKS_MAX_ENTRIES, 1,
+            dks_faili) != 1) {
+    fclose(dks_faili);
+    return (0);
+  }
+  for (int i = 0; i < DKS_MAX_ENTRIES; i++) {
+    dirri[i].offset = SDL_Swap32LE(dirri[i].offset);
+    dirri[i].koko = SDL_Swap32LE(dirri[i].koko);
+  }
 
   fclose(dks_faili);
 
@@ -129,7 +109,7 @@ int dksopen(const char *nimi) {
   int lask;
   int kohta = -1;
 
-  for (lask = 0; lask < MAX_ENTRIES; lask++) {
+  for (lask = 0; lask < DKS_MAX_ENTRIES; lask++) {
     if (!strcmp(dirri[lask].nimi, nimi)) {
       kohta = lask;
       break;
@@ -154,7 +134,7 @@ int extdksopen(const char *nimi) {
   int lask;
   int kohta = -1;
 
-  for (lask = 0; lask < MAX_ENTRIES; lask++) {
+  for (lask = 0; lask < DKS_MAX_ENTRIES; lask++) {
     if (!strcmp(dirri[lask].nimi, nimi)) {
       kohta = lask;
       break;

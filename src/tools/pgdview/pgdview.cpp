@@ -26,28 +26,16 @@
 *******************************************************************************/
 
 #include "gfx/gfx.h"
+#include "io/dksfile.h"
 #include "io/trip_io.h"
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
-constexpr int32_t MAX_ENTRIES = 8192;
-
-/* XXXX */
-#pragma pack(1)
-struct main_directory_entry {
-  char nimi[7];
-  unsigned long int offset __attribute__((packed));
-  unsigned long int koko __attribute__((packed));
-};
-
-#pragma pack()
-
-extern main_directory_entry *dirri;
 
 int main(int argv, char *argc[]) {
-  char nimi[30];
+  char nimi[FILENAME_MAX];
   int lask, lask2 = 0;
 
   wantfullscreen = 0;
@@ -58,8 +46,7 @@ int main(int argv, char *argc[]) {
     printf("Usage: PGDVIEW dks-datafilename [picturename] (no extension)\n");
     exit(1);
   }
-  strcpy(nimi, argc[1]);
-  strcat(nimi, ".dks");
+  snprintf(nimi, sizeof(nimi), "%s.dks", argc[1]);
 
   if (!dksinit(nimi)) {
     printf("Cannot open %s\n", nimi);
@@ -75,7 +62,7 @@ int main(int argv, char *argc[]) {
     getch();
   } else {
     printf("\n");
-    for (lask = 0; lask < MAX_ENTRIES; lask++) {
+    for (lask = 0; lask < DKS_MAX_ENTRIES; lask++) {
       if (!dirri[lask].nimi[0])
         break;
       printf("%-6s ", dirri[lask].nimi);

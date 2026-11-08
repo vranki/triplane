@@ -150,8 +150,8 @@ std::unique_ptr<gfx::font::Font> grid2;
 
 //\ Parameter control
 
-char parametrit[40][40];
-int parametri_kpl;
+char **parametrit; /* argv */
+int parametri_kpl; /* argc */
 
 //\ Shots control
 
@@ -180,7 +180,7 @@ int hangarmenu_max_ammo[16];
 int hangarmenu_max_bombs[16];
 
 /* Timing */
-short int frame_laskuri = 0;
+int frame_laskuri = 0;
 /* Timing*/
 
 //\ Graphics locating
@@ -841,14 +841,27 @@ void init_player(int l, int pommit) {
   }
 }
 
+/* Index of the command line option, or 0 if it is not given. */
 int findparameter(const char *jono) {
   int laskuri;
 
   for (laskuri = 1; laskuri < parametri_kpl; laskuri++)
-    if (!strncmp(parametrit[laskuri], jono, strlen(jono)))
+    if (!strcmp(parametrit[laskuri], jono))
       return (laskuri);
 
   return (0);
+}
+
+/* Value glued to an option, e.g. "-levelfoo" gives "foo", or nullptr. */
+const char *findparameter_value(const char *jono) {
+  int laskuri;
+  size_t len = strlen(jono);
+
+  for (laskuri = 1; laskuri < parametri_kpl; laskuri++)
+    if (!strncmp(parametrit[laskuri], jono, len) && parametrit[laskuri][len])
+      return parametrit[laskuri] + len;
+
+  return nullptr;
 }
 
 void controls() {
@@ -1233,7 +1246,7 @@ void detect_collision() {
                     player_points[l2]--;
                     if (config.sound_on && config.sfx_on)
                       play_2d_sample(sample_crash[util::wutil::wrandom(2)],
-                                     player_x_8[solo_country], player_x_8[l]);
+                                     player_x_8[solo_country], player_x_8[l2]);
                   }
                 }
               }
@@ -1619,10 +1632,18 @@ void main_engine() {
 
   if (findparameter("-playback")) {
     record_file = settings_open("record.dta", "rb");
+    if (record_file == nullptr) {
+      fprintf(stderr, "No recording (record.dta) in the settings directory\n");
+      exit(1);
+    }
     fread(record_data, RECORD_FRAMES, 16, record_file);
     fclose(record_file);
 
     record_file = settings_open("record.000", "rb");
+    if (record_file == nullptr) {
+      fprintf(stderr, "No recording (record.000) in the settings directory\n");
+      exit(1);
+    }
     fread(record_random, RECORD_FRAMES, 4, record_file);
     record_random_swap_endianess();
     fclose(record_file);
@@ -2360,7 +2381,7 @@ void load_up() {
   for (l = 0; l < 2501; l++)
     point1[l] = gfx::extra::converted_explosion[l];
 
-  plane1 = std::make_unique<Bitmap>(61, 41, point1, "explosion");
+  plane1 = std::make_unique<Bitmap>(61, 41, point1, "explosion", true);
 
   for (l = 0; l < 4; l++)
     for (l2 = 0; l2 < EXPLOX_FRAMES; l2++)
@@ -2404,7 +2425,7 @@ void load_up() {
     point1 = (unsigned char *)util::wutil::walloc(13 * 11);
 
     point2 = mekan_running[l][0]->info(&xxx, &yyy);
-    mekan_running[l][1] = std::make_unique<Bitmap>(13, 11, point1, "mekan1");
+    mekan_running[l][1] = std::make_unique<Bitmap>(13, 11, point1, "mekan1", true);
 
     for (xxx = 0; xxx < 13; xxx++)
       for (yyy = 0; yyy < 11; yyy++)
@@ -2417,7 +2438,7 @@ void load_up() {
 
     point1 = (unsigned char *)util::wutil::walloc(13 * 11);
     point2 = mekan_pushing[0][l][0]->info(&xxx, &yyy);
-    mekan_pushing[0][l][1] = std::make_unique<Bitmap>(13, 11, point1, "mekan2");
+    mekan_pushing[0][l][1] = std::make_unique<Bitmap>(13, 11, point1, "mekan2", true);
 
     for (xxx = 0; xxx < 13; xxx++)
       for (yyy = 0; yyy < 11; yyy++)
@@ -2431,7 +2452,7 @@ void load_up() {
     point1 = (unsigned char *)util::wutil::walloc(13 * 11);
 
     point2 = mekan_pushing[1][l][1]->info(&xxx, &yyy);
-    mekan_pushing[1][l][0] = std::make_unique<Bitmap>(13, 11, point1, "mekan3");
+    mekan_pushing[1][l][0] = std::make_unique<Bitmap>(13, 11, point1, "mekan3", true);
 
     for (xxx = 0; xxx < 13; xxx++)
       for (yyy = 0; yyy < 11; yyy++)
@@ -2480,7 +2501,7 @@ void load_up() {
       point1 = (unsigned char *)util::wutil::walloc(15 * 14);
 
       point2 = infantry_dropping[l][0]->info(&xxx, &yyy);
-      infantry_dropping[l][1] = std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_dropping");
+      infantry_dropping[l][1] = std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_dropping", true);
 
       for (xxx = 0; xxx < 15; xxx++)
         for (yyy = 0; yyy < 14; yyy++)
@@ -2490,7 +2511,7 @@ void load_up() {
 
       point2 = infantry_after_drop[l][0]->info(&xxx, &yyy);
       infantry_after_drop[l][1] =
-              std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_after_drop");
+              std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_after_drop", true);
 
       for (xxx = 0; xxx < 15; xxx++)
         for (yyy = 0; yyy < 14; yyy++)
@@ -2501,7 +2522,7 @@ void load_up() {
 
         point2 = infantry_walking[l][0][l2]->info(&xxx, &yyy);
         infantry_walking[l][1][l2] =
-                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_walking");
+                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_walking", true);
 
         for (xxx = 0; xxx < 15; xxx++)
           for (yyy = 0; yyy < 14; yyy++)
@@ -2512,7 +2533,7 @@ void load_up() {
         point1 = (unsigned char *)util::wutil::walloc(15 * 14);
 
         point2 = infantry_dying[l][0][l2]->info(&xxx, &yyy);
-        infantry_dying[l][1][l2] = std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_dying");
+        infantry_dying[l][1][l2] = std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_dying", true);
 
         for (xxx = 0; xxx < 15; xxx++)
           for (yyy = 0; yyy < 14; yyy++)
@@ -2524,7 +2545,7 @@ void load_up() {
 
         point2 = infantry_aiming[l][0][l2]->info(&xxx, &yyy);
         infantry_aiming[l][1][l2] =
-                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_aiming");
+                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_aiming", true);
 
         for (xxx = 0; xxx < 15; xxx++)
           for (yyy = 0; yyy < 14; yyy++)
@@ -2533,7 +2554,7 @@ void load_up() {
         point1 = (unsigned char *)util::wutil::walloc(15 * 14);
         point2 = infantry_shooting[l][0][l2]->info(&xxx, &yyy);
         infantry_shooting[l][1][l2] =
-                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_shooting");
+                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_shooting", true);
 
         for (xxx = 0; xxx < 15; xxx++)
           for (yyy = 0; yyy < 14; yyy++)
@@ -2544,7 +2565,7 @@ void load_up() {
         point1 = (unsigned char *)util::wutil::walloc(15 * 14);
         point2 = infantry_wavedeath[l][0][l2]->info(&xxx, &yyy);
         infantry_wavedeath[l][1][l2] =
-                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_wavedeath");
+                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_wavedeath", true);
 
         for (xxx = 0; xxx < 15; xxx++)
           for (yyy = 0; yyy < 14; yyy++)
@@ -2554,7 +2575,7 @@ void load_up() {
 
         point2 = infantry_bdying[l][0][l2]->info(&xxx, &yyy);
         infantry_bdying[l][1][l2] =
-                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_bdying");
+                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_bdying", true);
 
         for (xxx = 0; xxx < 15; xxx++)
           for (yyy = 0; yyy < 14; yyy++)
@@ -2604,11 +2625,11 @@ void load_up() {
           point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
           point2 = (unsigned char *)util::wutil::walloc(400);
           if (!l2) {
-            planes[l1][30][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_1");
+            planes[l1][30][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_1", true);
             plane_p[l1][30][l3][1] = point2;
           } else {
             planes[l1][30 - l2][l3][1] =
-                    std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_2");
+                    std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_2", true);
             plane_p[l1][30 - l2][l3][1] = point2;
           }
           for (xxx = 0; xxx < 20; xxx++)
@@ -2623,7 +2644,7 @@ void load_up() {
           point2 = (unsigned char *)util::wutil::walloc(400);
 
           planes[l1][90 - l2][l3][1] =
-                  std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_3");
+                  std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_3", true);
           plane_p[l1][90 - l2][l3][1] = point2;
 
           for (xxx = 0; xxx < 20; xxx++)
@@ -2637,11 +2658,11 @@ void load_up() {
           point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
           point2 = (unsigned char *)util::wutil::walloc(400);
           if (!l2) {
-            planes[l1][0][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_4");
+            planes[l1][0][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_4", true);
             plane_p[l1][0][l3][1] = point2;
           } else {
             planes[l1][60 - l2][l3][1] =
-                    std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_5");
+                    std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_5", true);
             plane_p[l1][60 - l2][l3][1] = point2;
           }
           for (xxx = 0; xxx < 20; xxx++)
@@ -2655,11 +2676,11 @@ void load_up() {
           point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
           point2 = (unsigned char *)util::wutil::walloc(400);
           if (!l2) {
-            planes[l1][0][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_6");
+            planes[l1][0][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_6", true);
             plane_p[l1][0][l3][1] = point2;
           } else {
             planes[l1][60 - l2][l3][1] =
-                    std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_7");
+                    std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_7", true);
             plane_p[l1][60 - l2][l3][1] = point2;
           }
           for (xxx = 0; xxx < 20; xxx++)
@@ -2674,7 +2695,7 @@ void load_up() {
           point2 = (unsigned char *)util::wutil::walloc(400);
 
           planes[l1][60 - l2][l3][0] =
-                  std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_8");
+                  std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_8", true);
           plane_p[l1][60 - l2][l3][0] = point2;
 
           for (xxx = 0; xxx < 20; xxx++)
@@ -2770,14 +2791,15 @@ void load_level() {
 
   loading_text("Loading levelinfo.");
 
-  if (!findparameter("-level")) {
+  const char *level_arg = findparameter_value("-level");
+  if (level_arg == nullptr) {
     if (!playing_solo) {
-      sprintf(levelname, "level%d", config.current_multilevel + 1);
+      snprintf(levelname, sizeof(levelname), "level%d", config.current_multilevel + 1);
     } else {
-      sprintf(levelname, "%d-%d", solo_country, solo_mission);
+      snprintf(levelname, sizeof(levelname), "%d-%d", solo_country, solo_mission);
     }
   } else {
-    sprintf(levelname, "%s", parametrit[findparameter("-level")] + 6);
+    snprintf(levelname, sizeof(levelname), "%s", level_arg);
   }
 
   if (!dksopen(levelname)) {
@@ -3347,9 +3369,7 @@ int main(int argc, char *argv[]) {
   FILE *faili;
   std::unique_ptr<Bitmap> lakuva1;
 
-  for (laskuri = 0; laskuri < argc; laskuri++)
-    strcpy(parametrit[laskuri], argv[laskuri]);
-
+  parametrit = argv;
   parametri_kpl = argc;
 
   if (findparameter("-?") || findparameter("-h") || findparameter("--help") ||

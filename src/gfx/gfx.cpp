@@ -80,8 +80,9 @@ void fill_vircr(int x1, int y1, int x2, int y2, unsigned char vari) {
   int lasky;
 
   if (update_vircr_mode) {
+    int stride = (current_mode == VGA_MODE) ? 320 : screen_width;
     for (lasky = y1; lasky <= y2; lasky++)
-      memset(&vircr[x1 + lasky * 320], vari, x2 - x1 + 1);
+      memset(&vircr[x1 + lasky * stride], vari, x2 - x1 + 1);
   }
 
   if (!draw_with_vircr_mode)

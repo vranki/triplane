@@ -47,7 +47,10 @@ static void all_bitmaps_add(Bitmap *b) {
   if (draw_with_vircr_mode)
     return;
 
-  assert(all_bitmaps_n < MAX_BITMAPS);
+  if (all_bitmaps_n >= MAX_BITMAPS) {
+    fprintf(stderr, "Too many bitmaps (limit %d)\n", MAX_BITMAPS);
+    exit(1);
+  }
   all_bitmaps[all_bitmaps_n++] = b;
 }
 
@@ -180,16 +183,14 @@ void Bitmap::refresh_sdlsurface() {
 
 Bitmap::Bitmap(const char *image_name, int transparent) {
   unsigned int xx, yy, lask, lask2;
-  int laskx;
   uint32_t koko;
   char nimmi[7];
-  char longname[12];
+  char longname[FILENAME_MAX];
   unsigned char *pointteri2;
 
   if (dksopen(image_name) == 0) {
 
-    strcpy(longname, image_name);
-    strcat(longname, ".pgd");
+    snprintf(longname, sizeof(longname), "%s.pgd", image_name);
     dks_faili = fopen(longname, "rb");
 
     if (dks_faili == nullptr) {
@@ -220,23 +221,22 @@ Bitmap::Bitmap(const char *image_name, int transparent) {
 
   lask = 0;
 
+  /* RLE: a byte above the mark means "repeat the next byte that many times" */
   for (lask2 = 0; lask2 < (koko - 1); lask2++) {
+    unsigned int run = 1;
+    unsigned char value = pointteri2[lask2];
 
-    if (pointteri2[lask2] > RLE_REPETITION_MARK) {
-      for (laskx = 1; laskx <= (pointteri2[lask2] - RLE_REPETITION_MARK);
-           laskx++)
-        image_data[lask + laskx - 1] = pointteri2[lask2 + 1];
+    if (value > RLE_REPETITION_MARK) {
+      run = value - RLE_REPETITION_MARK;
+      value = pointteri2[lask2 + 1];
       lask2++;
-      lask += (laskx - 1);
-    } else {
-      image_data[lask] = pointteri2[lask2];
-      lask++;
     }
-  }
-
-  if ((lask - 1) > (xx * yy)) {
-    printf("Unpacking failure %d %d %s\n", lask, lask2, nimmi);
-    exit(1);
+    if (lask + run > xx * yy) {
+      fprintf(stderr, "Unpacking failure %d %d %s\n", lask, lask2, nimmi);
+      exit(1);
+    }
+    memset(&image_data[lask], value, run);
+    lask += run;
   }
 
   free(pointteri2);
@@ -249,11 +249,11 @@ Bitmap::Bitmap(const char *image_name, int transparent) {
 }
 
 Bitmap::Bitmap(const int width_bitmap, const int height_bitmap, unsigned char *image_data_bitmap,
-               const char *name_bitmap) {
+               const char *name_bitmap, bool owns_data) {
   this->image_data = image_data_bitmap;
   this->width = width_bitmap;
   this->height = height_bitmap;
-  this->external_image_data = 1;
+  this->external_image_data = owns_data ? 0 : 1;
   this->name = name_bitmap;
   this->hastransparency = 1;
   this->sdlsurface = nullptr;
@@ -468,7 +468,6 @@ std::unique_ptr<Bitmap> rotate_bitmap(Bitmap *picture, int degrees) {
 
     for (count = 0; count < (nxl * nyl); count++)
         temp_data[count] = 255;
-    picture2 = std::make_unique<Bitmap>(xl, yl, picture_data, "rotated");
 
     for (count = 0; count < xl; count++)
         for (count2 = 0; count2 < yl; count2++)
@@ -489,7 +488,7 @@ std::unique_ptr<Bitmap> rotate_bitmap(Bitmap *picture, int degrees) {
         }
     free(temp_data);
 
-    picture2->refresh_sdlsurface();
+    picture2 = std::make_unique<Bitmap>(xl, yl, picture_data, "rotated", true);
     return picture2;
 }
 

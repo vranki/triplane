@@ -155,6 +155,15 @@ for test in "$@"; do
   current build $new_desc after $new_frames frames"
     fi
 
+    if [ "$base_frames" -eq 0 ]; then
+        problems="$problems
+  baseline produced no frames (exit status $base_status)"
+    fi
+    if [ "$new_frames" -eq 0 ]; then
+        problems="$problems
+  current build produced no frames (exit status $new_status)"
+    fi
+
     first_diff=$(paste -d ' ' "$work/$name.base.crc" "$work/$name.new.crc" |
         awk '$1 != $3 || $2 != $4 { print NR; exit }')
     if [ -n "$first_diff" ]; then

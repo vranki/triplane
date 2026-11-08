@@ -20,7 +20,6 @@
 
 #include "video.h"
 
-#include <cassert>
 #include <csignal>
 #include <unistd.h>
 
@@ -213,7 +212,10 @@ void init_video() {
     SDL_HideCursor();
 
     video_state.palette = SDL_CreatePalette(256);
-    assert(video_state.palette);
+    if (!video_state.palette) {
+      fprintf(stderr, "SDL_CreatePalette: %s\n", SDL_GetError());
+      exit(1);
+    }
 
     if (!draw_with_vircr_mode) {
       vircr = (unsigned char *)util::wutil::walloc(screen_width * screen_height);
@@ -239,17 +241,27 @@ static int init_mode(int new_mode, const char *paletname) {
   if (video_state.surface)
     SDL_DestroySurface(video_state.surface);
   video_state.surface = SDL_CreateSurface(sw, sh, SDL_PIXELFORMAT_INDEX8);
-  assert(video_state.surface);
+  if (!video_state.surface) {
+    fprintf(stderr, "SDL_CreateSurface: %s\n", SDL_GetError());
+    exit(1);
+  }
   SDL_SetSurfacePalette(video_state.surface, video_state.palette);
   /* the game writes to vircr directly, so the pitch must equal the width */
-  assert(video_state.surface->pitch == sw);
+  if (video_state.surface->pitch != sw) {
+    fprintf(stderr, "Unexpected surface pitch %d for width %d\n",
+            video_state.surface->pitch, sw);
+    exit(1);
+  }
 
   if (video_state.texture)
     SDL_DestroyTexture(video_state.texture);
   video_state.texture =
       SDL_CreateTexture(video_state.renderer, SDL_PIXELFORMAT_XRGB8888,
                         SDL_TEXTUREACCESS_STREAMING, sw, sh);
-  assert(video_state.texture);
+  if (!video_state.texture) {
+    fprintf(stderr, "SDL_CreateTexture: %s\n", SDL_GetError());
+    exit(1);
+  }
   SDL_SetTextureScaleMode(video_state.texture, SDL_SCALEMODE_NEAREST);
   SDL_SetRenderLogicalPresentation(video_state.renderer, sw, sh,
                                    SDL_LOGICAL_PRESENTATION_LETTERBOX);

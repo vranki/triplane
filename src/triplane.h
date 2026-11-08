@@ -125,7 +125,7 @@ extern std::unique_ptr<gfx::font::Font> grid2;
 
 //\ Parameter control
 
-extern char parametrit[40][40];
+extern char **parametrit;
 extern int parametri_kpl;
 
 //\ Shots control
@@ -317,6 +317,7 @@ extern int main_engine_random_seed;
 
 extern int small_warning(const char *message);
 extern int findparameter(const char *jono);
+const char *findparameter_value(const char *jono);
 extern void kangas_terrain_to_screen(int leftx);
 extern void main_engine();
 extern void do_aftermath(int show_it_all);

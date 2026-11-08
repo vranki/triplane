@@ -67,18 +67,22 @@ short init_joysticks() {
   joystick_config[0].up.n = 1;
   joystick_config[0].up.threshold =
       (Sint16)(32767 * JOYSTICK_THRESHOLD_MULTIPLIER);
+  joystick_config[0].up.threshold_dir = 0; /* active above the threshold */
   joystick_config[0].down.type = 2;
   joystick_config[0].down.n = 1;
   joystick_config[0].down.threshold =
       (Sint16)(-32767 * JOYSTICK_THRESHOLD_MULTIPLIER);
+  joystick_config[0].down.threshold_dir = 1; /* active below the threshold */
   joystick_config[0].power.type = 2;
   joystick_config[0].power.n = 0;
   joystick_config[0].power.threshold =
       (Sint16)(32767 * JOYSTICK_THRESHOLD_MULTIPLIER);
+  joystick_config[0].power.threshold_dir = 0;
   joystick_config[0].brake.type = 2;
   joystick_config[0].brake.n = 0;
   joystick_config[0].brake.threshold =
       (Sint16)(-32767 * JOYSTICK_THRESHOLD_MULTIPLIER);
+  joystick_config[0].brake.threshold_dir = 1;
   joystick_config[0].guns.type = 1;
   joystick_config[0].guns.n = 0;
   joystick_config[0].guns.threshold = 0;
@@ -142,6 +146,10 @@ int load_joysticks_data(const char *filename) {
 
 void save_joysticks_data(const char *filename) {
   FILE *fp = settings_open(filename, "wb");
+  if (fp == nullptr) {
+    printf("Unable to write joystick data\n");
+    return;
+  }
   fwrite(&joystick_config, sizeof(joystick_configuration), 5, fp);
   fclose(fp);
 }

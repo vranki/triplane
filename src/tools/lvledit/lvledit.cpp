@@ -109,6 +109,20 @@ void omaline(int x1, int y1, int x2, int y2, unsigned char c) {
   draw_line(x1, y1, x2, y2, c);
 }
 
+static void save_level() {
+  FILE *faili;
+
+  swap_byte_order();
+  faili = fopen(filename, "wb");
+  if (faili == nullptr) {
+    printf("Cannot write %s\n", filename);
+  } else {
+    fwrite(&leveldata, sizeof(leveldata), 1, faili);
+    fclose(faili);
+  }
+  swap_byte_order();
+}
+
 void edit_level() {
   int ch = 0;
   int kohta = 0;
@@ -118,7 +132,6 @@ void edit_level() {
   int active = -1;
   int airfield_set = -1;
   unsigned char colori = 0;
-  FILE *faili;
 
   std::unique_ptr<Bitmap> pointti(new Bitmap(1, 1, &colori));
 
@@ -207,11 +220,7 @@ void edit_level() {
 
       switch (ch) {
       case TK_F2:
-        swap_byte_order();
-        faili = fopen(filename, "wb");
-        fwrite(&leveldata, sizeof(leveldata), 1, faili);
-        fclose(faili);
-        swap_byte_order();
+        save_level();
         break;
 
       case TK_INSERT:
@@ -529,11 +538,7 @@ int main(int argc, char **argv) {
 
   edit_level();
 
-  swap_byte_order();
-  faili = fopen(filename, "wb");
-  fwrite(&leveldata, sizeof(leveldata), 1, faili);
-  fclose(faili);
-  swap_byte_order();
+  save_level();
 
   return 0;
 }

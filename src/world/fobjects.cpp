@@ -147,6 +147,9 @@ void do_shots() {
       if ((shots_flying_age[l]++) > SHOTS_RANGE)
         shots_flying_x[l] = 0;
 
+      if (!shots_flying_x[l])
+        continue; /* removed above, do not test it against the planes */
+
       for (l2 = 0; l2 < 16; l2++) {
         if (plane_present[l2])
           if (((player_x[l2] + 2304) > shots_flying_x[l]) &&

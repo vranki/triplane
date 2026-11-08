@@ -21,7 +21,22 @@
 #ifndef DKSFILE_H
 #define DKSFILE_H
 
+#include <cstdint>
 #include <cstdio>
+
+constexpr int32_t DKS_MAX_ENTRIES = 8192;
+
+/* One entry of the directory at the start of a .dks file, as stored on disk
+ * (little-endian). Shared with dksbuild and pgdview. */
+#pragma pack(push, 1)
+struct main_directory_entry {
+  char nimi[7];
+  uint32_t offset;
+  uint32_t koko;
+};
+#pragma pack(pop)
+
+extern main_directory_entry *dirri;
 
 int dksinit(const char *tiedosto);
 int dksopen(const char *nimi);

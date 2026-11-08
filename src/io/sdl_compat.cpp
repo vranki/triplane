@@ -22,7 +22,6 @@
 #include <mikmod.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -188,6 +187,14 @@ void SDLCALL mixer_callback(void *, SDL_AudioStream *stream,
 
 bool mikmod_ready = false;
 
+/* exit() handler. SDL_Quit is registered earlier and so runs later; stop the
+ * audio stream (and its thread) before MikMod is torn down. */
+void audio_atexit() {
+  if (mixer.stream)
+    sdl_uninit_sounds();
+  MikMod_Exit();
+}
+
 /* MikMod renders the music into memory; it is set up once per process. */
 bool ensure_mikmod() {
   if (mikmod_ready)
@@ -204,7 +211,7 @@ bool ensure_mikmod() {
     fprintf(stderr, "MikMod_Init: %s\n", MikMod_strerror(MikMod_errno));
     return false;
   }
-  atexit(MikMod_Exit);
+  atexit(audio_atexit);
   mikmod_ready = true;
   return true;
 }
@@ -304,9 +311,10 @@ static uint8_t *read_dks_entry(const char *name, int *len) {
 
   *len = dkssize();
   uint8_t *p = (uint8_t *)util::wutil::walloc(*len);
-  int ret = dksread(p, *len);
-  assert(ret == 1);
-  (void)ret;
+  if (dksread(p, *len) != 1) {
+    fprintf(stderr, "Cannot read %s from the data file\n", name);
+    exit(1);
+  }
   dksclose();
   return p;
 }
@@ -375,7 +383,11 @@ sb_mod_file *sdl_load_mod_file(const char *name) {
   if (!p)
     return nullptr;
 
-  MODULE *module = Player_LoadMem((const char *)p, len, 64, 0);
+  MODULE *module;
+  {
+    audio_lock lock; /* MikMod is not thread safe against the player */
+    module = Player_LoadMem((const char *)p, len, 64, 0);
+  }
   if (!module) {
     fprintf(stderr, "sdl_load_mod_file %s: %s\n", name,
             MikMod_strerror(MikMod_errno));
@@ -401,8 +413,8 @@ void sdl_free_mod_file(sb_mod_file *mod) {
     audio_lock lock;
     if (mixer.music_playing && Player_GetModule() == mod->module)
       stop_music_locked();
+    Player_Free((MODULE *)mod->module);
   }
-  Player_Free((MODULE *)mod->module);
   free(mod);
 }
 

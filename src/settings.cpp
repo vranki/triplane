@@ -55,13 +55,12 @@ struct configuration config;
  * when needed for easy concatenation.
  *
  */
-static void find_settings_directory(char *dir) {
-  char *home;
+static void find_settings_directory(char *dir, size_t size) {
+  const char *home;
 
   home = getenv("TRIPLANE_HOME");
   if (home) {
-    strncpy(dir, home, FILENAME_MAX - 1);
-    strncat(dir, "/", FILENAME_MAX - 1);
+    snprintf(dir, size, "%s/", home);
     return;
   }
 
@@ -70,8 +69,7 @@ static void find_settings_directory(char *dir) {
     int ret;
     struct stat st;
 
-    strncpy(dir, home, FILENAME_MAX - 1);
-    strncat(dir, "/.triplane", FILENAME_MAX - 1);
+    snprintf(dir, size, "%s/.triplane", home);
     ret = stat(dir, &st);
     if (ret) {
 #ifdef _WIN32
@@ -84,11 +82,11 @@ static void find_settings_directory(char *dir) {
         exit(1);
       }
     }
-    strncat(dir, "/", FILENAME_MAX - 1);
+    snprintf(dir + strlen(dir), size - strlen(dir), "/");
     return;
   }
 
-  strncpy(dir, "", FILENAME_MAX - 1);
+  dir[0] = 0;
 }
 
 /*
@@ -99,13 +97,11 @@ static void find_settings_directory(char *dir) {
  * @return return value of fopen
  */
 FILE *settings_open(const char *filename, const char *mode) {
-  char buf[FILENAME_MAX];
-  FILE *fp;
+  char dir[FILENAME_MAX], buf[FILENAME_MAX];
 
-  find_settings_directory(buf);
-  strncat(buf, filename, FILENAME_MAX - 1);
-  fp = fopen(buf, mode);
-  return fp;
+  find_settings_directory(dir, sizeof(dir));
+  snprintf(buf, sizeof(buf), "%s%s", dir, filename);
+  return fopen(buf, mode);
 }
 
 void wait_relase() {
@@ -287,7 +283,10 @@ void load_keyset() {
 
     save_keyset();
   } else {
-    fread(player_keys, sizeof(player_keys), 1, faili);
+    if (fread(player_keys, sizeof(player_keys), 1, faili) != 1) {
+      printf("keyset.dta is damaged, please set the keys again\n");
+      memset(player_keys, 0, sizeof(player_keys));
+    }
     fclose(faili);
     swap_keyset_endianes();
   }
@@ -366,9 +365,15 @@ void load_roster() {
         printf("unsupported roster.dta version %08x\n", hdr.version);
         exit(1);
       }
-      fread(&roster, sizeof(roster), 1, faili);
+      if (fread(&roster, sizeof(roster), 1, faili) != 1) {
+        printf("failed to read roster.dta\n");
+        exit(1);
+      }
     } else {
-      fread(&droster, sizeof(droster), 1, faili);
+      if (fread(&droster, sizeof(droster), 1, faili) != 1) {
+        printf("failed to read roster.dta\n");
+        exit(1);
+      }
       printf("Converting roster from DOS format.\n");
       convert_dos_roster((struct dos_roster *)&droster);
     }
@@ -422,7 +427,6 @@ void swap_config_endianes() {
   config.explosion_sounds = SDL_Swap32LE(config.explosion_sounds);
   config.gunshot_sounds = SDL_Swap32LE(config.gunshot_sounds);
   config.ground_i_sounds = SDL_Swap32LE(config.ground_i_sounds);
-  config.explosion_sounds = SDL_Swap32LE(config.explosion_sounds);
   config.splash = SDL_Swap32LE(config.splash);
   config.infantry_sounds = SDL_Swap32LE(config.infantry_sounds);
 
@@ -476,7 +480,6 @@ void load_config() {
   config.explosion_sounds = 1;
   config.gunshot_sounds = 1;
   config.ground_i_sounds = 1;
-  config.explosion_sounds = 1;
   config.splash = 1;
   config.infantry_sounds = 1;
 
@@ -504,7 +507,11 @@ void load_config() {
   faili = settings_open(CONFIGURATION_FILENAME, "rb");
 
   if (faili != nullptr) {
-    fread(&config, sizeof(config), 1, faili);
+    /* A shorter file (an older layout) fills what it has; the rest keeps
+     * the defaults set above. */
+    size_t got = fread(&config, 1, sizeof(config), faili);
+    if (got != sizeof(config))
+      printf("triplane.cfg is shorter than expected, check your settings\n");
     fclose(faili);
     swap_config_endianes();
   }
@@ -515,8 +522,12 @@ void load_config() {
 void save_config() {
   FILE *faili;
 
-  swap_config_endianes();
   faili = settings_open(CONFIGURATION_FILENAME, "wb");
+  if (faili == nullptr) {
+    printf("Unable to write configuration\n");
+    return;
+  }
+  swap_config_endianes();
   fwrite(&config, sizeof(config), 1, faili);
   fclose(faili);
   swap_config_endianes();
