@@ -308,6 +308,9 @@ int mission_duration;
 int mission_interrupted;
 int mission_re_fly = -1;
 
+/* Recorded games hold the controls of 16 players for up to this many frames. */
+constexpr int RECORD_FRAMES = 24 * 1280;
+
 FILE *record_file = nullptr;
 char *record_data = nullptr;
 int *record_random = nullptr;
@@ -422,7 +425,7 @@ char struct_names[NUMBER_OF_STRUCT_NAMES * 2][7] = {
 
 static void record_random_swap_endianess() {
   int i;
-  for (i = 0; i < 24 * 1280; i++) {
+  for (i = 0; i < RECORD_FRAMES; i++) {
     record_random[i] = SDL_Swap32LE(record_random[i]);
   }
 }
@@ -865,7 +868,10 @@ void controls() {
   unsigned char rbyte;
   int rcount;
 
-  if (findparameter("-record")) {
+  /* stop one frame early, record_random is indexed with the next frame */
+  bool record_full = record_counter + 16 >= 16 * RECORD_FRAMES;
+
+  if (findparameter("-record") && !record_full) {
     for (rcount = 0; rcount < 16; rcount++) {
 
       rbyte = 0;
@@ -883,6 +889,10 @@ void controls() {
   }
 
   if (findparameter("-playback")) {
+    if (record_full) {
+      printf("End of recording\n");
+      exit(0);
+    }
     for (rcount = 0; rcount < 16; rcount++) {
       rbyte = record_data[record_counter++];
 
@@ -1363,6 +1373,7 @@ static uint32_t crc32_le(uint32_t crc, unsigned char const *p, size_t len) {
   return crc;
 }
 
+/* -debugtrace prints a checksum of every frame (see tools/compare-baseline). */
 void do_debug_trace() {
   static int first_call = 1;
   static int enabled = 0;
@@ -1370,6 +1381,8 @@ void do_debug_trace() {
   if (first_call) {
     if (findparameter("-debugtrace")) {
       enabled = 1;
+      /* keep the trace complete even if the game crashes */
+      setvbuf(stdout, nullptr, _IOLBF, 0);
     }
     first_call = 0;
   }
@@ -1600,17 +1613,17 @@ void main_engine() {
   //// Record
 
   if (findparameter("-record") || findparameter("-playback")) {
-    record_data = (char *)util::wutil::walloc(16 * 24 * 1280);
-    record_random = (int *)util::wutil::walloc(4 * 24 * 1280);
+    record_data = (char *)util::wutil::walloc(16 * RECORD_FRAMES);
+    record_random = (int *)util::wutil::walloc(4 * RECORD_FRAMES);
   }
 
   if (findparameter("-playback")) {
     record_file = settings_open("record.dta", "rb");
-    fread(record_data, 24 * 1280, 16, record_file);
+    fread(record_data, RECORD_FRAMES, 16, record_file);
     fclose(record_file);
 
     record_file = settings_open("record.000", "rb");
-    fread(record_random, 24 * 1280, 4, record_file);
+    fread(record_random, RECORD_FRAMES, 4, record_file);
     record_random_swap_endianess();
     fclose(record_file);
   }
@@ -1808,12 +1821,12 @@ void main_engine() {
 
   if (findparameter("-record")) {
     record_file = settings_open("record.dta", "wb");
-    fwrite(record_data, 24 * 1280, 16, record_file);
+    fwrite(record_data, RECORD_FRAMES, 16, record_file);
     fclose(record_file);
 
     record_file = settings_open("record.000", "wb");
     record_random_swap_endianess();
-    fwrite(record_random, 24 * 1280, 4, record_file);
+    fwrite(record_random, RECORD_FRAMES, 4, record_file);
     fclose(record_file);
   }
 

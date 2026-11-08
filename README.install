@@ -49,14 +49,17 @@ Resulting .deb package is located in parent directory.
 Testsuite
 ---------
 
-Use "make test" to run testsuite. It plays the game with prerecorded
-inputs and checks the CRC checksum of every output frame. This is
-especially important if you are building on a weird architecture or
-have changed something in the code.
+"make test" replays the recorded games in triplane-testsuite/ with your
+build and with a baseline commit, and compares the checksum of every
+frame. Any change in what the game does or draws shows up, with the
+first frame where the two builds differ. Crashes and hangs fail too.
 
-Note: the recordings and reference outputs predate the gameplay changes
-of this version, so the replays diverge and the tests currently fail.
-They need to be recorded again (see triplane-testsuite/README).
+$ make test                  # working tree against the last commit
+$ make test BASE=master      # against another commit, branch or tag
+
+The baseline is built once per commit under build/baseline/. It has to
+be buildable with CMake and SDL3. See tools/compare-baseline -h for the
+remaining options, such as the number of frames compared per game.
 
 Regenerating data/
 ------------------
