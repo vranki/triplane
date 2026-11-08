@@ -20,25 +20,18 @@
 
 /* Solomission exceptions code headerfile */
 
+#ifndef TMEXEPT_H
+#define TMEXEPT_H
+
 namespace world::tmexept {
 
+/* Mission-specific rules that the generic solo game does not cover. The
+   three hooks run when the mission starts, every game frame and when it
+   ends; most missions have none. */
 void init_exeptions(int country, int mission);
 void game_exeptions(int country, int mission);
 void endgame_exeptions(int country, int mission);
 
-void german_init_exeptions(int mission);
-void finnish_init_exeptions(int mission);
-void english_init_exeptions(int mission);
-void japanese_init_exeptions(int mission);
-
-void german_game_exeptions(int mission);
-void finnish_game_exeptions(int mission);
-void english_game_exeptions(int mission);
-void japanese_game_exeptions(int mission);
-
-void german_end_exeptions(int mission);
-void finnish_end_exeptions(int mission);
-void english_end_exeptions(int mission);
-void japanese_end_exeptions(int mission);
-
 } // namespace world::tmexept
+
+#endif

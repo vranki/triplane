@@ -39,6 +39,11 @@ extern void start_wave(int x);
 extern void start_flame(int x, int y, int width);
 extern void do_flames();
 
+/* Index of a free flying object, or -1 when all are in use. */
+extern int alloc_fobject();
+/* Does the point (x, y), in 1/256 pixels, hit the sprite of plane l2? */
+extern bool point_hits_plane(int l2, int x, int y);
+
 extern int flame_x[MAX_FLAMES];
 extern int flame_y[MAX_FLAMES];
 extern int flame_width[MAX_FLAMES];

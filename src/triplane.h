@@ -262,8 +262,6 @@ extern int kkbase_number[MAX_AA_GUNS];
 //\\ Computer players
 
 extern int computer_active[16];
-extern int going_left;
-extern int going_up;
 extern int terrain_level[2400];
 extern int wide_terrain_level[2400];
 extern int current_mission[16];
@@ -273,7 +271,7 @@ extern int mission_target[16];
 extern int distances[16];
 extern int angles[16];
 
-extern int bombs_going[100];
+extern int bombs_going[MAX_STRUCTURES];
 
 //\\ Configuration
 
@@ -292,14 +290,9 @@ extern int solo_dest_remaining;
 extern int status_frames;
 extern int status_state;
 
-extern char mission_names[24][30];
-
 extern int mission_re_fly;
 
 extern int mission_duration;
-
-extern int modem_port_open;
-extern int modem_master;
 
 extern int mc_up[16];
 extern int mc_down[16];
@@ -308,10 +301,6 @@ extern int mc_roll[16];
 extern int mc_guns[16];
 extern int mc_power[16];
 
-extern int main_version;
-extern int sub_version;
-
-extern int main_engine_random_seed;
 
 /***************************** Functions **************************************/
 

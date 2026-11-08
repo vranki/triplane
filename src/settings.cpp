@@ -136,8 +136,8 @@ int select_key(int player, int old) {
         wait_relase();
         return c;
       }
-    if (player == 100)
-      return 100;
+    if (player == SELECT_KEY_NO_WAIT)
+      return SELECT_KEY_NO_WAIT;
   }
 
   wait_relase();
@@ -182,6 +182,16 @@ void swap_roster_endianes() {
   }
 }
 
+/* The keys a new pilot starts with. */
+static void set_default_keys(rosteri &pilot) {
+  pilot.up = TK_x;
+  pilot.down = TK_w;
+  pilot.roll = TK_s;
+  pilot.power = TK_TAB;
+  pilot.guns = TK_2;
+  pilot.bombs = TK_1;
+}
+
 void convert_dos_roster(struct dos_roster *droster) {
   int l, l2, l3;
 
@@ -213,12 +223,7 @@ void convert_dos_roster(struct dos_roster *droster) {
     roster[l].multi_mis_totals = droster[l].multi_mis_totals;
     roster[l].multi_mis_dropped = droster[l].multi_mis_dropped;
 
-    roster[l].up = TK_x;
-    roster[l].down = TK_w;
-    roster[l].roll = TK_s;
-    roster[l].power = TK_TAB;
-    roster[l].guns = TK_2;
-    roster[l].bombs = TK_1;
+    set_default_keys(roster[l]);
   }
 }
 
@@ -238,7 +243,7 @@ void swap_keyset_endianes() {
 void save_keyset() {
   FILE *faili;
 
-  faili = settings_open("keyset.dta", "wb");
+  faili = settings_open(KEYSET_FILENAME, "wb");
   if (faili == nullptr) {
     printf("Unable to write keyboard data\n");
   } else {
@@ -252,7 +257,7 @@ void save_keyset() {
 void load_keyset() {
   FILE *faili;
 
-  if ((faili = settings_open("keyset.dta", "rb")) == nullptr) {
+  if ((faili = settings_open(KEYSET_FILENAME, "rb")) == nullptr) {
     player_keys[0].up = TK_x;
     player_keys[0].down = TK_w;
     player_keys[0].roll = TK_s;
@@ -293,7 +298,7 @@ void load_keyset() {
 }
 
 void load_roster() {
-  int l, l2, l3;
+  int l;
   FILE *faili;
 
   if ((faili = settings_open(ROSTER_FILENAME, "rb")) == nullptr) {
@@ -302,39 +307,10 @@ void load_roster() {
       exit(1);
     }
 
-    for (l = 0; l < MAX_PLAYERS_IN_ROSTER; l++) {
-      roster[l].pilotname[0] = 0;
-      roster[l].solo_mis_flown = 0;
-      roster[l].solo_mis_success = 0;
-      roster[l].solo_mis_drops = 0;
-      roster[l].solo_mis_shotsf = 0;
-      roster[l].solo_mis_shotshit = 0;
-      roster[l].solo_mis_bombs = 0;
-      roster[l].solo_mis_bombshit = 0;
-      roster[l].solo_mis_totals = 0;
-      roster[l].solo_mis_dropped = 0;
-
-      for (l2 = 0; l2 < 4; l2++)
-        for (l3 = 0; l3 < 7; l3++)
-          roster[l].solo_mis_scores[l2][l3] = 0;
-
-      roster[l].multi_mis_flown = 0;
-      roster[l].multi_mis_success = 0;
-      roster[l].multi_mis_drops = 0;
-      roster[l].multi_mis_shotsf = 0;
-      roster[l].multi_mis_shotshit = 0;
-      roster[l].multi_mis_bombs = 0;
-      roster[l].multi_mis_bombshit = 0;
-      roster[l].multi_mis_totals = 0;
-      roster[l].multi_mis_dropped = 0;
-
-      roster[l].up = TK_x;
-      roster[l].down = TK_w;
-      roster[l].roll = TK_s;
-      roster[l].power = TK_TAB;
-      roster[l].guns = TK_2;
-      roster[l].bombs = TK_1;
-    }
+    /* A new roster: empty names and zero scores, which the untouched
+       global already holds, and the default keys. */
+    for (l = 0; l < MAX_PLAYERS_IN_ROSTER; l++)
+      set_default_keys(roster[l]);
 
     swap_roster_endianes();
     fwrite(&roster, sizeof(roster), 1, faili);
@@ -375,7 +351,7 @@ void load_roster() {
         exit(1);
       }
       printf("Converting roster from DOS format.\n");
-      convert_dos_roster((struct dos_roster *)&droster);
+      convert_dos_roster(droster);
     }
     fclose(faili);
     swap_roster_endianes();

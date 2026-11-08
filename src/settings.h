@@ -20,6 +20,7 @@
 
 #ifndef SETTINGS_H
 #define SETTINGS_H
+#include <cstdint>
 #include <cstdio>
 
 #define ROSTER_FILENAME "roster.dta"
@@ -161,6 +162,9 @@ extern configuration config;
 
 void load_keyset();
 void save_keyset();
+/* select_key() with this as the player does not wait for a key: it returns
+ * SELECT_KEY_NO_WAIT when none is down. */
+constexpr int32_t SELECT_KEY_NO_WAIT = 100;
 int select_key(int player, int old);
 void wait_relase();
 

@@ -19,3 +19,7 @@ Leave out "-solomenumission 0" for a multiplayer game. Then write the
 playback command line to triplane-testsuite/NAME/args:
 
 -playback -autostart -solomenumission 0 -autoquit -speed -debugtrace -nofullscreen
+
+The *-vga directories are copies of the recordings with svga=0 in
+triplane.cfg, so that the 320x200 drawing code is covered as well. All
+original recordings were made in 800x600 mode.

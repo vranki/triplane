@@ -43,18 +43,6 @@ void controls_menu();
 int kangas_menu();
 int solo_player_menu();
 
-void print_clear_roster(Bitmap *rosteri);
-void print_filled_roster(int number);
 void wait_mouse_relase(int nokb = 0);
-void load_descriptions(int number);
-void show_descriptions(int number);
-void sort_and_show(int percent = 0);
-int get_rank(int player);
-
-void aces_grand_total();
-void aces_multi_total();
-void aces_solo_total();
-void aces_one_solo(int country, int mission);
-int calculate_multitotal(int player);
 
 #endif

@@ -21,7 +21,6 @@
 /* Triplane Turmoil menusystem */
 
 #include "tripmenu.h"
-#include "../gfx/bitmap.h"
 #include "../io/joystick.h"
 #include "../io/sdl_compat.h"
 #include "../io/trip_io.h"
@@ -29,44 +28,98 @@
 #include "../triplane.h"
 #include "../util/wutil.h"
 #include "../world/plane.h"
+#include "../world/tripmis.h"
 #include "../world/tripaudio.h"
 #include <SDL3/SDL.h>
+#include <array>
+#include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <iterator>
 #include <memory>
-#include <array>
 #include "../gfx/fades.h"
 #include "../gfx/font.h"
 #include "../io/dksfile.h"
 #include "../world/terrain.h"
-
-extern int miss_pl_x[16];
-extern int miss_pl_y[16];
 
 extern sb_mod_file *triplane_mod;
 extern sb_mod_file *aces_mod;
 extern sb_sample *sample_hurr;
 
 
-char mission_description[80 * 16];
-char mission_lines[16][80];
-int mission_pixels[16];
-int mission_headline_pixels;
+static char mission_description[80 * 16];
+static char mission_lines[16][80];
+static int mission_pixels[16];
+static int mission_headline_pixels;
 
-int aces_number_of_entries;
-int aces_score[MAX_PLAYERS_IN_ROSTER];
+static int aces_number_of_entries;
+static int aces_score[MAX_PLAYERS_IN_ROSTER];
 
 constexpr int32_t CHARS_PER_LINE = 70;
 
-sb_mod_file *national_mod = nullptr;
+/* The game (src/triplane.cpp) sets mission_re_fly to this when the player
+ * returns to the mission menu instead of re-flying a mission. */
+constexpr int32_t MISSION_RE_FLY_BACK_TO_MENU = 999;
 
-char rank_names[6][10] = {"2nd Lt.", "1st Lt.", "Capt.",
-                          "Major",   "Lt Col.", "Colonel"};
+/* The pilot the roster menu falls back to when a pilot cannot be created
+ * because the roster is full. */
+constexpr int32_t ROSTER_FULL_FALLBACK_PILOT = 99;
+
+static sb_mod_file *national_mod = nullptr;
+
+static const char *const rank_names[6] = {"2nd Lt.", "1st Lt.", "Capt.",
+                                          "Major",   "Lt Col.", "Colonel"};
+
+static constexpr const char *country_names[4] = {"German", "Finnish",
+                                                 "English", "Japanese"};
+static constexpr const char *national_modnames[4] = {"mgerma", "mfinla",
+                                                     "mengla", "mjapan"};
+
+/* A key the roster and controls menus ask for: the prompt and the key
+ * field of a pilot (rosteri) or a player (keymap). */
+template <typename Keys>
+struct key_prompt {
+  const char *text;
+  int32_t Keys::*key;
+};
+
+/* The six keys in the order they are asked. */
+static constexpr key_prompt<rosteri> roster_key_prompts[] = {
+    {"Key for upward turn", &rosteri::up},
+    {"Key for downward turn", &rosteri::down},
+    {"Key for roll", &rosteri::roll},
+    {"Key for engine power", &rosteri::power},
+    {"Key for bomb drop", &rosteri::bombs},
+    {"Key for guns", &rosteri::guns},
+};
+
+static constexpr key_prompt<keymap> player_key_prompts[] = {
+    {"Key for upward turn", &keymap::up},
+    {"Key for downward turn", &keymap::down},
+    {"Key for roll", &keymap::roll},
+    {"Key for engine power", &keymap::power},
+    {"Key for bomb drop", &keymap::bombs},
+    {"Key for guns", &keymap::guns},
+};
+
+/* joystick_config[0..3] are the multiplayer joysticks, joystick_config[4]
+ * the solo game joystick of the roster menu. */
+static constexpr int ROSTER_JOYSTICK = 4;
 
 /**************************** Functions ***************************************/
-void joystick_roster_setup(Bitmap *controlme);
 
-int get_rank(const int player) {
+static void joystick_setup(int joy, Bitmap *background, int text_x,
+                           int text_y);
+static void print_clear_roster(Bitmap *rosteri);
+static void print_filled_roster(int number);
+
+/* The national anthems in the solo game menus are only played when a
+ * sound card was found, the player wants music and -nomusic is not given. */
+static bool national_music_enabled() {
+  return is_there_sound && config.music_on && !findparameter("-nomusic");
+}
+
+static int get_rank(const int player) {
   int l, l2, l3;
 
   l = roster[player].solo_mis_flown + roster[player].multi_mis_flown;
@@ -93,7 +146,7 @@ int get_rank(const int player) {
   return 5;
 }
 
-int calculate_multitotal(const int player) {
+static int calculate_multitotal(const int player) {
   int ts = 0;
 
   if (!roster[player].pilotname[0])
@@ -111,7 +164,7 @@ int calculate_multitotal(const int player) {
   return ts;
 }
 
-void sort_and_show(const int percent) {
+static void sort_and_show(const int percent) {
   int alkuosa, loppuosa;
   int flag = 1;
   int aces_number[MAX_PLAYERS_IN_ROSTER];
@@ -163,14 +216,23 @@ void sort_and_show(const int percent) {
   }
 }
 
-void aces_grand_total() {
+/* Draws one TOP10 page of the aces menu: the title at (title_x, 45) (no
+ * title for the grand total, whose title is part of the ACESB bitmap),
+ * then the active pilots sorted by score(c). With percent the scores are
+ * hundredths of a percent. */
+template <typename Score>
+static void aces_show(const int title_x, const char *title, const int percent,
+                      Score score) {
   int c;
+
+  if (title)
+    frost->printf(title_x, 45, "%s", title);
 
   for (c = 0; c < MAX_PLAYERS_IN_ROSTER; c++) {
     if (!roster[c].pilotname[0])
       break;
 
-    aces_score[c] = calculate_multitotal(c) + roster[c].solo_mis_totals;
+    aces_score[c] = score(c);
   }
 
   if (!c) {
@@ -178,236 +240,77 @@ void aces_grand_total() {
 
   } else {
     aces_number_of_entries = c;
-    sort_and_show();
+    sort_and_show(percent);
   }
 }
 
-void aces_multi_total() {
-  int c;
+struct aces_page {
+  const char *title;
+  int percent;
+  int (*score)(int c);
+};
 
-  frost->printf(90, 45, "Multiplayer TOP10");
+/* Pages 0-2 and 27-33 of the aces menu. Pages 3-26 are the solo missions,
+ * see aces_one_solo. */
+static constexpr aces_page aces_pages[] = {
+    {nullptr, 0,
+     [](int c) -> int {
+       return calculate_multitotal(c) + roster[c].solo_mis_totals;
+     }},
+    {"Multiplayer TOP10", 0,
+     [](int c) -> int { return calculate_multitotal(c); }},
+    {"Sologame TOP10", 0,
+     [](int c) -> int { return roster[c].solo_mis_totals; }},
+    {"The most triggerhappy pilots", 0,
+     [](int c) -> int {
+       return roster[c].solo_mis_shotsf + roster[c].multi_mis_shotsf;
+     }},
+    {"Bombusers TOP10", 0,
+     [](int c) -> int {
+       return roster[c].solo_mis_bombs + roster[c].multi_mis_bombs;
+     }},
+    {"The most accurate shooters", 1,
+     [](int c) -> int {
+       const int shots = roster[c].solo_mis_shotsf + roster[c].multi_mis_shotsf;
+       if (shots < 1000)
+         return 0;
+       return (roster[c].solo_mis_shotshit + roster[c].multi_mis_shotshit) *
+              10000 / shots;
+     }},
+    {"The most accurate bombers", 1,
+     [](int c) -> int {
+       const int bombs = roster[c].solo_mis_bombs + roster[c].multi_mis_bombs;
+       if (bombs < 100)
+         return 0;
+       return (roster[c].solo_mis_bombshit + roster[c].multi_mis_bombshit) *
+              10000 / bombs;
+     }},
+    {"Drops TOP10", 0,
+     [](int c) -> int {
+       return roster[c].solo_mis_drops + roster[c].multi_mis_drops;
+     }},
+    {"The most active decoys", 0,
+     [](int c) -> int {
+       return roster[c].solo_mis_dropped + roster[c].multi_mis_dropped;
+     }},
+    {"The most missions flown", 0,
+     [](int c) -> int {
+       return roster[c].solo_mis_flown + roster[c].multi_mis_flown;
+     }},
+};
 
-  for (c = 0; c < MAX_PLAYERS_IN_ROSTER; c++) {
-    if (!roster[c].pilotname[0])
-      break;
+static void aces_one_solo(const int country, const int mission) {
+  char title[80];
 
-    aces_score[c] = calculate_multitotal(c);
-  }
+  snprintf(title, sizeof(title), "%d. %s mission (%s)", mission + 1,
+           country_names[country], mission_names[country * 6 + mission]);
 
-  if (!c) {
-    frost->printf(100, 100, "No active pilots present.");
-
-  } else {
-    aces_number_of_entries = c;
-    sort_and_show();
-  }
+  aces_show(82, title, 0, [=](int c) -> int {
+    return roster[c].solo_mis_scores[country][mission];
+  });
 }
 
-void aces_solo_total() {
-  int c;
-
-  frost->printf(90, 45, "Sologame TOP10");
-
-  for (c = 0; c < MAX_PLAYERS_IN_ROSTER; c++) {
-    if (!roster[c].pilotname[0])
-      break;
-
-    aces_score[c] = roster[c].solo_mis_totals;
-  }
-
-  if (!c) {
-    frost->printf(100, 100, "No active pilots present.");
-
-  } else {
-    aces_number_of_entries = c;
-    sort_and_show();
-  }
-}
-
-void aces_triggerhappy() {
-  int c;
-
-  frost->printf(90, 45, "The most triggerhappy pilots");
-
-  for (c = 0; c < MAX_PLAYERS_IN_ROSTER; c++) {
-    if (!roster[c].pilotname[0])
-      break;
-
-    aces_score[c] = roster[c].solo_mis_shotsf + roster[c].multi_mis_shotsf;
-  }
-
-  if (!c) {
-    frost->printf(100, 100, "No active pilots present.");
-
-  } else {
-    aces_number_of_entries = c;
-    sort_and_show();
-  }
-}
-
-void aces_bombdropper() {
-  int c;
-
-  frost->printf(90, 45, "Bombusers TOP10");
-
-  for (c = 0; c < MAX_PLAYERS_IN_ROSTER; c++) {
-    if (!roster[c].pilotname[0])
-      break;
-
-    aces_score[c] = roster[c].solo_mis_bombs + roster[c].multi_mis_bombs;
-  }
-
-  if (!c) {
-    frost->printf(100, 100, "No active pilots present.");
-
-  } else {
-    aces_number_of_entries = c;
-    sort_and_show();
-  }
-}
-
-void aces_shotaccuracy() {
-  int c;
-
-  frost->printf(90, 45, "The most accurate shooters");
-
-  for (c = 0; c < MAX_PLAYERS_IN_ROSTER; c++) {
-    if (!roster[c].pilotname[0])
-      break;
-
-    if ((roster[c].solo_mis_shotsf + roster[c].multi_mis_shotsf) < 1000)
-      aces_score[c] = 0;
-    else
-      aces_score[c] =
-          (roster[c].solo_mis_shotshit + roster[c].multi_mis_shotshit) * 10000 /
-          (roster[c].solo_mis_shotsf + roster[c].multi_mis_shotsf);
-  }
-
-  if (!c) {
-    frost->printf(100, 100, "No active pilots present.");
-
-  } else {
-    aces_number_of_entries = c;
-    sort_and_show(1);
-  }
-}
-
-void aces_bombaccuracy() {
-  int c;
-
-  frost->printf(90, 45, "The most accurate bombers");
-
-  for (c = 0; c < MAX_PLAYERS_IN_ROSTER; c++) {
-    if (!roster[c].pilotname[0])
-      break;
-
-    if ((roster[c].solo_mis_bombs + roster[c].multi_mis_bombs) < 100)
-      aces_score[c] = 0;
-    else
-      aces_score[c] =
-          (roster[c].solo_mis_bombshit + roster[c].multi_mis_bombshit) * 10000 /
-          (roster[c].solo_mis_bombs + roster[c].multi_mis_bombs);
-  }
-
-  if (!c) {
-    frost->printf(100, 100, "No active pilots present.");
-
-  } else {
-    aces_number_of_entries = c;
-    sort_and_show(1);
-  }
-}
-
-void aces_mostkills() {
-  int c;
-
-  frost->printf(90, 45, "Drops TOP10");
-
-  for (c = 0; c < MAX_PLAYERS_IN_ROSTER; c++) {
-    if (!roster[c].pilotname[0])
-      break;
-
-    aces_score[c] = roster[c].solo_mis_drops + roster[c].multi_mis_drops;
-  }
-
-  if (!c) {
-    frost->printf(100, 100, "No active pilots present.");
-
-  } else {
-    aces_number_of_entries = c;
-    sort_and_show();
-  }
-}
-
-void aces_decoy() {
-  int c;
-
-  frost->printf(90, 45, "The most active decoys");
-
-  for (c = 0; c < MAX_PLAYERS_IN_ROSTER; c++) {
-    if (!roster[c].pilotname[0])
-      break;
-
-    aces_score[c] = roster[c].solo_mis_dropped + roster[c].multi_mis_dropped;
-  }
-
-  if (!c) {
-    frost->printf(100, 100, "No active pilots present.");
-
-  } else {
-    aces_number_of_entries = c;
-    sort_and_show();
-  }
-}
-
-void aces_totalmissions() {
-  int c;
-
-  frost->printf(90, 45, "The most missions flown");
-
-  for (c = 0; c < MAX_PLAYERS_IN_ROSTER; c++) {
-    if (!roster[c].pilotname[0])
-      break;
-
-    aces_score[c] = roster[c].solo_mis_flown + roster[c].multi_mis_flown;
-  }
-
-  if (!c) {
-    frost->printf(100, 100, "No active pilots present.");
-
-  } else {
-    aces_number_of_entries = c;
-    sort_and_show();
-  }
-}
-
-void aces_one_solo(const int country, const int mission) {
-  char country_names_genetive[4][15] = {"German", "Finnish", "English",
-                                        "Japanese"};
-
-  int c;
-
-  frost->printf(82, 45, "%d. %s mission (%s)", mission + 1,
-                country_names_genetive[country],
-                mission_names[country * 6 + mission]);
-
-  for (c = 0; c < MAX_PLAYERS_IN_ROSTER; c++) {
-    if (!roster[c].pilotname[0])
-      break;
-
-    aces_score[c] = roster[c].solo_mis_scores[country][mission];
-  }
-
-  if (!c) {
-    frost->printf(100, 100, "No active pilots present.");
-
-  } else {
-    aces_number_of_entries = c;
-    sort_and_show();
-  }
-}
-
-void show_descriptions(const int number) {
+static void show_descriptions(const int number) {
   int c;
 
   frost->printf((320 - mission_headline_pixels) >> 1, 24, "%s",
@@ -421,7 +324,7 @@ void show_descriptions(const int number) {
   }
 }
 
-void load_descriptions(const int number) {
+static void load_descriptions(const int number) {
   char *temp_storage;
   int c;
   int locator = 0;
@@ -446,7 +349,7 @@ void load_descriptions(const int number) {
     locator++;
   }
 
-  while (temp_storage[locator] != '#' && locator < dkssize()) {
+  while (locator < dkssize() && temp_storage[locator] != '#') {
     ch = temp_storage[locator];
 
     if (ch == 0xa) {
@@ -486,6 +389,11 @@ void load_descriptions(const int number) {
       }
     }
 
+    /* A word longer than a line is cut at the line end; without this the
+     * loop would not advance. */
+    if (wordcount == 0)
+      wordcount = CHARS_PER_LINE;
+
     chars_to_copy = wordcount;
 
     for (index = 0; index < chars_to_copy; index++) {
@@ -515,9 +423,10 @@ void load_descriptions(const int number) {
 }
 
 int solo_player_menu() {
-  char facenames[4][7] = {"GERFAC", "FINFAC", "ENGFAC", "JAPFAC"};
-  char missionnames[4][7] = {"MISSI0", "MISSI1", "MISSI2", "MISSI3"};
-  char modnames[4][7] = {"mgerma", "mfinla", "mengla", "mjapan"};
+  static constexpr const char *facenames[4] = {"GERFAC", "FINFAC", "ENGFAC",
+                                               "JAPFAC"};
+  static constexpr const char *missionnames[4] = {"MISSI0", "MISSI1",
+                                                  "MISSI2", "MISSI3"};
 
   std::unique_ptr<Bitmap> misboa;
   std::unique_ptr<Bitmap> misbak;
@@ -534,7 +443,7 @@ int solo_player_menu() {
            &mission_re_fly);
   }
 
-  if (mission_re_fly == 999) {
+  if (mission_re_fly == MISSION_RE_FLY_BACK_TO_MENU) {
     mission_re_fly = -1;
   }
 
@@ -564,10 +473,9 @@ int solo_player_menu() {
     do_all_clear();
   }
 
-  if ((mission_re_fly == -1) && is_there_sound && config.music_on &&
-      !findparameter("-nomusic")) {
+  if ((mission_re_fly == -1) && national_music_enabled()) {
     sdl_stop_music();
-    national_mod = sdl_load_mod_file(modnames[solo_country]);
+    national_mod = sdl_load_mod_file(national_modnames[solo_country]);
     if (national_mod == nullptr) {
       printf("Error locating music.\n");
       exit(1);
@@ -622,15 +530,14 @@ int solo_player_menu() {
     return 1;
 
   case 3:
-    if ((mission_re_fly == -1) && is_there_sound && config.music_on &&
-        !findparameter("-nomusic")) {
+    if ((mission_re_fly == -1) && national_music_enabled()) {
       sdl_stop_music();
       sdl_free_mod_file(national_mod);
     }
     return 2;
 
   case 2:
-    if (is_there_sound && config.music_on && !findparameter("-nomusic")) {
+    if (national_music_enabled()) {
       sdl_stop_music();
       sdl_free_mod_file(national_mod);
     }
@@ -864,37 +771,14 @@ void roster_menu() {
             break;
 
         if (number == MAX_PLAYERS_IN_ROSTER) {
-          number = 99;
+          number = ROSTER_FULL_FALLBACK_PILOT;
           break;
         }
 
         print_clear_roster(rosteri.get());
         frost->printf(15, 24, "Type name of\nthe pilot\nand press\nenter.");
 
-        roster[number].solo_mis_flown = 0;
-        roster[number].solo_mis_success = 0;
-        roster[number].solo_mis_drops = 0;
-        roster[number].solo_mis_shotsf = 0;
-        roster[number].solo_mis_shotshit = 0;
-        roster[number].solo_mis_bombs = 0;
-        roster[number].solo_mis_bombshit = 0;
-        roster[number].solo_mis_dropped = 0;
-        roster[number].solo_mis_totals = 0;
-
-        roster[number].multi_mis_flown = 0;
-        roster[number].multi_mis_success = 0;
-        roster[number].multi_mis_drops = 0;
-        roster[number].multi_mis_shotsf = 0;
-        roster[number].multi_mis_shotshit = 0;
-        roster[number].multi_mis_bombs = 0;
-        roster[number].multi_mis_bombshit = 0;
-        roster[number].multi_mis_dropped = 0;
-        roster[number].multi_mis_totals = 0;
-
-        for (l = 0; l < 4; l++)
-          for (l2 = 0; l2 < 6; l2++)
-            roster[number].solo_mis_scores[l][l2] = 0;
-
+        roster[number] = {};
         roster[number].up = TK_x;
         roster[number].down = TK_w;
         roster[number].roll = TK_s;
@@ -958,59 +842,24 @@ void roster_menu() {
 
         config.joystick[4] = -1;
 
-        rosteri->blit(0, 0);
+        for (const auto &prompt : roster_key_prompts) {
+          int32_t &keycode = roster[number].*prompt.key;
 
-        frost->printf(125, 100, "Key for upward turn [%s]",
-                      key_name((int)roster[number].up));
-        do_all();
+          rosteri->blit(0, 0);
+          frost->printf(125, 100, "%s [%s]", prompt.text,
+                        key_name((int)keycode));
+          do_all();
 
-        roster[number].up = select_key(number, roster[number].up);
-
-        rosteri->blit(0, 0);
-        frost->printf(125, 100, "Key for downward turn [%s]",
-                      key_name((int)roster[number].down));
-        do_all();
-
-        roster[number].down = select_key(number, roster[number].down);
-
-        rosteri->blit(0, 0);
-        frost->printf(125, 100, "Key for roll [%s]",
-                      key_name((int)roster[number].roll));
-        do_all();
-
-        roster[number].roll = select_key(number, roster[number].roll);
-
-        rosteri->blit(0, 0);
-
-        frost->printf(125, 100, "Key for engine power [%s]",
-                      key_name((int)roster[number].power));
-        do_all();
-
-        roster[number].power = select_key(number, roster[number].power);
-
-        rosteri->blit(0, 0);
-
-        frost->printf(125, 100, "Key for bomb drop [%s]",
-                      key_name((int)roster[number].bombs));
-        do_all();
-
-        roster[number].bombs = select_key(number, roster[number].bombs);
-
-        rosteri->blit(0, 0);
-
-        frost->printf(125, 100, "Key for guns [%s]",
-                      key_name((int)roster[number].guns));
-        do_all();
-
-        roster[number].guns = select_key(number, roster[number].guns);
+          keycode = select_key(number, keycode);
+        }
         break;
 
       case 8:
         if (joystick_exists & JOY1) {
-          config.joystick[4] = 1;
-          joystick_roster_setup(rosteri.get());
+          config.joystick[ROSTER_JOYSTICK] = 1;
+          joystick_setup(ROSTER_JOYSTICK, rosteri.get(), 125, 100);
           save_joysticks_data(CALIBRATION_FILENAME);
-          config.joystick_calibrated[4] = 1;
+          config.joystick_calibrated[ROSTER_JOYSTICK] = 1;
         } else {
           rosteri->blit(0, 0);
           frost->printf(125, 100, "Joystick 1 not connected");
@@ -1038,39 +887,7 @@ void roster_menu() {
 
         l = number + 1;
         while (roster[l].pilotname[0]) {
-          strcpy(roster[l - 1].pilotname, roster[l].pilotname);
-          roster[l - 1].solo_mis_flown = roster[l].solo_mis_flown;
-          roster[l - 1].solo_mis_success = roster[l].solo_mis_success;
-          roster[l - 1].solo_mis_drops = roster[l].solo_mis_drops;
-          roster[l - 1].solo_mis_shotsf = roster[l].solo_mis_shotsf;
-          roster[l - 1].solo_mis_shotshit = roster[l].solo_mis_shotshit;
-          roster[l - 1].solo_mis_bombs = roster[l].solo_mis_bombs;
-          roster[l - 1].solo_mis_bombshit = roster[l].solo_mis_bombshit;
-          roster[l - 1].solo_mis_dropped = roster[l].solo_mis_dropped;
-          roster[l - 1].solo_mis_totals = roster[l].solo_mis_totals;
-
-          for (l3 = 0; l3 < 4; l3++)
-            for (l2 = 0; l2 < 6; l2++)
-              roster[l - 1].solo_mis_scores[l3][l2] =
-                  roster[l].solo_mis_scores[l3][l2];
-
-          roster[l - 1].multi_mis_flown = roster[l].multi_mis_flown;
-          roster[l - 1].multi_mis_success = roster[l].multi_mis_success;
-          roster[l - 1].multi_mis_drops = roster[l].multi_mis_drops;
-          roster[l - 1].multi_mis_shotsf = roster[l].multi_mis_shotsf;
-          roster[l - 1].multi_mis_shotshit = roster[l].multi_mis_shotshit;
-          roster[l - 1].multi_mis_bombs = roster[l].multi_mis_bombs;
-          roster[l - 1].multi_mis_bombshit = roster[l].multi_mis_bombshit;
-          roster[l - 1].multi_mis_dropped = roster[l].multi_mis_dropped;
-          roster[l - 1].multi_mis_totals = roster[l].multi_mis_totals;
-
-          roster[l - 1].up = roster[l].up;
-          roster[l - 1].down = roster[l].down;
-          roster[l - 1].roll = roster[l].roll;
-          roster[l - 1].power = roster[l].power;
-          roster[l - 1].guns = roster[l].guns;
-          roster[l - 1].bombs = roster[l].bombs;
-
+          roster[l - 1] = roster[l];
           l++;
         }
         roster[l - 1].pilotname[0] = 0;
@@ -1087,7 +904,7 @@ void roster_menu() {
   wait_mouse_relase();
 }
 
-void check_other_joys(int num, int active) {
+static void check_other_joys(int num, int active) {
   for (int i = 0; i < 4; i++) {
     if (i == num)
       continue;
@@ -1095,6 +912,81 @@ void check_other_joys(int num, int active) {
       config.joystick[i] = -1;
   }
 }
+
+/* A yes/no row of the options menu: its label, its row y and the
+ * configuration field it sets. The yes box is at x 214-221 and the no box
+ * at x 224-231 of the same y. */
+struct option_row {
+  const char *label;
+  int y;
+  int32_t configuration::*field;
+};
+
+/* Rows that are just a label and a checkbox pair. The rows of the
+ * multiplayer page with extra controls (all_planes_are and its plane
+ * selector, the stop counter, alliance and its selector) are handled in
+ * options_menu. */
+static constexpr option_row visual_options[] = {
+    {"Shots visible?", 60, &configuration::shots_visible},
+    {"AAA shots visible?", 70, &configuration::it_shots_visible},
+    {"AA-MG shots visible?", 80, &configuration::aa_mg_shots_visible},
+    {"Flags?", 90, &configuration::flags},
+    {"Structure flames?", 100, &configuration::flames},
+    {nullptr, 110, &configuration::svga}, // label depends on split_num
+    {"Structure smoke?", 120, &configuration::structure_smoke},
+};
+
+static constexpr option_row audio_options[] = {
+    {"Sounds on?", 60, &configuration::sound_on},
+    {"Musics on?", 70, &configuration::music_on},
+    {"SFX on?", 80, &configuration::sfx_on},
+    {"Explosion sounds?", 90, &configuration::explosion_sounds},
+    {"Gunfire sounds?", 100, &configuration::gunshot_sounds},
+    {"AAA-fire sounds?", 110, &configuration::ground_i_sounds},
+    {"Water splash sound?", 120, &configuration::splash},
+    {"Infantry sounds?", 130, &configuration::infantry_sounds},
+};
+
+static constexpr option_row flying_options[] = {
+    {"Do you want on/off power?", 60, &configuration::poweronoff},
+    {"Do you want a reversed\n  powerswitch?", 70, &configuration::powerrev},
+};
+
+static constexpr option_row multiplayer_options[] = {
+    {"Are all planes the same?", 60, &configuration::all_planes_are},
+    {"Collisions on?", 70, &configuration::nocollision},
+    {"Flying parts hit plane?", 80, &configuration::partcollision},
+    {"Battle ends after n points", 90, &configuration::stop},
+    {"Alliances enabled?", 100, &configuration::alliance},
+    {"AA-MGs?", 110, &configuration::aa_mgs},
+    {"AAAs?", 120, &configuration::it_guns},
+    {"Infantry?", 130, &configuration::infantry},
+    {"Unlimited ammo?", 140, &configuration::unlimited_ammo},
+    {"Unlimited gas?", 150, &configuration::unlimited_gas},
+};
+
+struct option_page {
+  const option_row *rows;
+  int row_count;
+};
+
+static constexpr option_page option_pages[4] = {
+    {visual_options, std::size(visual_options)},
+    {audio_options, std::size(audio_options)},
+    {flying_options, std::size(flying_options)},
+    {multiplayer_options, std::size(multiplayer_options)},
+};
+
+/* Rows of the multiplayer page (optimode 3) with extra controls. */
+static constexpr int ALL_PLANES_ARE_Y = 60;
+static constexpr int STOP_Y = 90;
+static constexpr int ALLIANCE_Y = 100;
+
+/* The menuselect ids used while an option row is clicked. */
+static constexpr int MENUSELECT_OPTION_ROW = 10; // + row index
+static constexpr int MENUSELECT_STOP = 28;
+static constexpr int MENUSELECT_PLANE_TYPE = 51;  // + plane type - 1
+static constexpr int MENUSELECT_ALLIANCE = 55;    // + alliance - 1
 
 void options_menu() {
   int exit_flag = 0;
@@ -1110,10 +1002,11 @@ void options_menu() {
   int optimode = 0;
   int l;
 
-  char selitykset[4][80] = {"This form has questions about your vision.",
-                            "This form has questions about your hearing.",
-                            "Phychological questions about flying.",
-                            "Questions about hostile environments."};
+  static constexpr const char *selitykset[4] = {
+      "This form has questions about your vision.",
+      "This form has questions about your hearing.",
+      "Phychological questions about flying.",
+      "Questions about hostile environments."};
 
   kohta[3] = std::make_unique<Bitmap>("OPTI1");
   kohta[2] = std::make_unique<Bitmap>("OPTI2");
@@ -1130,237 +1023,64 @@ void options_menu() {
     kohta[3 - optimode]->blit(248, 13);
     frost->printf(73, 43, "%s", selitykset[optimode]);
 
-    switch (optimode) {
-    case 0:
-      frost->printf(73, 60, "Shots visible?");
-      frost->printf(73, 70, "AAA shots visible?");
-      frost->printf(73, 80, "AA-MG shots visible?");
-      frost->printf(73, 90, "Flags?");
-      frost->printf(73, 100, "Structure flames?");
-      frost->printf(73, 110, "Use %s window?",
-                    split_num == 2
-                        ? "800x600"
-                        : (split_num == 1 ? "1200x400" : "2400:200"));
-      frost->printf(73, 120, "Structure smoke?");
+    const option_page &page = option_pages[optimode];
+    const bool multiplayer_page = (optimode == 3);
 
-      for (l = 0; l < 7; l++) {
-        boxi(214, 60 + l * 10, 221, 68 + l * 10, 0);
-        boxi(224, 60 + l * 10, 231, 68 + l * 10, 0);
+    for (l = 0; l < page.row_count; l++) {
+      const option_row &row = page.rows[l];
+
+      if (row.label)
+        frost->printf(73, row.y, "%s", row.label);
+      else
+        frost->printf(73, row.y, "Use %s window?",
+                      split_num == 2
+                          ? "800x600"
+                          : (split_num == 1 ? "1200x400" : "2400:200"));
+    }
+
+    for (l = 0; l < page.row_count; l++) {
+      const option_row &row = page.rows[l];
+
+      if (multiplayer_page && row.y == STOP_Y)
+        continue;
+      boxi(214, row.y, 221, row.y + 8, 0);
+      boxi(224, row.y, 231, row.y + 8, 0);
+    }
+
+    for (l = 0; l < page.row_count; l++) {
+      const option_row &row = page.rows[l];
+      const int32_t value = config.*row.field;
+
+      if (multiplayer_page && row.y == STOP_Y) {
+        if (value)
+          frost->printf(216, 91, "%d", value);
+        else
+          frost->printf(216, 91, "UnLtd");
+        continue;
       }
 
-      if (config.shots_visible)
-        right->blit(215, 60);
-      else
-        wrong->blit(225, 60);
+      if (value) {
+        right->blit(215, row.y);
 
-      if (config.it_shots_visible)
-        right->blit(215, 70);
-      else
-        wrong->blit(225, 70);
+        if (multiplayer_page && row.y == ALL_PLANES_ARE_Y) {
+          opt1->blit(1, 1);
+          boxi(34, 10, 41, 18, 0);
+          boxi(34, 31, 41, 39, 0);
+          boxi(34, 52, 41, 60, 0);
+          boxi(34, 73, 41, 81, 0);
 
-      if (config.aa_mg_shots_visible)
-        right->blit(215, 80);
-      else
-        wrong->blit(225, 80);
+          right->blit(35, value * 21 - 11);
+        }
 
-      if (config.flags)
-        right->blit(215, 90);
-      else
-        wrong->blit(225, 90);
-
-      if (config.flames)
-        right->blit(215, 100);
-      else
-        wrong->blit(225, 100);
-
-      if (config.structure_smoke)
-        right->blit(215, 120);
-      else
-        wrong->blit(225, 120);
-
-      if (config.svga)
-        right->blit(215, 110);
-      else
-        wrong->blit(225, 110);
-
-      break;
-
-    case 1:
-
-      frost->printf(73, 60, "Sounds on?");
-      frost->printf(73, 70, "Musics on?");
-      frost->printf(73, 80, "SFX on?");
-      frost->printf(73, 90, "Explosion sounds?");
-      frost->printf(73, 100, "Gunfire sounds?");
-      frost->printf(73, 110, "AAA-fire sounds?");
-      frost->printf(73, 120, "Water splash sound?");
-      frost->printf(73, 130, "Infantry sounds?");
-
-      for (l = 0; l < 8; l++) {
-        boxi(214, 60 + l * 10, 221, 68 + l * 10, 0);
-        boxi(224, 60 + l * 10, 231, 68 + l * 10, 0);
-      }
-
-      if (config.sound_on)
-        right->blit(215, 60);
-      else
-        wrong->blit(225, 60);
-
-      if (config.music_on)
-        right->blit(215, 70);
-      else
-        wrong->blit(225, 70);
-
-      if (config.sfx_on)
-        right->blit(215, 80);
-      else
-        wrong->blit(225, 80);
-
-      if (config.explosion_sounds)
-        right->blit(215, 90);
-      else
-        wrong->blit(225, 90);
-
-      if (config.gunshot_sounds)
-        right->blit(215, 100);
-      else
-        wrong->blit(225, 100);
-
-      if (config.ground_i_sounds)
-        right->blit(215, 110);
-      else
-        wrong->blit(225, 110);
-
-      if (config.splash)
-        right->blit(215, 120);
-      else
-        wrong->blit(225, 120);
-
-      if (config.infantry_sounds)
-        right->blit(215, 130);
-      else
-        wrong->blit(225, 130);
-
-      break;
-
-    case 2:
-
-      frost->printf(73, 60, "Do you want on/off power?");
-      frost->printf(73, 70, "Do you want a reversed\n  powerswitch?");
-
-      for (l = 0; l < 2; l++) {
-        boxi(214, 60 + l * 10, 221, 68 + l * 10, 0);
-        boxi(224, 60 + l * 10, 231, 68 + l * 10, 0);
-      }
-
-      if (config.poweronoff)
-        right->blit(215, 60);
-      else
-        wrong->blit(225, 60);
-
-      if (config.powerrev)
-        right->blit(215, 70);
-      else
-        wrong->blit(225, 70);
-
-      break;
-
-    case 3:
-
-      frost->printf(73, 60, "Are all planes the same?");
-      frost->printf(73, 70, "Collisions on?");
-      frost->printf(73, 80, "Flying parts hit plane?");
-      frost->printf(73, 90, "Battle ends after n points");
-      frost->printf(73, 100, "Alliances enabled?");
-      frost->printf(73, 110, "AA-MGs?");
-      frost->printf(73, 120, "AAAs?");
-      frost->printf(73, 130, "Infantry?");
-      frost->printf(73, 140, "Unlimited ammo?");
-      frost->printf(73, 150, "Unlimited gas?");
-
-      for (l = 0; l < 10; l++) {
-        if (l == 3)
-          continue;
-        boxi(214, 60 + l * 10, 221, 68 + l * 10, 0);
-        boxi(224, 60 + l * 10, 231, 68 + l * 10, 0);
-      }
-
-      if (config.all_planes_are) {
-        right->blit(215, 60);
-        opt1->blit(1, 1);
-        boxi(34, 10, 41, 18, 0);
-        boxi(34, 31, 41, 39, 0);
-        boxi(34, 52, 41, 60, 0);
-        boxi(34, 73, 41, 81, 0);
-
-        right->blit(35, config.all_planes_are * 21 - 11);
+        if (multiplayer_page && row.y == ALLIANCE_Y) {
+          opt2->blit(1, 92);
+          boxi(5, 92 + value * 32 - 28, 53, 92 + value * 32 + 4, 38);
+        }
       } else
-        wrong->blit(225, 60);
-
-      if (config.nocollision)
-        right->blit(215, 70);
-      else
-        wrong->blit(225, 70);
-
-      if (config.partcollision)
-        right->blit(215, 80);
-      else
-        wrong->blit(225, 80);
-
-      /*
-         if(config.stop)
-         right->blit(215,90);
-         else
-         wrong->blit(225,90);
-       */
-
-      if (config.stop)
-        frost->printf(216, 91, "%d", config.stop);
-      else
-        frost->printf(216, 91, "UnLtd");
-
-      if (config.alliance) {
-        right->blit(215, 100);
-        opt2->blit(1, 92);
-        boxi(5, 92 + config.alliance * 32 - 28, 53,
-             92 + config.alliance * 32 + 4, 38);
-      } else
-        wrong->blit(225, 100);
-
-      if (config.aa_mgs)
-        right->blit(215, 110);
-      else
-        wrong->blit(225, 110);
-
-      if (config.it_guns)
-        right->blit(215, 120);
-      else
-        wrong->blit(225, 120);
-
-      if (config.infantry)
-        right->blit(215, 130);
-      else
-        wrong->blit(225, 130);
-
-      if (config.unlimited_ammo)
-        right->blit(215, 140);
-      else
-        wrong->blit(225, 140);
-
-      if (config.unlimited_gas)
-        right->blit(215, 150);
-      else
-        wrong->blit(225, 150);
-
-      break;
+        wrong->blit(225, row.y);
     }
 
     menuselect = 0;
-    /*if(x>=257 && x<=272 && y>=53 && y<=173)
-       {
-       frost->printf(15,24,"Create new\n pilot");
-       menuselect=1;
-       } */
 
     if (x >= 267 && x <= 301 && y >= 155 && y <= 190) {
       frost->printf(102, 26, "Back to main menu");
@@ -1387,202 +1107,43 @@ void options_menu() {
       menuselect = 6;
     }
 
-    if (optimode == 0)
-      if ((x >= 214 && x <= 221) || (x >= 224 && x <= 231)) {
-        if (x <= 221)
-          menusubselect = 1;
-        else
-          menusubselect = 0;
+    /* The stop counter is also hit between its (undrawn) boxes. */
+    if (multiplayer_page && x >= 214 && x <= 231 && y >= STOP_Y &&
+        y <= STOP_Y + 8)
+      menuselect = MENUSELECT_STOP;
 
-        if (y >= 60 && y <= 68) {
-          // shots_visible
-          menuselect = 10;
-        }
+    if ((x >= 214 && x <= 221) || (x >= 224 && x <= 231)) {
+      if (x <= 221)
+        menusubselect = 1;
+      else
+        menusubselect = 0;
 
-        if (y >= 70 && y <= 78) {
-          // it_shots_visible
-          menuselect = 11;
-        }
+      for (l = 0; l < page.row_count; l++) {
+        const option_row &row = page.rows[l];
 
-        if (y >= 80 && y <= 88) {
-          // aa_mg_shots_visible
-          menuselect = 12;
-        }
-
-        if (y >= 90 && y <= 98) {
-          // flags
-          menuselect = 13;
-        }
-
-        if (y >= 100 && y <= 108) {
-          // flames
-          menuselect = 14;
-        }
-
-        if (y >= 120 && y <= 128) {
-          // structure_smoke
-          menuselect = 64;
-        }
-
-        if (y >= 110 && y <= 118) {
-          // svga
-          menuselect = 15;
+        if (y >= row.y && y <= row.y + 8) {
+          if (multiplayer_page && row.y == STOP_Y)
+            menuselect = MENUSELECT_STOP;
+          else
+            menuselect = MENUSELECT_OPTION_ROW + l;
         }
       }
+    }
 
-    if (optimode == 1)
-      if ((x >= 214 && x <= 221) || (x >= 224 && x <= 231)) {
-        if (x <= 221)
-          menusubselect = 1;
-        else
-          menusubselect = 0;
-
-        if (y >= 60 && y <= 68) {
-          // sounds_on
-          menuselect = 16;
-        }
-
-        if (y >= 70 && y <= 78) {
-          // music_on
-          menuselect = 17;
-        }
-
-        if (y >= 80 && y <= 88) {
-          // sfx_on
-          menuselect = 18;
-        }
-
-        if (y >= 90 && y <= 98) {
-          // explosion_sounds
-          menuselect = 19;
-        }
-
-        if (y >= 100 && y <= 108) {
-          // gunshot_sounds
-          menuselect = 20;
-        }
-
-        if (y >= 110 && y <= 118) {
-          // ground_i_sounds
-          menuselect = 21;
-        }
-
-        if (y >= 120 && y <= 128) {
-          // splash
-          menuselect = 22;
-        }
-
-        if (y >= 130 && y <= 138) {
-          // infantry_sounds
-          menuselect = 50;
-        }
+    if (multiplayer_page) {
+      if (config.all_planes_are && x >= 34 && x <= 41) {
+        for (l = 0; l < 4; l++)
+          if (y >= 10 + l * 21 && y <= 18 + l * 21)
+            menuselect = MENUSELECT_PLANE_TYPE + l;
       }
 
-    if (optimode == 2)
-      if ((x >= 214 && x <= 221) || (x >= 224 && x <= 231)) {
-        if (x <= 221)
-          menusubselect = 1;
-        else
-          menusubselect = 0;
-
-        if (y >= 60 && y <= 68) {
-          // poweronoff
-          menuselect = 23;
-        }
-
-        if (y >= 70 && y <= 78) {
-          // powerrev
-          menuselect = 24;
-        }
-      }
-
-    if (optimode == 3) {
-      if (x >= 214 && x <= 231 && y >= 90 && y <= 98)
-        menuselect = 28;
-
-      if ((x >= 214 && x <= 221) || (x >= 224 && x <= 231)) {
-        if (x <= 221)
-          menusubselect = 1;
-        else
-          menusubselect = 0;
-
-        if (y >= 60 && y <= 68) {
-          // all_planes_are
-          menuselect = 25;
-        }
-
-        if (y >= 70 && y <= 78) {
-          // nocollision
-          menuselect = 26;
-        }
-
-        if (y >= 80 && y <= 88) {
-          // partcollision
-          menuselect = 27;
-        }
-
-        if (y >= 90 && y <= 98) {
-          // stop
-          menuselect = 28;
-        }
-
-        if (y >= 100 && y <= 108) {
-          // alliance
-          menuselect = 29;
-        }
-
-        if (y >= 110 && y <= 118) {
-          // aa_mgs
-          menuselect = 30;
-        }
-
-        if (y >= 120 && y <= 128) {
-          // it_gungs
-          menuselect = 31;
-        }
-
-        if (y >= 130 && y <= 138) {
-          // infantry
-          menuselect = 32;
-        }
-
-        if (y >= 140 && y <= 148) {
-          // unlimited_ammo
-          menuselect = 33;
-        }
-
-        if (y >= 150 && y <= 158) {
-          // unlimited_gas
-          menuselect = 34;
-        }
-      }
-
-      if (config.all_planes_are && x >= 34 && y >= 10 && x <= 41 && y <= 18) {
-        menuselect = 51;
-      }
-
-      if (config.all_planes_are && x >= 34 && y >= 31 && x <= 41 && y <= 39) {
-        menuselect = 52;
-      }
-
-      if (config.all_planes_are && x >= 34 && y >= 52 && x <= 41 && y <= 60) {
-        menuselect = 53;
-      }
-
-      if (config.all_planes_are && x >= 34 && y >= 73 && x <= 41 && y <= 81) {
-        menuselect = 54;
-      }
-
-      if (config.alliance && x >= 5 && y >= 96 && x <= 53 && y <= 128) {
-        menuselect = 55;
-      }
-
-      if (config.alliance && x >= 5 && y >= 129 && x <= 53 && y <= 160) {
-        menuselect = 56;
-      }
-
-      if (config.alliance && x >= 5 && y >= 161 && x <= 53 && y <= 182) {
-        menuselect = 57;
+      if (config.alliance && x >= 5 && x <= 53) {
+        if (y >= 96 && y <= 128)
+          menuselect = MENUSELECT_ALLIANCE;
+        if (y >= 129 && y <= 160)
+          menuselect = MENUSELECT_ALLIANCE + 1;
+        if (y >= 161 && y <= 182)
+          menuselect = MENUSELECT_ALLIANCE + 2;
       }
     }
 
@@ -1590,9 +1151,7 @@ void options_menu() {
     do_all(1);
 
     if ((n1 || n2) && menuselect) {
-      switch (menuselect) {
-
-      case 2:
+      if (menuselect == 2) {
         if (n1)
           gfx::fades::random_fade_out();
         else {
@@ -1600,89 +1159,17 @@ void options_menu() {
           do_all();
         }
         exit_flag = 1;
-        break;
+      }
 
-      case 10:
-        config.shots_visible = menusubselect;
-        break;
+      if (menuselect >= 3 && menuselect <= 6)
+        optimode = menuselect - 3;
 
-      case 11:
-        config.it_shots_visible = menusubselect;
-        break;
+      if (menuselect >= MENUSELECT_OPTION_ROW &&
+          menuselect < MENUSELECT_OPTION_ROW + page.row_count)
+        config.*page.rows[menuselect - MENUSELECT_OPTION_ROW].field =
+            menusubselect;
 
-      case 12:
-        config.aa_mg_shots_visible = menusubselect;
-        break;
-
-      case 13:
-        config.flags = menusubselect;
-        break;
-
-      case 14:
-        config.flames = menusubselect;
-        break;
-
-      case 64:
-        config.structure_smoke = menusubselect;
-        break;
-
-      case 15:
-        config.svga = menusubselect;
-        break;
-
-      case 16:
-        config.sound_on = menusubselect;
-        break;
-
-      case 17:
-        config.music_on = menusubselect;
-        break;
-
-      case 18:
-        config.sfx_on = menusubselect;
-        break;
-
-      case 19:
-        config.explosion_sounds = menusubselect;
-        break;
-
-      case 20:
-        config.gunshot_sounds = menusubselect;
-        break;
-
-      case 21:
-        config.ground_i_sounds = menusubselect;
-        break;
-
-      case 22:
-        config.splash = menusubselect;
-        break;
-
-      case 50:
-        config.infantry_sounds = menusubselect;
-        break;
-
-      case 23:
-        config.poweronoff = menusubselect;
-        break;
-
-      case 24:
-        config.powerrev = menusubselect;
-        break;
-
-      case 25:
-        config.all_planes_are = menusubselect;
-        break;
-
-      case 26:
-        config.nocollision = menusubselect;
-        break;
-
-      case 27:
-        config.partcollision = menusubselect;
-        break;
-
-      case 28:
+      if (menuselect == MENUSELECT_STOP) {
         if (n1) {
           if (++config.stop > 999)
             config.stop = 999;
@@ -1691,43 +1178,16 @@ void options_menu() {
           if (--config.stop < 0)
             config.stop = 0;
         }
-
-        break;
-
-      case 29:
-        config.alliance = menusubselect;
-        break;
-
-      case 30:
-        config.aa_mgs = menusubselect;
-        break;
-
-      case 31:
-        config.it_guns = menusubselect;
-        break;
-
-      case 32:
-        config.infantry = menusubselect;
-        break;
-
-      case 33:
-        config.unlimited_ammo = menusubselect;
-        break;
-
-      case 34:
-        config.unlimited_gas = menusubselect;
-        break;
       }
 
-      if (menuselect >= 3 && menuselect <= 6)
-        optimode = menuselect - 3;
-
-      if (menuselect >= 51 && menuselect <= 54) {
-        config.all_planes_are = menuselect - 50;
+      if (menuselect >= MENUSELECT_PLANE_TYPE &&
+          menuselect <= MENUSELECT_PLANE_TYPE + 3) {
+        config.all_planes_are = menuselect - MENUSELECT_PLANE_TYPE + 1;
       }
 
-      if (menuselect >= 55 && menuselect <= 57) {
-        config.alliance = menuselect - 54;
+      if (menuselect >= MENUSELECT_ALLIANCE &&
+          menuselect <= MENUSELECT_ALLIANCE + 2) {
+        config.alliance = menuselect - MENUSELECT_ALLIANCE + 1;
       }
     }
   }
@@ -1755,12 +1215,12 @@ void options_menu() {
   wait_mouse_relase();
 }
 
-void transfer_menu() {
+static void transfer_menu() {
   int exit_flag = 0;
   int x, y, n1, n2;
   int menuselect;
   std::unique_ptr<Bitmap> color_bites[6];
-    std::unique_ptr<Bitmap> descs[6];
+  std::unique_ptr<Bitmap> descs[6];
   int l;
 
   std::unique_ptr<Bitmap> optionme(new Bitmap("TRANS2"));
@@ -1802,7 +1262,6 @@ void transfer_menu() {
         (x >= 0 && x <= 319 && y >= 151 && y <= 199) ||
         (x >= 0 && x <= 32 && y >= 0 && y <= 199) ||
         (x >= 282 && x <= 319 && y >= 0 && y <= 199)) {
-      // frost->printf(25,180,"Back to main menu");
       menuselect = 2;
     }
 
@@ -1810,7 +1269,6 @@ void transfer_menu() {
       if (x >= (39 + l * 80 - (l / 3) * 240) &&
           x <= (118 + l * 80 - (l / 3) * 240) && y >= (46 + (l / 3) * 50) &&
           y <= (95 + (l / 3) * 50)) {
-        // frost->printf(25,180,"Select level %d",l+1);
         menuselect = 3 + l;
       }
 
@@ -1840,7 +1298,11 @@ void transfer_menu() {
   wait_mouse_relase();
 }
 
-static void joystick_setup(int joy, std::unique_ptr<Bitmap>& controlme) {
+/* Calibrates joystick_config[joy] interactively. The ROSTER_JOYSTICK is
+ * always the first physical joystick. The prompts are drawn over
+ * background at (text_x, text_y) and 7 pixels below. */
+static void joystick_setup(const int joy, Bitmap *background, const int text_x,
+                           const int text_y) {
   Sint16 *idle, *current;
   int i, c;
   struct {
@@ -1855,21 +1317,17 @@ static void joystick_setup(int joy, std::unique_ptr<Bitmap>& controlme) {
               {"Brake", &joystick_config[joy].brake},
               {nullptr, nullptr}};
 
-  if (joy == 0)
+  if (joy == ROSTER_JOYSTICK)
     open_close_joysticks(1, 0, 0, 0);
-  else if (joy == 1)
-    open_close_joysticks(0, 1, 0, 0);
-  else if (joy == 2)
-    open_close_joysticks(0, 0, 1, 0);
-  else if (joy == 3)
-    open_close_joysticks(0, 0, 0, 1);
+  else
+    open_close_joysticks(joy == 0, joy == 1, joy == 2, joy == 3);
 
   idle = allocate_axis_state(joy);
   current = allocate_axis_state(joy);
 
-  controlme->blit(0, 0);
-  frost->printf(54, 93, "Keep joystick idle and press");
-  frost->printf(54, 100, "Space (Esc=use old settings)");
+  background->blit(0, 0);
+  frost->printf(text_x, text_y, "Keep joystick idle and press");
+  frost->printf(text_x, text_y + 7, "Space (Esc=use old settings)");
   do_all();
   do {
     c = getch();
@@ -1880,9 +1338,9 @@ static void joystick_setup(int joy, std::unique_ptr<Bitmap>& controlme) {
   save_axis_state(idle, joy);
 
   for (i = 0; acts[i].prompt != nullptr; i++) {
-    controlme->blit(0, 0);
-    frost->printf(54, 93, "Do '%s' on joystick and", acts[i].prompt);
-    frost->printf(54, 100, "press Space or D=disable this");
+    background->blit(0, 0);
+    frost->printf(text_x, text_y, "Do '%s' on joystick and", acts[i].prompt);
+    frost->printf(text_x, text_y + 7, "press Space or D=disable this");
     do_all();
     do {
       c = getch();
@@ -1895,65 +1353,6 @@ static void joystick_setup(int joy, std::unique_ptr<Bitmap>& controlme) {
       if (!find_changed_button(acts[i].act, joy)) {
         save_axis_state(current, joy);
         find_changed_axis(acts[i].act, idle, current, joy);
-      }
-    }
-  }
-
-joystick_setup_exit:
-  util::wutil::wfree(idle);
-  util::wutil::wfree(current);
-
-  open_close_joysticks(0, 0, 0, 0);
-}
-
-void joystick_roster_setup(Bitmap *controlme) {
-  Sint16 *idle, *current;
-  int i, c;
-  struct {
-    const char *prompt;
-    joystick_action *act;
-  } acts[] = {{"Up", &joystick_config[4].up},
-              {"Down", &joystick_config[4].down},
-              {"Roll", &joystick_config[4].roll},
-              {"Power", &joystick_config[4].power},
-              {"Guns", &joystick_config[4].guns},
-              {"Bombs", &joystick_config[4].bombs},
-              {"Brake", &joystick_config[4].brake},
-              {nullptr, nullptr}};
-
-  open_close_joysticks(1, 0, 0, 0);
-
-  idle = allocate_axis_state(4);
-  current = allocate_axis_state(4);
-
-  controlme->blit(0, 0);
-  frost->printf(125, 100, "Keep joystick idle and press");
-  frost->printf(125, 107, "Space (Esc=use old settings)");
-  do_all();
-  do {
-    c = getch();
-  } while (c != 27 && c != ' ');
-  if (c == 27)
-    goto joystick_setup_exit;
-
-  save_axis_state(idle, 4);
-
-  for (i = 0; acts[i].prompt != nullptr; i++) {
-    controlme->blit(0, 0);
-    frost->printf(125, 100, "Do '%s' on joystick and", acts[i].prompt);
-    frost->printf(125, 107, "press Space or D=disable this");
-    do_all();
-    do {
-      c = getch();
-    } while (c != 27 && c != ' ' && c != 'd' && c != 'D');
-    if (c == 27) {
-      goto joystick_setup_exit;
-    } else if (c == 'd' || c == 'D') {
-      set_disabled_action(acts[i].act);
-    } else {
-      if (!find_changed_button(acts[i].act, 4)) {
-        save_axis_state(current, 4);
-        find_changed_axis(acts[i].act, idle, current, 4);
       }
     }
   }
@@ -2125,98 +1524,37 @@ void controls_menu() {
             config.joystick[i] = -1;
         }
 
-        controlme->blit(0, 0);
-        napp[active]->blit((active % 2) * 27 + 10, (active / 2) * 23 + 22);
-        frost->printf(56, 97, "Key for upward turn [%s]",
-                      key_name((int)player_keys[active].up));
-        do_all();
+        for (const auto &prompt : player_key_prompts) {
+          int32_t &keycode = player_keys[active].*prompt.key;
 
-        player_keys[active].up = select_key(active, player_keys[active].up);
+          controlme->blit(0, 0);
+          napp[active]->blit((active % 2) * 27 + 10, (active / 2) * 23 + 22);
+          frost->printf(56, 97, "%s [%s]", prompt.text,
+                        key_name((int)keycode));
+          do_all();
 
-        controlme->blit(0, 0);
-        napp[active]->blit((active % 2) * 27 + 10, (active / 2) * 23 + 22);
-        frost->printf(56, 97, "Key for downward turn [%s]",
-                      key_name((int)player_keys[active].down));
-        do_all();
-
-        player_keys[active].down = select_key(active, player_keys[active].down);
-
-        controlme->blit(0, 0);
-        napp[active]->blit((active % 2) * 27 + 10, (active / 2) * 23 + 22);
-        frost->printf(56, 97, "Key for roll [%s]",
-                      key_name((int)player_keys[active].roll));
-        do_all();
-
-        player_keys[active].roll = select_key(active, player_keys[active].roll);
-
-        controlme->blit(0, 0);
-        napp[active]->blit((active % 2) * 27 + 10, (active / 2) * 23 + 22);
-        frost->printf(56, 97, "Key for engine power [%s]",
-                      key_name((int)player_keys[active].power));
-        do_all();
-
-        player_keys[active].power =
-            select_key(active, player_keys[active].power);
-
-        controlme->blit(0, 0);
-        napp[active]->blit((active % 2) * 27 + 10, (active / 2) * 23 + 22);
-        frost->printf(56, 97, "Key for bomb drop [%s]",
-                      key_name((int)player_keys[active].bombs));
-        do_all();
-
-        player_keys[active].bombs =
-            select_key(active, player_keys[active].bombs);
-
-        controlme->blit(0, 0);
-        napp[active]->blit((active % 2) * 27 + 10, (active / 2) * 23 + 22);
-        frost->printf(56, 97, "Key for guns [%s]",
-                      key_name((int)player_keys[active].guns));
-        do_all();
-
-        player_keys[active].guns = select_key(active, player_keys[active].guns);
+          keycode = select_key(active, keycode);
+        }
 
         save_keyset();
         break;
 
       case 8:
-        if (joystick_exists & JOY1) {
-          config.joystick[0] = active;
-          check_other_joys(0, active);
-          joystick_setup(0, controlme);
-          save_joysticks_data(CALIBRATION_FILENAME);
-          config.joystick_calibrated[0] = 1;
-        }
-        break;
-
       case 9:
-        if (joystick_exists & JOY2) {
-          config.joystick[1] = active;
-          check_other_joys(1, active);
-          joystick_setup(1, controlme);
-          save_joysticks_data(CALIBRATION_FILENAME);
-          config.joystick_calibrated[1] = 1;
-        }
-        break;
-
       case 10:
-        if (joystick_exists & JOY3) {
-          config.joystick[2] = active;
-          check_other_joys(2, active);
-          joystick_setup(2, controlme);
-          save_joysticks_data(CALIBRATION_FILENAME);
-          config.joystick_calibrated[2] = 1;
-        }
-        break;
+      case 11: {
+        const int joy = menuselect - 8;
+        static constexpr int joystick_bits[4] = {JOY1, JOY2, JOY3, JOY4};
 
-      case 11:
-        if (joystick_exists & JOY4) {
-          config.joystick[3] = active;
-          check_other_joys(3, active);
-          joystick_setup(3, controlme);
+        if (joystick_exists & joystick_bits[joy]) {
+          config.joystick[joy] = active;
+          check_other_joys(joy, active);
+          joystick_setup(joy, controlme.get(), 54, 93);
           save_joysticks_data(CALIBRATION_FILENAME);
-          config.joystick_calibrated[3] = 1;
+          config.joystick_calibrated[joy] = 1;
         }
         break;
+      }
       }
 
       if (menuselect >= 4 && menuselect <= 7) {
@@ -2228,7 +1566,7 @@ void controls_menu() {
   wait_mouse_relase();
 }
 
-void assign_menu() {
+static void assign_menu() {
   int exit_flag = 0;
   int x, y, n1, n2;
   int menuselect;
@@ -2277,7 +1615,6 @@ void assign_menu() {
         (x >= 308 && x <= 319 && y >= 0 && y <= 199) ||
         (x >= 0 && x <= 319 && y >= 0 && y <= 28) ||
         (x >= 0 && x <= 319 && y >= 168 && y <= 199)) {
-      // frost->printf(82,177,"Back to main menu");
       menuselect = 2;
     }
 
@@ -2306,32 +1643,32 @@ void assign_menu() {
         }
       }
 
+      // next pilot
       if (x >= (134 + lx) && x < (143 + lx) && y >= (79 + ly) &&
           y <= (89 + ly)) {
         menusubselect1 = l;
         menuselect = 3;
-        // frost->printf(82,177,"Select next pilot");
       }
 
+      // previous pilot
       if (x >= (143 + lx) && x <= (151 + lx) && y >= (79 + ly) &&
           y <= (89 + ly)) {
         menusubselect1 = l;
         menuselect = 4;
-        // frost->printf(82,177,"Select previous pilot");
       }
 
+      // add plane
       if (x >= (134 + lx) && x < (143 + lx) && y >= (67 + ly) &&
           y <= (77 + ly)) {
         menusubselect1 = l;
         menuselect = 5;
-        // frost->printf(82,177,"Add plane");
       }
 
+      // remove plane
       if (x >= (143 + lx) && x <= (151 + lx) && y >= (67 + ly) &&
           y <= (77 + ly)) {
         menusubselect1 = l;
         menuselect = 6;
-        // frost->printf(82,177,"Remove plane");
       }
     }
 
@@ -2594,44 +1931,12 @@ void aces_menu() {
     if (help_on)
       help->blit(0, 0);
 
-    if (!current_page)
-      aces_grand_total();
-    if (current_page == 1)
-      aces_multi_total();
-    if (current_page == 2)
-      aces_solo_total();
-    if (current_page > 2 && current_page <= 26)
-      aces_one_solo((current_page - 3) / 6,
-                    (current_page - 3) - ((current_page - 3) / 6) * 6);
-
-    switch (current_page) {
-    case 27:
-      aces_triggerhappy();
-      break;
-
-    case 28:
-      aces_bombdropper();
-      break;
-
-    case 29:
-      aces_shotaccuracy();
-      break;
-
-    case 30:
-      aces_bombaccuracy();
-      break;
-
-    case 31:
-      aces_mostkills();
-      break;
-
-    case 32:
-      aces_decoy();
-      break;
-
-    case 33:
-      aces_totalmissions();
-      break;
+    if (current_page > 2 && current_page <= 26) {
+      aces_one_solo((current_page - 3) / 6, (current_page - 3) % 6);
+    } else {
+      const aces_page &page =
+          aces_pages[current_page < 3 ? current_page : current_page - 24];
+      aces_show(90, page.title, page.percent, page.score);
     }
 
     if ((n1 || n2) && menuselect) {
@@ -2683,7 +1988,7 @@ int kangas_menu() {
   std::unique_ptr<Bitmap> buttr(new Bitmap("BUTTR"));
   std::unique_ptr<Bitmap> buttl(new Bitmap("BUTTL"));
   std::unique_ptr<Bitmap> fly(new Bitmap("FLY"));
-  std::unique_ptr<Bitmap> exit(new Bitmap("EXIT"));
+  std::unique_ptr<Bitmap> exit_button(new Bitmap("EXIT"));
 
   init_vga("PALET3");
 
@@ -2707,10 +2012,6 @@ int kangas_menu() {
 
   load_descriptions(solo_mission + solo_country * 6);
 
-  if (is_there_sound && config.sfx_on) {
-    // sb_mix_sample(sample_hurr);
-  }
-
   while (!exit_flag) {
     if (kbhit() && getch() == TK_ESCAPE) {
       exit_flag = 1;
@@ -2718,34 +2019,34 @@ int kangas_menu() {
 
     koords(&x, &y, &n1, &n2);
     kangas->blit_fullscreen();
-      world::terrain::kangas_terrain_to_screen(place_x);
+    world::terrain::kangas_terrain_to_screen(place_x);
 
     if (showing_texts)
       show_descriptions(solo_mission + solo_country * 6);
 
     menuselect = 0;
     if (x >= 72 && x <= 88 && y >= 191 && y <= 199) {
-      // frost->printf(150,188,"Fly mission");
+      // fly mission
       menuselect = 1;
     }
 
     if (x >= 54 && x <= 70 && y >= 191 && y <= 199) {
-      // frost->printf(150,188,"Back to mission menu");
+      // back to mission menu
       menuselect = 2;
     }
 
     if (x >= 0 && x <= 16 && y >= 191 && y <= 199) {
-      // frost->printf(150,188,"Scroll map leftwards");
+      // scroll map leftwards
       menuselect = 3;
     }
 
     if (x >= 18 && x <= 34 && y >= 191 && y <= 199) {
-      // frost->printf(150,188,"Scroll map rightwards");
+      // scroll map rightwards
       menuselect = 4;
     }
 
     if (x >= 5 && x <= 315 && y >= 8 && y <= 178) {
-      // frost->printf(150,188,"Texts on/off");
+      // texts on/off
       menuselect = 5;
     }
 
@@ -2763,7 +2064,7 @@ int kangas_menu() {
 
       case 2:
 
-        exit->blit(54, 191);
+        exit_button->blit(54, 191);
         do_all();
         if (n1)
           gfx::fades::random_fade_out();
@@ -2802,8 +2103,7 @@ int kangas_menu() {
     }
   }
 
-  if ((mission_re_fly == -1) && is_there_sound && config.music_on &&
-      !findparameter("-nomusic")) {
+  if ((mission_re_fly == -1) && national_music_enabled()) {
     sdl_stop_music();
     sdl_free_mod_file(national_mod);
   }
@@ -2878,14 +2178,12 @@ void credits_menu() {
 void letter_menu() {
   int exit_flag = 0;
   int x, y, n1, n2;
-  char country_names[4][10] = {"German", "Finnish", "English", "Japanese"};
-  char modnames[4][7] = {"mgerma", "mfinla", "mengla", "mjapan"};
 
   std::unique_ptr<Bitmap> temp(new Bitmap("MEDAL1"));
   std::unique_ptr<Bitmap> medal1(new Bitmap(1 + 32 * solo_country, 1, 31, 57, temp));
 
-  if (is_there_sound && config.music_on && !findparameter("-nomusic")) {
-    national_mod = sdl_load_mod_file(modnames[solo_country]);
+  if (national_music_enabled()) {
+    national_mod = sdl_load_mod_file(national_modnames[solo_country]);
     if (national_mod == nullptr) {
       printf("Error locating music.\n");
       exit(1);
@@ -2932,7 +2230,7 @@ void letter_menu() {
 
   wait_mouse_relase();
 
-  if (is_there_sound && config.music_on && !findparameter("-nomusic")) {
+  if (national_music_enabled()) {
     sdl_stop_music();
     sdl_free_mod_file(national_mod);
   }
@@ -3132,7 +2430,6 @@ void main_menu() {
           fclose(rfile);
         }
 
-        main_engine_random_seed = full_seed;
         ////
 
         init_vga("PALET5");
@@ -3321,13 +2618,13 @@ void main_menu() {
   }
 }
 
-void print_clear_roster(Bitmap *rosteri) {
+static void print_clear_roster(Bitmap *rosteri) {
   rosteri->blit(0, 0);
   grid2->printf(152, 40, "Pilot Info");
 }
 
-void print_filled_roster(int number) {
-  int ts = 0;
+static void print_filled_roster(int number) {
+  int ts;
 
   if (number == -1)
     return;
@@ -3377,14 +2674,7 @@ void print_filled_roster(int number) {
                                             100 / roster[number].multi_mis_bombs
                                       : 0));
 
-  ts += roster[number].multi_mis_flown;
-  ts += roster[number].multi_mis_success * 10;
-  ts += roster[number].multi_mis_drops * 4;
-  ts -= roster[number].multi_mis_dropped;
-  ts -= roster[number].multi_mis_shotsf / 128;
-  ts += roster[number].multi_mis_shotshit / 60;
-  ts -= roster[number].multi_mis_bombs / 12;
-  ts += roster[number].multi_mis_bombshit / 6;
+  ts = calculate_multitotal(number);
 
   frost->printf(122, 167, "- Multiplayer score: %d", ts);
 
