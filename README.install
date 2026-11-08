@@ -4,17 +4,37 @@ Building from source
 Dependencies
 ------------
 
-* g++
-* SDL 1.2 
-* SDL mixer 1.2
-* GNU make
+* a C++23 compiler (g++ or clang++)
+* CMake 3.24 or newer
+* SDL 3
+* libmikmod (plays the music)
+* pkg-config
+* make (optional, see below)
+
+On macOS with Homebrew:
+
+$ brew install cmake sdl3 libmikmod pkg-config
 
 Build procedure
 ---------------
 
-$ make depend
 $ make
+$ make run
 $ make install
+
+The Makefile is a thin wrapper around CMake. The equivalent CMake
+commands are:
+
+$ cmake -S . -B build
+$ cmake --build build
+$ cmake --install build
+
+The game and fokker.dks end up in build/, together with the tools:
+
+* lvledit   level editor (keys are listed in doc/lvledit-keys.txt)
+* pgdview   lists or shows the pictures in fokker.dks
+            (pgdview fokker [picturename])
+* pcx2pgd   PCX to .pgd converter, used by tools/build-data-from-source
 
 DESTDIR and PREFIX are supported. See doc/mingw32.txt for Windows
 build instructions.
@@ -29,10 +49,27 @@ Resulting .deb package is located in parent directory.
 Testsuite
 ---------
 
-Use "make test" to run testsuite. It plays the game with prerecorded
-inputs and checks the CRC checksum of every output frame. This is
-especially important if you are building on a weird architecture or
-have changed something in the code.
+"make test" replays the recorded games in triplane-testsuite/ with your
+build and with a baseline commit, and compares the checksum of every
+frame. Any change in what the game does or draws shows up, with the
+first frame where the two builds differ. Crashes and hangs fail too.
+
+$ make test                  # working tree against the last commit
+$ make test BASE=master      # against another commit, branch or tag
+
+The baseline is built once per commit under build/baseline/. It has to
+be buildable with CMake and SDL3. See tools/compare-baseline -h for the
+remaining options, such as the number of frames compared per game.
+
+"make smoke" only replays the recorded games with your build and checks
+that each draws frames and ends without a crash; it needs no baseline.
+
+GitHub Actions (.github/workflows/ci.yml) runs the build, the smoke test
+and the baseline comparison against the previous commit on Linux
+(Debian trixie), macOS and Windows (MSYS2) for every push and pull
+request. A fourth job builds the Debian package, installs it and
+replays a recorded game with the installed binary; the .deb is kept as
+a workflow artifact.
 
 Regenerating data/
 ------------------
@@ -41,4 +78,5 @@ It is possible to modify the data files that are included in the
 fokker.dks file. Just modify the files in data_src with your favourite
 image editor that understand the PCX format and then use the helper
 script tools/build-data-from-source to regenerate contents of the
-data/ directory.
+data/ directory. Build pcx2pgd first; the script looks for it in
+build/ unless PCX2PGD points elsewhere.

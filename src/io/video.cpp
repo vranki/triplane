@@ -20,15 +20,13 @@
 
 #include "video.h"
 
-#include <SDL/SDL.h>
-#include <cassert>
 #include <csignal>
 #include <unistd.h>
 
 #include "dksfile.h"
 #include "../util/wutil.h"
 
-struct video_state_t video_state = {nullptr, 0, 0};
+struct video_state_t video_state;
 
 struct naytto ruutu;
 
@@ -56,9 +54,17 @@ SDL_Color curpal[256];
  * @param pal the palette, specify nullptr to set all colors to black=(0,0,0)
  * @param reverse = 1 to read colors in reverse order (pal[n-1] to pal[0])
  */
+/* curpal as packed XRGB8888, for converting the frame buffer to the texture */
+static Uint32 palette_lut[256];
+
 void setpal_range(const char pal[][3], int firstcolor, int n, int reverse) {
-  SDL_Color *cc = (SDL_Color *)util::wutil::walloc(n * sizeof(SDL_Color));
+  SDL_Color cc[256];
   int i, from = (reverse ? n - 1 : 0);
+
+  if (firstcolor < 0 || n < 0 || firstcolor + n > 256) {
+    fprintf(stderr, "setpal_range: bad range %d+%d\n", firstcolor, n);
+    exit(1);
+  }
 
   for (i = 0; i < n; i++) {
     if (pal == nullptr) {
@@ -74,124 +80,76 @@ void setpal_range(const char pal[][3], int firstcolor, int n, int reverse) {
       from++;
   }
 
-  if (draw_with_vircr_mode) {
-    SDL_SetPalette(video_state.surface,
-                   video_state.haverealpalette ? SDL_PHYSPAL : SDL_LOGPAL, cc,
-                   firstcolor, n);
-  } else {
-    SDL_SetPalette(video_state.surface, SDL_PHYSPAL | SDL_LOGPAL, cc,
-                   firstcolor, n);
+  for (i = 0; i < n; i++) {
+    cc[i].a = SDL_ALPHA_OPAQUE;
+    palette_lut[firstcolor + i] = 0xff000000u | ((Uint32)cc[i].r << 16) |
+                                  ((Uint32)cc[i].g << 8) | (Uint32)cc[i].b;
   }
+  if (video_state.palette)
+    SDL_SetPaletteColors(video_state.palette, cc, firstcolor, n);
   memcpy(&curpal[firstcolor], cc, n * sizeof(SDL_Color));
-  util::wutil::wfree(cc);
-}
-
-static Uint32 getcolor(unsigned char c) {
-  if (video_state.haverealpalette)
-    return c;
-  else
-    return SDL_MapRGB(video_state.surface->format, curpal[c].r, curpal[c].g,
-                      curpal[c].b);
 }
 
 void fillrect(const int x, const int y, const int w, const int h, const int c) {
-  SDL_Rect r;
-  r.x = x;
-  r.y = y;
-  r.w = w;
-  r.h = h;
-  if (pixel_multiplier > 1) {
-    r.x *= pixel_multiplier;
-    r.y *= pixel_multiplier;
-    r.w *= pixel_multiplier;
-    r.h *= pixel_multiplier;
-  }
-  SDL_FillRect(video_state.surface, &r, getcolor(c));
+  SDL_Rect r = {x, y, w, h};
+  SDL_FillSurfaceRect(video_state.surface, &r, (Uint32)c);
 }
 
-void do_all(int /*do_retrace*/) {
-  if (draw_with_vircr_mode) {
-    if (pixel_multiplier > 1) {
-      int i, j, k;
-      int w = (current_mode == VGA_MODE) ? 320 : screen_width;
-      int h = (current_mode == VGA_MODE) ? 200 : screen_height;
-      uint8_t *in = vircr, *out = (uint8_t *)video_state.surface->pixels;
-      /* optimized versions using 32-bit and 16-bit writes when possible */
-      if (pixel_multiplier == 4 && sizeof(char *) >= 4) { /* word size >= 4 */
-        uint32_t cccc;
-        for (j = 0; j < h * pixel_multiplier; j += pixel_multiplier) {
-          for (i = 0; i < w * pixel_multiplier; i += pixel_multiplier) {
-            cccc = *in | (*in << 8) | (*in << 16) | (*in << 24);
-            in++;
-            for (k = 0; k < pixel_multiplier; k++) {
-              *(uint32_t *)(&out[(j + k) * (w * pixel_multiplier) + i]) = cccc;
-            }
-          }
-        }
-      } else if (pixel_multiplier == 3) {
-        uint16_t cc, c;
-        for (j = 0; j < h * pixel_multiplier; j += pixel_multiplier) {
-          for (i = 0; i < w * pixel_multiplier; i += pixel_multiplier) {
-            c = *in++;
-            cc = c | (c << 8);
-            for (k = 0; k < pixel_multiplier; k++) {
-              *(uint16_t *)(&out[(j + k) * (w * pixel_multiplier) + i]) = cc;
-              out[(j + k) * (w * pixel_multiplier) + i + 2] = c;
-            }
-          }
-        }
-      } else if (pixel_multiplier == 2) {
-        uint16_t cc;
-        for (j = 0; j < h * pixel_multiplier; j += pixel_multiplier) {
-          for (i = 0; i < w * pixel_multiplier; i += pixel_multiplier) {
-            cc = *in | (*in << 8);
-            in++;
-            for (k = 0; k < pixel_multiplier; k++) {
-              *(uint16_t *)(&out[(j + k) * (w * pixel_multiplier) + i]) = cc;
-            }
-          }
-        }
-      } else { /* unoptimized version */
-        int l;
-        uint8_t c;
-        for (j = 0; j < h * pixel_multiplier; j += pixel_multiplier) {
-          for (i = 0; i < w * pixel_multiplier; i += pixel_multiplier) {
-            c = *in++;
-            for (k = 0; k < pixel_multiplier; k++) {
-              for (l = 0; l < pixel_multiplier; l++) {
-                out[(j + k) * (w * pixel_multiplier) + (i + l)] = c;
-              }
-            }
-          }
-        }
-      }
+/* Convert the paletted frame buffer to RGB and show it. The renderer
+ * scales it to the window (and to pixel_multiplier times its size). */
+static void present_frame() {
+  SDL_Surface *src = video_state.surface;
+  void *pixels;
+  int pitch;
+
+  if (SDL_LockTexture(video_state.texture, nullptr, &pixels, &pitch)) {
+    for (int y = 0; y < src->h; y++) {
+      const uint8_t *in = (const uint8_t *)src->pixels + y * src->pitch;
+      Uint32 *out = (Uint32 *)((uint8_t *)pixels + y * pitch);
+      for (int x = 0; x < src->w; x++)
+        out[x] = palette_lut[in[x]];
     }
+    SDL_UnlockTexture(video_state.texture);
   }
 
-  SDL_Flip(video_state.surface);
+  SDL_SetRenderDrawColor(video_state.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+  SDL_RenderClear(video_state.renderer);
+  SDL_RenderTexture(video_state.renderer, video_state.texture, nullptr, nullptr);
+  SDL_RenderPresent(video_state.renderer);
 }
+
+void do_all() { present_frame(); }
 
 static void sigint_handler(int /*dummy*/) { _exit(1); }
 
 void init_video() {
-  int ret;
-
   if (!video_state.init_done) {
-    ret = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK |
-                   SDL_INIT_NOPARACHUTE);
-    if (ret) {
-      fprintf(stderr,
-              "SDL_Init failed with %d. Is your DISPLAY environment variable "
-              "set?\n",
-              ret);
+    SDL_SetAppMetadata("Triplane Classic", TRIPLANE_VERSION,
+                       "fi.iki.triplane");
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)) {
+      fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
       exit(1);
     }
     signal(SIGINT, sigint_handler);
     atexit(SDL_Quit);
     video_state.init_done = 1;
 
-    SDL_WM_SetCaption("Triplane Classic", "Triplane Classic");
-    SDL_ShowCursor(SDL_DISABLE);
+    if (!SDL_CreateWindowAndRenderer("Triplane Classic", 960, 600,
+                                     SDL_WINDOW_RESIZABLE |
+                                         (wantfullscreen ? SDL_WINDOW_FULLSCREEN
+                                                         : 0),
+                                     &video_state.window,
+                                     &video_state.renderer)) {
+      fprintf(stderr, "SDL_CreateWindowAndRenderer: %s\n", SDL_GetError());
+      exit(1);
+    }
+    SDL_HideCursor();
+
+    video_state.palette = SDL_CreatePalette(256);
+    if (!video_state.palette) {
+      fprintf(stderr, "SDL_CreatePalette: %s\n", SDL_GetError());
+      exit(1);
+    }
 
     if (!draw_with_vircr_mode) {
       vircr = (unsigned char *)util::wutil::walloc(screen_width * screen_height);
@@ -200,41 +158,64 @@ void init_video() {
 }
 
 static int init_mode(int new_mode, const char *paletname) {
-  Uint32 mode_flags;
-  const SDL_VideoInfo *vi;
   int las, las2;
   int w = (new_mode == SVGA_MODE) ? screen_width : 320;
   int h = (new_mode == SVGA_MODE) ? screen_height : 200;
 
   init_video();
 
-  mode_flags = SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_HWPALETTE;
-
-  if (!draw_with_vircr_mode)
-    mode_flags |= SDL_ANYFORMAT;
-  if (wantfullscreen)
-    mode_flags |= SDL_FULLSCREEN;
-
-  if (draw_with_vircr_mode && pixel_multiplier > 1)
-      util::wutil::wfree(vircr);
-
   pixel_multiplier =
       (new_mode == SVGA_MODE) ? pixel_multiplier_svga : pixel_multiplier_vga;
 
-  video_state.surface = SDL_SetVideoMode(w * pixel_multiplier,
-                                         h * pixel_multiplier, 8, mode_flags);
-  assert(video_state.surface);
+  /* The frame buffer stays at the game's resolution. pixel_multiplier only
+   * sets the logical size the renderer scales to (and the window size). */
+  int sw = w, sh = h;
+  int lw = w * pixel_multiplier, lh = h * pixel_multiplier;
 
-  if (draw_with_vircr_mode) {
+  if (video_state.surface)
+    SDL_DestroySurface(video_state.surface);
+  video_state.surface = SDL_CreateSurface(sw, sh, SDL_PIXELFORMAT_INDEX8);
+  if (!video_state.surface) {
+    fprintf(stderr, "SDL_CreateSurface: %s\n", SDL_GetError());
+    exit(1);
+  }
+  SDL_SetSurfacePalette(video_state.surface, video_state.palette);
+  /* the game writes to vircr directly, so the pitch must equal the width */
+  if (video_state.surface->pitch != sw) {
+    fprintf(stderr, "Unexpected surface pitch %d for width %d\n",
+            video_state.surface->pitch, sw);
+    exit(1);
+  }
+
+  if (video_state.texture)
+    SDL_DestroyTexture(video_state.texture);
+  video_state.texture =
+      SDL_CreateTexture(video_state.renderer, SDL_PIXELFORMAT_XRGB8888,
+                        SDL_TEXTUREACCESS_STREAMING, sw, sh);
+  if (!video_state.texture) {
+    fprintf(stderr, "SDL_CreateTexture: %s\n", SDL_GetError());
+    exit(1);
+  }
+  SDL_SetTextureScaleMode(video_state.texture, SDL_SCALEMODE_NEAREST);
+  SDL_SetRenderLogicalPresentation(video_state.renderer, lw, lh,
+                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+  if (!wantfullscreen) {
     if (pixel_multiplier > 1) {
-      vircr = (uint8_t *)util::wutil::walloc(w * h);
+      /* -2, -3, -4, -2svga: exactly that many times the game size */
+      SDL_SetWindowSize(video_state.window, lw, lh);
     } else {
-      vircr = (uint8_t *)video_state.surface->pixels;
+      /* otherwise the largest whole multiple that fits 1280x800 */
+      int scale = 1;
+      while (sw * (scale + 1) <= 1280 && sh * (scale + 1) <= 800)
+        scale++;
+      SDL_SetWindowSize(video_state.window, sw * scale, sh * scale);
     }
   }
+
+  if (draw_with_vircr_mode)
+    vircr = (uint8_t *)video_state.surface->pixels;
   /* else vircr is preallocated in init_video */
-  vi = SDL_GetVideoInfo();
-  video_state.haverealpalette = (vi->vfmt->palette != nullptr);
 
   dksopen(paletname);
 

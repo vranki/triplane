@@ -28,21 +28,6 @@
 #include "../world/plane.h"
 #include "../world/tripaudio.h"
 
-//sb_sample *sample_itexp[3];
-extern sb_sample *sample_bomb[4];
-//sb_sample *sample_hitti;
-extern sb_sample *sample_konsu[4];
-//sb_sample *sample_propelli;
-extern sb_sample *sample_hit[4];
-//sb_sample *sample_aagun;
-extern sb_sample *sample_splash[3];
-//sb_sample *sample_spcrash;
-//sb_sample *sample_hurr;
-//sb_sample *sample_itshot;
-//sb_sample *sample_crash[2];
-//sb_sample *sample_alku;
-//sb_sample *sample_die[9];
-
 void do_shots();
 void start_shot(int player);
 void start_shot(int x, int y, int angle, int speed, int infan = -1);
@@ -68,6 +53,39 @@ int flame_width[MAX_FLAMES];
 int flame_age[MAX_FLAMES];
 
 /******************************************************************************/
+
+/* Index of a free flying object, or -1 when all are in use. */
+int alloc_fobject() {
+  for (int l = 0; l < MAX_FLYING_OBJECTS; l++)
+    if (!fobjects[l].x)
+      return l;
+
+  return -1;
+}
+
+/* Index of a free shot, or -1 when all are in the air. */
+static int alloc_shot() {
+  for (int l = 0; l < MAX_SHOTS; l++)
+    if (!shots_flying_x[l])
+      return l;
+
+  return -1;
+}
+
+/* Does the point (x, y), in 1/256 pixels, hit the sprite of plane l2? */
+bool point_hits_plane(int l2, int x, int y) {
+  if (!plane_present[l2])
+    return false;
+
+  if (!(((player_x[l2] + 2304) > x) && ((player_x[l2] - 2304) < x) &&
+        ((player_y[l2] + 2304) > y) && ((player_y[l2] - 2304) < y)))
+    return false;
+
+  return plane_p[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]]
+                [player_upsidedown[l2]]
+                [(x >> 8) - (player_x_8[l2]) + 10 +
+                 ((y >> 8) - (player_y_8[l2]) + 10) * 20] != 255;
+}
 
 void start_flame(int x, int y, int width) {
   int l;
@@ -104,11 +122,9 @@ void do_flames() {
 void start_one_flame(int x, int y) {
   int l;
 
-  for (l = 0; l < MAX_FLYING_OBJECTS; l++)
-    if (!fobjects[l].x)
-      break;
+  l = alloc_fobject();
 
-  if (l != MAX_FLYING_OBJECTS) {
+  if (l != -1) {
     fobjects[l].x = x << 8;
     fobjects[l].y = y << 8;
 
@@ -151,54 +167,48 @@ void do_shots() {
       if ((shots_flying_age[l]++) > SHOTS_RANGE)
         shots_flying_x[l] = 0;
 
+      if (!shots_flying_x[l])
+        continue; /* removed above, do not test it against the planes */
+
       for (l2 = 0; l2 < 16; l2++) {
-        if (plane_present[l2])
-          if (((player_x[l2] + 2304) > shots_flying_x[l]) &&
-              ((player_x[l2] - 2304) < shots_flying_x[l]) &&
-              ((player_y[l2] + 2304) > shots_flying_y[l]) &&
-              ((player_y[l2] - 2304) < shots_flying_y[l]))
-            if (plane_p[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]]
-                       [player_upsidedown[l2]]
-                       [(shots_flying_x[l] >> 8) - (player_x_8[l2]) + 10 +
-                        ((shots_flying_y[l] >> 8) - (player_y_8[l2]) + 10) *
-                            20] != 255) {
+        if (point_hits_plane(l2, shots_flying_x[l], shots_flying_y[l])) {
 
-              if (config.sound_on && config.sfx_on)
-                play_2d_sample(sample_hit[util::wutil::wrandom(4)], player_x_8[solo_country],
-                               player_x_8[l2]);
+          if (config.sound_on && config.sfx_on)
+            play_2d_sample(sample_hit[util::wutil::wrandom(4)], player_x_8[solo_country],
+                           player_x_8[l2]);
 
-              shots_flying_x[l] = 0;
+          shots_flying_x[l] = 0;
 
-              if (shots_flying_owner[l] != -1)
-                player_hits[shots_flying_owner[l]]++;
+          if (shots_flying_owner[l] != -1)
+            player_hits[shots_flying_owner[l]]++;
 
-              // Damage caused when a shot hits player. This is now constant.
-              player_endurance[l2] -= 4;
+          // Damage caused when a shot hits player. This is now constant.
+          player_endurance[l2] -= 4;
 
-              if (player_endurance[l2] < 1) {
-                if (!player_spinning[l2] && !in_closing[l2]) {
-                  if (shots_flying_owner[l] != -1) {
-                    if (player_sides[l2] !=
-                        player_sides[shots_flying_owner[l]]) {
-                      player_points[shots_flying_owner[l]]++;
+          if (player_endurance[l2] < 1) {
+            if (!player_spinning[l2] && !in_closing[l2]) {
+              if (shots_flying_owner[l] != -1) {
+                if (player_sides[l2] !=
+                    player_sides[shots_flying_owner[l]]) {
+                  player_points[shots_flying_owner[l]]++;
 
-                    } else {
-                      player_points[shots_flying_owner[l]]--;
-                    }
-
-                    player_shots_down[shots_flying_owner[l]][l2]++;
-                  }
+                } else {
+                  player_points[shots_flying_owner[l]]--;
                 }
-                if (util::wutil::wrandom(4) && (!player_on_airfield[l2]))
-                  player_spinning[l2] = 1;
-                else {
-                  in_closing[l2] = 2;
-                  plane_present[l2] = 0;
-                  start_parts(l2);
-                }
+
+                player_shots_down[shots_flying_owner[l]][l2]++;
               }
-              break;
             }
+            if (util::wutil::wrandom(4) && (!player_on_airfield[l2]))
+              player_spinning[l2] = 1;
+            else {
+              in_closing[l2] = 2;
+              plane_present[l2] = 0;
+              start_parts(l2);
+            }
+          }
+          break;
+        }
       }
     }
   }
@@ -207,11 +217,9 @@ void do_shots() {
 void start_shot(int x, int y, int angle, int speed, int infan) {
   int l;
 
-  for (l = 0; l < MAX_SHOTS; l++)
-    if (!shots_flying_x[l])
-      break;
+  l = alloc_shot();
 
-  if (l != MAX_SHOTS) {
+  if (l != -1) {
     shots_flying_age[l] = 0;
     shots_flying_x[l] = (x << 8);
     shots_flying_y[l] = (y << 8);
@@ -235,11 +243,9 @@ void start_shot(int player) {
 
   player_fired[player]++;
   player_ammo[player]--;
-  for (l = 0; l < MAX_SHOTS; l++)
-    if (!shots_flying_x[l])
-      break;
+  l = alloc_shot();
 
-  if (l != MAX_SHOTS) {
+  if (l != -1) {
     shots_flying_age[l] = 0;
     shots_flying_x[l] =
         player_x[player] + 12 * util::wutil::cosinit[player_angle[player] >> 8];
@@ -292,37 +298,27 @@ void do_fobjects() {
 
       if (fobjects[l].hit_plane && part_collision_detect)
         for (l2 = 0; l2 < 16; l2++) {
-          if (plane_present[l2]) {
-            if (((player_x[l2] + 2304) > fobjects[l].x) &&
-                ((player_x[l2] - 2304) < fobjects[l].x) &&
-                ((player_y[l2] + 2304) > fobjects[l].y) &&
-                ((player_y[l2] - 2304) < fobjects[l].y))
-              if (plane_p[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]]
-                         [player_upsidedown[l2]]
-                         [(fobjects[l].x >> 8) - (player_x_8[l2]) + 10 +
-                          ((fobjects[l].y >> 8) - (player_y_8[l2]) + 10) *
-                              20] != 255) {
-                fobjects[l].x = 0;
-                player_endurance[l2] -= util::wutil::wrandom(FOBJECTS_DAMAGE);
-                if (player_endurance[l2] < 1) {
-                  if ((fobjects[l].owner != -1) && (!player_spinning[l2])) {
-                    player_shots_down[fobjects[l].owner][l2]++;
-                    if (player_sides[fobjects[l].owner] != player_sides[l2])
-                      player_points[fobjects[l].owner]++;
-                    else
-                      player_points[fobjects[l].owner]--;
-                  }
-
-                  if (util::wutil::wrandom(2) == 1 && (!player_on_airfield[l2]))
-                    player_spinning[l2] = 1;
-                  else {
-                    in_closing[l2] = 2;
-                    plane_present[l2] = 0;
-                    start_parts(l2);
-                  }
-                }
-                break;
+          if (point_hits_plane(l2, fobjects[l].x, fobjects[l].y)) {
+            fobjects[l].x = 0;
+            player_endurance[l2] -= util::wutil::wrandom(FOBJECTS_DAMAGE);
+            if (player_endurance[l2] < 1) {
+              if ((fobjects[l].owner != -1) && (!player_spinning[l2])) {
+                player_shots_down[fobjects[l].owner][l2]++;
+                if (player_sides[fobjects[l].owner] != player_sides[l2])
+                  player_points[fobjects[l].owner]++;
+                else
+                  player_points[fobjects[l].owner]--;
               }
+
+              if (util::wutil::wrandom(2) == 1 && (!player_on_airfield[l2]))
+                player_spinning[l2] = 1;
+              else {
+                in_closing[l2] = 2;
+                plane_present[l2] = 0;
+                start_parts(l2);
+              }
+            }
+            break;
           }
         }
 
@@ -391,11 +387,9 @@ void do_fobjects() {
 void start_wave(int x) {
   int l;
 
-  for (l = 0; l < MAX_FLYING_OBJECTS; l++)
-    if (!fobjects[l].x)
-      break;
+  l = alloc_fobject();
 
-  if (l != MAX_FLYING_OBJECTS) {
+  if (l != -1) {
     fobjects[l].x = (x) << 8;
     fobjects[l].y = (terrain_level[x] - 11) << 8;
     fobjects[l].x_speed = 0;
@@ -411,11 +405,9 @@ void start_wave(int x) {
 void start_gun_wave(int x) {
   int l;
 
-  for (l = 0; l < MAX_FLYING_OBJECTS; l++)
-    if (!fobjects[l].x)
-      break;
+  l = alloc_fobject();
 
-  if (l != MAX_FLYING_OBJECTS) {
+  if (l != -1) {
     fobjects[l].x = (x) << 8;
     fobjects[l].y = (terrain_level[x] - 2) << 8;
     fobjects[l].x_speed = 0;
@@ -431,11 +423,9 @@ void start_gun_wave(int x) {
 void start_smoke(int player) {
   int l;
 
-  for (l = 0; l < MAX_FLYING_OBJECTS; l++)
-    if (!fobjects[l].x)
-      break;
+  l = alloc_fobject();
 
-  if (l != MAX_FLYING_OBJECTS) {
+  if (l != -1) {
     fobjects[l].x = player_x[player] - 12 * util::wutil::cosinit[player_angle[player] >> 8];
     fobjects[l].y = player_y[player] + 12 * util::wutil::sinit[player_angle[player] >> 8];
 
@@ -452,11 +442,9 @@ void start_smoke(int player) {
 void start_ssmoke(int x, int y) {
   int l;
 
-  for (l = 0; l < MAX_FLYING_OBJECTS; l++)
-    if (!fobjects[l].x)
-      break;
+  l = alloc_fobject();
 
-  if (l != MAX_FLYING_OBJECTS) {
+  if (l != -1) {
 
     fobjects[l].x = x;
     fobjects[l].y = y - 1024 + util::wutil::wrandom(2048);
@@ -480,11 +468,9 @@ void start_explox(int x, int y) {
 
   for (l2 = 0; l2 < number_of_exps; l2++) {
 
-    for (l = 0; l < MAX_FLYING_OBJECTS; l++)
-      if (!fobjects[l].x)
-        break;
+    l = alloc_fobject();
 
-    if (l != MAX_FLYING_OBJECTS) {
+    if (l != -1) {
       fobjects[l].x = x + util::wutil::wrandom(EXPLOX_VARIETY) - (EXPLOX_VARIETY / 2);
       fobjects[l].y = y + util::wutil::wrandom(EXPLOX_VARIETY) - (EXPLOX_VARIETY / 2);
 
@@ -527,11 +513,9 @@ void start_parts(int player) {
   xsss = (util::wutil::cosinit[player_angle[player] >> 8] * (player_speed[player])) >> 2;
 
   for (l2 = 0; l2 < limit; l2++) {
-    for (l = 0; l < MAX_FLYING_OBJECTS; l++)
-      if (!fobjects[l].x)
-        break;
+    l = alloc_fobject();
 
-    if (l != MAX_FLYING_OBJECTS) {
+    if (l != -1) {
       fobjects[l].x = xxx;
       fobjects[l].y = yyy;
       fobjects[l].x_speed = xsss + util::wutil::wrandom(PARTS_SPEED) - (PARTS_SPEED >> 1);
@@ -549,11 +533,9 @@ void start_parts(int player) {
 void start_rifle(int x, int y) {
   int l;
 
-  for (l = 0; l < MAX_FLYING_OBJECTS; l++)
-    if (!fobjects[l].x)
-      break;
+  l = alloc_fobject();
 
-  if (l != MAX_FLYING_OBJECTS) {
+  if (l != -1) {
     fobjects[l].x = x << 8;
     fobjects[l].y = y << 8;
     fobjects[l].x_speed = 256 * 128 * 5 - util::wutil::wrandom(2560 * 128);
@@ -654,35 +636,23 @@ void do_bombs() {
     if (bomb_age[l]++ >
         BOMB_PRIME_TIME) { // Dont' destroy players if not primed yet
       for (l2 = 0; l2 < 16; l2++) {
-        if (plane_present[l2]) {
-          if (((player_x[l2] + 2304) > bomb_x[l]) &&
-              ((player_x[l2] - 2304) < bomb_x[l]) &&
-              ((player_y[l2] + 2304) > bomb_y[l]) &&
-              ((player_y[l2] - 2304) < bomb_y[l]))
-            if (plane_p[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]]
-                       [player_upsidedown[l2]]
-                       [(bomb_x[l] >> 8) - (player_x_8[l2]) + 10 +
-                        ((bomb_y[l] >> 8) - (player_y_8[l2]) + 10) * 20] !=
-                255) {
-              bomb_x[l] = 0;
-              player_endurance[l2] = 0;
-              if (player_endurance[l2] < 1) {
-                if ((!player_spinning[l2]) && (!in_closing[l2])) {
-                  if (player_sides[bomb_owner[l]] != player_sides[l2])
-                    player_points[bomb_owner[l]]++;
-                  else
-                    player_points[bomb_owner[l]]--;
+        if (point_hits_plane(l2, bomb_x[l], bomb_y[l])) {
+          bomb_x[l] = 0;
+          player_endurance[l2] = 0;
+          if ((!player_spinning[l2]) && (!in_closing[l2])) {
+            if (player_sides[bomb_owner[l]] != player_sides[l2])
+              player_points[bomb_owner[l]]++;
+            else
+              player_points[bomb_owner[l]]--;
 
-                  player_shots_down[bomb_owner[l]][l2]++;
-                }
+            player_shots_down[bomb_owner[l]][l2]++;
+          }
 
-                in_closing[l2] = 2;
-                plane_present[l2] = 0;
-                start_parts(l2);
-                start_bomb_explo(l, 1);
-              }
-              break;
-            }
+          in_closing[l2] = 2;
+          plane_present[l2] = 0;
+          start_parts(l2);
+          start_bomb_explo(l, 1);
+          break;
         }
       }
     }
@@ -690,32 +660,27 @@ void do_bombs() {
 }
 
 void start_bomb_explo(int bb, int hitted) {
-  int l, l2, limit;
-  int palasia = 0;
+  int l;
+  int ai_bomb;
 
-  if (playing_solo) {
-    if (bomb_owner[bb] != solo_country) {
-      for (l = 0; l < 100; l++) {
-        if (bombs_going[l] == bb) {
-          bombs_going[l] = -1;
-          break;
-        }
-      }
-    }
+  /* A bomb the computer aimed at a structure is no longer on its way. */
+  if (playing_solo)
+    ai_bomb = bomb_owner[bb] != solo_country;
+  else
+    ai_bomb = computer_active[bomb_owner[bb]];
 
-  } else {
-    if (computer_active[bomb_owner[bb]]) {
-      for (l = 0; l < 100; l++) {
-        if (bombs_going[l] == bb) {
-          bombs_going[l] = -1;
-          break;
-        }
+  if (ai_bomb) {
+    for (l = 0; l < MAX_STRUCTURES; l++) {
+      if (bombs_going[l] == bb) {
+        bombs_going[l] = -1;
+        break;
       }
     }
   }
 
-  limit = util::wutil::wrandom(MAX_BOMB_PARTS - MIN_BOMB_PARTS);
-  limit += MIN_BOMB_PARTS;
+  /* The number of parts is not used any more, but the random number is
+     part of the recorded games. */
+  util::wutil::wrandom(MAX_BOMB_PARTS - MIN_BOMB_PARTS);
 
   if ((level_bitmap[(bomb_x[bb] >> 8) + (bomb_y[bb] >> 8) * 2400] >= 224) &&
       (level_bitmap[(bomb_x[bb] >> 8) + (bomb_y[bb] >> 8) * 2400] <= 231)) {
@@ -869,24 +834,4 @@ void start_bomb_explo(int bb, int hitted) {
   if (hitted == 1) {
     player_bomb_hits[bomb_owner[bb]]++;
   }
-
-  if (palasia)
-    for (l2 = 0; l2 < limit; l2++) {
-      for (l = 0; l < MAX_FLYING_OBJECTS; l++)
-        if (!fobjects[l].x)
-          break;
-
-      if (l != MAX_FLYING_OBJECTS) {
-        fobjects[l].x = bomb_x[bb];
-        fobjects[l].y = bomb_y[bb];
-        fobjects[l].x_speed = util::wutil::wrandom(PARTS_SPEED) - PARTS_SPEED / 2;
-        fobjects[l].y_speed = (util::wutil::wrandom(PARTS_SPEED) - PARTS_SPEED / 2);
-        fobjects[l].hit_plane = 1;
-        fobjects[l].width = 10;
-        fobjects[l].height = 10;
-        fobjects[l].type = FOBJECTS_PARTS;
-        fobjects[l].phase = util::wutil::wrandom(NUMBER_OF_BITES);
-        fobjects[l].owner = bomb_owner[bb];
-      }
-    }
 }

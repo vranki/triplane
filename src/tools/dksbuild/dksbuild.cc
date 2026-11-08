@@ -30,16 +30,15 @@
 #include <cstring>
 #include <ctime>
 
-constexpr int32_t MAX_ENTRIES = 8192;
+#include "io/dksfile.h"
 
-#pragma pack(1)
-struct main_directory_entry {
-
-  char nimi[7];
-  unsigned long int offset;
-  unsigned long int koko;
-};
-#pragma pack()
+/* The directory is stored little-endian. */
+static uint32_t to_le32(uint32_t v) {
+  const uint16_t one = 1;
+  if (*(const uint8_t *)&one)
+    return v;
+  return (v >> 24) | ((v >> 8) & 0xff00) | ((v << 8) & 0xff0000) | (v << 24);
+}
 
 struct buildaus_info {
 
@@ -71,25 +70,19 @@ int main(int argc, char **argv) {
   int monesko_merkki;
   int vaihe;
   buildaus_info *info;
-  main_directory_entry *dirri;
+  main_directory_entry *entries;
   unsigned char *tila;
   unsigned long koko;
   unsigned long offset;
-  char crypt_key[80] = "";
-  int crypt_length;
-  int c_counter;
-  unsigned char *crypt_pointer;
-  int key_counter;
-  int reg_number = 5324434;
 
-  if ((info = (buildaus_info *)malloc(MAX_ENTRIES * sizeof(buildaus_info))) ==
+  if ((info = (buildaus_info *)malloc(DKS_MAX_ENTRIES * sizeof(buildaus_info))) ==
       nullptr) {
     printf("Out of memory");
     exit(1);
   }
 
-  if ((dirri = (main_directory_entry *)malloc(
-           MAX_ENTRIES * sizeof(main_directory_entry))) == nullptr) {
+  if ((entries = (main_directory_entry *)malloc(
+           DKS_MAX_ENTRIES * sizeof(main_directory_entry))) == nullptr) {
     printf("Out of memory");
     exit(1);
   }
@@ -107,10 +100,10 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  for (vaihe = 0; vaihe < MAX_ENTRIES; vaihe++) {
-    dirri[vaihe].nimi[0] = 0;
-    dirri[vaihe].offset = 0;
-    dirri[vaihe].koko = 0;
+  for (vaihe = 0; vaihe < DKS_MAX_ENTRIES; vaihe++) {
+    entries[vaihe].nimi[0] = 0;
+    entries[vaihe].offset = 0;
+    entries[vaihe].koko = 0;
     info[vaihe].nimi[0] = 0;
     info[vaihe].tiedosto[0] = 0;
   }
@@ -180,7 +173,7 @@ int main(int argc, char **argv) {
   fclose(in);
   printf("\n");
 
-  offset = sizeof(main_directory_entry) * MAX_ENTRIES + sizeof(tekstia);
+  offset = sizeof(main_directory_entry) * DKS_MAX_ENTRIES + sizeof(tekstia);
 
   printf("\nProcessing entries found\n");
 
@@ -195,14 +188,18 @@ int main(int argc, char **argv) {
     }
 
     koko = filelength(in);
-    dirri[vaihe].koko = koko;
-    dirri[vaihe].offset = offset;
+    entries[vaihe].koko = to_le32(koko);
+    entries[vaihe].offset = to_le32(offset);
 
     if (!info[vaihe].nimi[0]) {
       if ((strstr(info[vaihe].tiedosto, ".pgd")) ||
           (strstr(info[vaihe].tiedosto, ".PGD"))) {
         fseek(in, 8, SEEK_SET);
-        fread(info[vaihe].nimi, sizeof(info[vaihe].nimi), 1, in);
+        if (fread(info[vaihe].nimi, sizeof(info[vaihe].nimi), 1, in) != 1) {
+          printf("\nError: cannot read the name of %s.\n", info[vaihe].tiedosto);
+          fclose(in);
+          exit(1);
+        }
         fseek(in, 0, SEEK_SET);
       } else {
         printf("\nError: file %s is not named.\n", info[vaihe].tiedosto);
@@ -212,10 +209,10 @@ int main(int argc, char **argv) {
       }
     }
 
-    strcpy(dirri[vaihe].nimi, info[vaihe].nimi);
+    strcpy(entries[vaihe].nimi, info[vaihe].nimi);
 
     if (!fread(tila + offset - sizeof(tekstia) -
-                   sizeof(main_directory_entry) * MAX_ENTRIES,
+                   sizeof(main_directory_entry) * DKS_MAX_ENTRIES,
                koko, 1, in)) {
       printf("\nError reading file %s.\n", info[vaihe].tiedosto);
       fclose(in);
@@ -241,20 +238,21 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  if (!fwrite(dirri, sizeof(main_directory_entry) * MAX_ENTRIES, 1, out)) {
+  if (!fwrite(entries, sizeof(main_directory_entry) * DKS_MAX_ENTRIES, 1, out)) {
     printf("\nError writing file %s\n", file_to_be);
     exit(1);
   }
 
-  fwrite(tila, offset - 20 - sizeof(main_directory_entry) * MAX_ENTRIES, 1,
-         out);
+  fwrite(tila,
+         offset - sizeof(tekstia) - sizeof(main_directory_entry) * DKS_MAX_ENTRIES,
+         1, out);
   fclose(out);
 
   printf("\n%s created. Size: %lu Entries: %d.\n", file_to_be, offset,
          kohtien_lukumaara);
 
   free(info);
-  free(dirri);
+  free(entries);
   free(tila);
 
   return (0);

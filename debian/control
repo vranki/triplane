@@ -3,11 +3,11 @@ Section: games
 Priority: optional
 Maintainer: Debian Games Team <pkg-games-devel@lists.alioth.debian.org>
 Uploaders: Timo Juhani Lindfors <timo.lindfors@iki.fi>
-Build-Depends: debhelper (>= 7.0.50~), libsdl-mixer1.2-dev, libsdl1.2-dev
-Standards-Version: 3.9.2
-Homepage: http://triplane.sourceforge.net/
-Vcs-Git: git://git.debian.org/pkg-games/triplane.git
-Vcs-Browser: http://git.debian.org/?p=pkg-games/triplane.git;a=summary
+Build-Depends: debhelper-compat (= 13), cmake, pkg-config, libsdl3-dev, libmikmod-dev
+Standards-Version: 4.6.2
+Homepage: https://github.com/vranki/triplane
+Vcs-Git: https://github.com/vranki/triplane.git
+Vcs-Browser: https://github.com/vranki/triplane
 
 Package: triplane
 Architecture: any

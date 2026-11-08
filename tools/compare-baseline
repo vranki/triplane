@@ -1,0 +1,191 @@
+#!/bin/bash
+#
+# Replay the recorded games in triplane-testsuite/ with the current build
+# and with a baseline commit, and compare the per-frame checksums.
+#
+# Use it to check that a change (a refactor, a port, a cleanup) does not
+# change what the game does or draws. Intended changes in gameplay or
+# graphics show up as differences too; then the report tells you where.
+#
+# Usage: tools/compare-baseline [options] [test ...]
+#
+#   -b REF      baseline commit, branch or tag (default: HEAD)
+#   -d DIR      build directory of the current build (default: build)
+#   -n FRAMES   compare at most this many frames per game (default: 5000)
+#   -t SECONDS  time limit per game run (default: 300)
+#
+# Tests default to every directory in triplane-testsuite/. The baseline
+# is built once per commit and cached in DIR/baseline/<commit>/.
+# The baseline commit has to be buildable with CMake and SDL3.
+
+set -eu
+
+base=HEAD
+build_dir=build
+max_frames=5000
+time_limit=300
+cmake=${CMAKE:-cmake}
+
+while getopts "b:d:n:t:h" opt; do
+    case $opt in
+        b) base=$OPTARG ;;
+        d) build_dir=$OPTARG ;;
+        n) max_frames=$OPTARG ;;
+        t) time_limit=$OPTARG ;;
+        *) sed -n '2,/^$/s/^# \{0,1\}//p' "$0"; exit 2 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+top=$(git rev-parse --show-toplevel)
+cd "$top"
+build_dir=$(cd "$build_dir" 2>/dev/null && pwd) || {
+    echo "Build directory not found. Run make first." >&2; exit 2; }
+[ -x "$build_dir/triplane" ] && [ -f "$build_dir/fokker.dks" ] || {
+    echo "No triplane build in $build_dir. Run make first." >&2; exit 2; }
+
+if [ $# -eq 0 ]; then
+    set -- triplane-testsuite/*/
+fi
+
+# --- Baseline build ----------------------------------------------------------
+
+sha=$(git rev-parse --verify --quiet "$base^{commit}") || {
+    echo "Unknown baseline: $base" >&2; exit 2; }
+short=$(git rev-parse --short "$sha")
+base_dir="$build_dir/baseline/$sha"
+
+if [ ! -x "$base_dir/build/triplane" ] || [ ! -f "$base_dir/build/fokker.dks" ]; then
+    echo "Building baseline $base ($short) in $base_dir ..."
+    rm -rf "$base_dir"
+    mkdir -p "$base_dir/src"
+    git archive "$sha" | tar -x -C "$base_dir/src"
+    # Only the game and its data file are needed, not the tools.
+    if ! { "$cmake" -S "$base_dir/src" -B "$base_dir/build" \
+               -DCMAKE_BUILD_TYPE=RelWithDebInfo &&
+           "$cmake" --build "$base_dir/build" --parallel \
+               --target triplane data; } \
+             > "$base_dir/build.log" 2>&1; then
+        echo "Baseline build failed, see $base_dir/build.log:" >&2
+        tail -n 30 "$base_dir/build.log" >&2
+        exit 2
+    fi
+fi
+
+# --- Running the games -------------------------------------------------------
+
+work=$(mktemp -d "${TMPDIR:-/tmp}/triplane-compare.XXXXXXXX")
+keep_work=0
+trap '[ $keep_work = 1 ] || rm -rf "$work"' EXIT
+
+# run_game BUILDDIR TESTDIR OUTPUT
+# Writes the output to OUTPUT and the exit status to OUTPUT.status. The
+# game is stopped (SIGPIPE) once max_frames checksums have been printed.
+run_game() {
+    local dir=$1 test=$2 out=$3 home
+    home=$(mktemp -d "$work/home.XXXXXXXX")
+    cp -R "$test/." "$home/"
+    (
+        cd "$dir"
+        SDL_VIDEODRIVER=dummy SDL_AUDIO_DRIVER=dummy \
+        TRIPLANE_HOME="$home" TRIPLANE_DATA="$dir" \
+            perl -e 'alarm shift; exec @ARGV or die "exec: $!\n"' \
+                "$time_limit" ./triplane $(cat "$test/args") \
+                < /dev/null 2> "$out.err" |
+            awk -v max="$max_frames" '
+                { print }
+                /^[0-9]+ [0-9a-f]{8}$/ { if (++n >= max) exit }' > "$out"
+        echo "${PIPESTATUS[0]}" > "$out.status"
+    )
+}
+
+# Describe an exit status. Returns 1 for crashes and timeouts.
+describe_status() {
+    case $1 in
+        0|1) echo "finished"; return 0 ;;
+        142) echo "hit the ${time_limit}s time limit"; return 1 ;;
+        *) if [ "$1" -gt 128 ]; then
+               echo "crashed (signal $(($1 - 128)))"
+           else
+               echo "exited with status $1"
+           fi
+           return 1 ;;
+    esac
+}
+
+# Keep the checksum lines only: "<frame> <crc32>".
+trace() { grep -E '^[0-9]+ [0-9a-f]{8}$' "$1" || true; }
+
+# Being stopped after max_frames frames is the normal end of a long game.
+# The time limit can hit as well if the game was still busy then.
+check_status() {
+    local status=$1 frames=$2
+    if { [ "$status" = 141 ] || [ "$status" = 142 ]; } &&
+       [ "$frames" -ge "$max_frames" ]; then
+        return 0
+    fi
+    describe_status "$status" > /dev/null
+}
+
+echo "Comparing $build_dir/triplane against $base ($short), up to $max_frames frames per game"
+failed=0
+
+for test in "$@"; do
+    test=${test%/}
+    name=$(basename "$test")
+    [ -f "$test/args" ] || { echo "$name: no args file, skipped"; continue; }
+
+    run_game "$base_dir/build" "$top/$test" "$work/$name.base" &
+    run_game "$build_dir" "$top/$test" "$work/$name.new" &
+    wait
+
+    base_status=$(cat "$work/$name.base.status")
+    new_status=$(cat "$work/$name.new.status")
+    trace "$work/$name.base" > "$work/$name.base.crc"
+    trace "$work/$name.new" > "$work/$name.new.crc"
+    base_frames=$(wc -l < "$work/$name.base.crc" | tr -d ' ')
+    new_frames=$(wc -l < "$work/$name.new.crc" | tr -d ' ')
+
+    problems=""
+    if ! check_status "$base_status" "$base_frames"; then
+        base_desc=$(describe_status "$base_status" || true)
+        problems="$problems
+  baseline $base_desc after $base_frames frames"
+    fi
+    if ! check_status "$new_status" "$new_frames"; then
+        new_desc=$(describe_status "$new_status" || true)
+        problems="$problems
+  current build $new_desc after $new_frames frames"
+    fi
+
+    if [ "$base_frames" -eq 0 ]; then
+        problems="$problems
+  baseline produced no frames (exit status $base_status)"
+    fi
+    if [ "$new_frames" -eq 0 ]; then
+        problems="$problems
+  current build produced no frames (exit status $new_status)"
+    fi
+
+    first_diff=$(paste -d ' ' "$work/$name.base.crc" "$work/$name.new.crc" |
+        awk '$1 != $3 || $2 != $4 { print NR; exit }')
+    if [ -n "$first_diff" ]; then
+        line=$(sed -n "${first_diff}p" "$work/$name.base.crc")
+        newline=$(sed -n "${first_diff}p" "$work/$name.new.crc")
+        problems="$problems
+  first difference at trace line $first_diff: baseline '${line:-<end>}', current '${newline:-<end>}'"
+    fi
+
+    if [ -z "$problems" ]; then
+        echo "$name: OK, $new_frames frames identical"
+    else
+        echo "$name: FAILED$problems"
+        failed=1
+    fi
+done
+
+if [ $failed = 1 ]; then
+    keep_work=1
+    echo "Outputs kept in $work"
+    exit 1
+fi

@@ -18,11 +18,6 @@
  * tjt@users.sourceforge.net
  */
 
-#include <cstdint>
-
-constexpr int32_t MAIN_VERSION = 1;
-constexpr int32_t SUB_VERSION = 3;
-
 //\\\\ Includes
 
 #include "gfx/gfx.h"
@@ -37,10 +32,10 @@ constexpr int32_t SUB_VERSION = 3;
 #include "world/plane.h"
 #include "world/terrain.h"
 #include "world/tmexept.h"
+#include "world/tripmis.h"
 #include "world/tripaudio.h"
 #include "world/tripai.h"
-#include <SDL/SDL.h>
-#include <SDL/SDL_endian.h>
+#include <SDL3/SDL.h>
 #include <cstdint>
 #include <cstring>
 #include <ctime>
@@ -57,7 +52,7 @@ std::unique_ptr<Bitmap> pwon;
 std::unique_ptr<Bitmap> pwoff;
 std::unique_ptr<Bitmap> picons[4];
 std::unique_ptr<Bitmap> plane1;
-std::unique_ptr<Bitmap> planes[16][61][4][2];
+std::shared_ptr<Bitmap> planes[16][61][4][2];
 std::unique_ptr<Bitmap> bomb[61];
 std::unique_ptr<Bitmap> boards[4];
 std::unique_ptr<Bitmap> closed;
@@ -121,11 +116,6 @@ int player_sides[16] = {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
 int player_tsides[16] = {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
 
 int plane_coming[16];
-extern int number_of_planes[16];
-extern int miss_plane_direction[16];
-extern int miss_pl_x[16];
-extern int miss_pl_y[16];
-extern int fighter[16];
 
 unsigned char *level_bitmap;
 
@@ -145,19 +135,17 @@ int struct_heigth[MAX_STRUCTURES];
 
 //\ Fonts
 
-//std::unique_ptr<gfx::font::Font> fontti;
+std::unique_ptr<gfx::font::Font> fontti;
 std::unique_ptr<gfx::font::Font> frost;
 std::unique_ptr<gfx::font::Font> grid2;
 
 //\ Parameter control
 
-char parametrit[40][40];
-int parametri_kpl;
+char **parametrit; /* argv */
+int parametri_kpl; /* argc */
 
 //\ Shots control
 
-int pohja = 0;
-int play_shot[16];
 int shots_flying_x[MAX_SHOTS];
 int shots_flying_y[MAX_SHOTS];
 int shots_flying_x_speed[MAX_SHOTS];
@@ -183,8 +171,7 @@ int hangarmenu_max_ammo[16];
 int hangarmenu_max_bombs[16];
 
 /* Timing */
-short int viimeiset_framet = 0;
-short int frame_laskuri = 0;
+int frame_laskuri = 0;
 /* Timing*/
 
 //\ Graphics locating
@@ -228,7 +215,7 @@ int player_bomb_hits[16];
 
 char levelname[80];
 
-//struct level_struct leveldata;
+struct level_struct leveldata;
 
 //\ Bombs
 
@@ -286,8 +273,6 @@ extern int infan_stop[8];
 
 int computer_active[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-int going_left;
-int going_up;
 int terrain_level[2400];
 int wide_terrain_level[2400];
 int current_mission[16];
@@ -297,14 +282,12 @@ int mission_target[16];
 int distances[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 int angles[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-int bombs_going[100];
+int bombs_going[MAX_STRUCTURES];
 
 //\\ Configuration
 
 short joystick_exists;
 
-int modem_com_port = 2;
-int modem_com_speed = 9600;
 
 // Solo mode success/failure text blinking variables
 int status_frames = 0;
@@ -314,12 +297,14 @@ int mission_duration;
 int mission_interrupted;
 int mission_re_fly = -1;
 
+/* Recorded games hold the controls of 16 players for up to this many frames. */
+constexpr int RECORD_FRAMES = 24 * 1280;
+
 FILE *record_file = nullptr;
 char *record_data = nullptr;
 int *record_random = nullptr;
 int record_counter = 0;
 
-int main_engine_random_seed;
 
 int quit_flag = 0;
 
@@ -343,14 +328,13 @@ int new_mc_power[16];
 // throttle button is pressed, even with reverse throttle.
 int power_break_active[16];
 
-int main_version;
-int sub_version;
+/* -record / -playback, looked up once per game instead of every frame. */
+static bool recording_game = false;
+static bool playing_back_game = false;
 
 #include "gfx/extra.h"
 
 //\\\\ Externs
-
-extern int current_mode;
 
 extern int dirty_area;
 extern int isa_counter;
@@ -362,8 +346,6 @@ extern unsigned char *dirty_marker;
 
 extern int itgun_shot_x[MAX_ITGUN_SHOTS];
 extern int itgun_shot_y[MAX_ITGUN_SHOTS];
-
-extern char mission_names[24][30];
 
 //\\\\ Prototypes
 
@@ -387,7 +369,6 @@ void itgun_sound(int itgun_x);
 void rotate_water_palet();
 void cause_damage(int amount, int plane);
 int small_warning(const char *message);
-int big_warning(const char *message);
 void load_all_samples();
 void init_sologame();
 void write_files();
@@ -404,14 +385,12 @@ int get_player_hits(int player);
 int get_player_shots_down(int player, int player2);
 
 extern void start_it_shot(int x, int y, int angle);
-extern void init_mission(int country, int number);
 
 extern "C" {
 extern void init_alkucallback();
 }
 
 constexpr int32_t NUMBER_OF_STRUCT_NAMES = 35;
-#define DESCRIPTION_LENGHT
 
 char struct_names[NUMBER_OF_STRUCT_NAMES * 2][7] = {
     "TOWER",  "DTOWER", "FAC1",   "DFAC1",  "FAC2",   "DFAC2",  "BIRCH1",
@@ -429,9 +408,29 @@ char struct_names[NUMBER_OF_STRUCT_NAMES * 2][7] = {
 
 static void record_random_swap_endianess() {
   int i;
-  for (i = 0; i < 24 * 1280; i++) {
-    record_random[i] = SDL_SwapLE32(record_random[i]);
+  for (i = 0; i < RECORD_FRAMES; i++) {
+    record_random[i] = SDL_Swap32LE(record_random[i]);
   }
+}
+
+/* Put plane l on the ground in front of its hangar, facing the runway. */
+static void place_plane_at_hangar(int l) {
+  int side = player_tsides[l];
+
+  player_x[l] = (hangar_x[side] + 38) << 8;
+  if (leveldata.plane_direction[side]) {
+    player_angle[l] = TAIL_HIT_ANGLE << 8;
+    player_upsidedown[l] = 0;
+  } else {
+    player_angle[l] = (180 + 6 - TAIL_HIT_ANGLE) << 8;
+    player_upsidedown[l] = 1;
+  }
+
+  player_y[l] = (leveldata.airfield_y[side] - PLANE_MODIFICATION) << 8;
+  player_on_airfield[l] = side + 1;
+  player_was_on_airfield[l] = side + 1;
+  controls_power[l] = 0;
+  player_speed[l] = 0;
 }
 
 void hangarmenu_handle() {
@@ -533,22 +532,7 @@ void hangarmenu_handle() {
       hangarmenu_active[l] = 0;
     }
 
-    if (leveldata.plane_direction[player_tsides[l]]) {
-      player_x[l] = (hangar_x[player_tsides[l]] + 38) << 8;
-      player_angle[l] = TAIL_HIT_ANGLE << 8;
-      player_upsidedown[l] = 0;
-    } else {
-      player_x[l] = (hangar_x[player_tsides[l]] + 38) << 8;
-      player_angle[l] = (180 + 6 - TAIL_HIT_ANGLE) << 8;
-      player_upsidedown[l] = 1;
-    }
-
-    player_y[l] = (leveldata.airfield_y[player_tsides[l]] - PLANE_MODIFICATION)
-                  << 8;
-    player_on_airfield[l] = player_tsides[l] + 1;
-    player_was_on_airfield[l] = player_tsides[l] + 1;
-    controls_power[l] = 0;
-    player_speed[l] = 0;
+    place_plane_at_hangar(l);
 
     player_x_8[l] = player_x[l] >> 8;
     player_y_8[l] = player_y[l] >> 8;
@@ -595,17 +579,25 @@ int small_warning(const char *message) {
     }
   }
 
-  while (n1 || n2)
-    koords(&x, &y, &n1, &n2);
+  wait_mouse_relase(1);
 
   return response;
 }
 
-int big_warning(const char *message) {
-  if (message == nullptr)
-    return 0;
-  else
-    return 0;
+/* The plane breaks up: it leaves the game and its parts fly off. splash
+ * selects the sound of hitting water. */
+static void crash_plane(int plane, bool splash = false) {
+  in_closing[plane] = 2;
+  plane_present[plane] = 0;
+  start_parts(plane);
+  if (config.sound_on && config.sfx_on) {
+    if (splash)
+      play_2d_sample(sample_spcrash, player_x_8[solo_country],
+                     player_x_8[plane]);
+    else
+      play_2d_sample(sample_crash[util::wutil::wrandom(2)],
+                     player_x_8[solo_country], player_x_8[plane]);
+  }
 }
 
 void cause_damage(int amount, int plane) {
@@ -617,14 +609,8 @@ void cause_damage(int amount, int plane) {
 
       if (util::wutil::wrandom(2) == 1 && (!player_on_airfield[plane]))
         player_spinning[plane] = 1;
-      else {
-        in_closing[plane] = 2;
-        plane_present[plane] = 0;
-        start_parts(plane);
-        if (config.sound_on && config.sfx_on)
-          play_2d_sample(sample_crash[util::wutil::wrandom(2)], player_x_8[solo_country],
-                         player_x_8[plane]);
-      }
+      else
+        crash_plane(plane);
     }
   }
 }
@@ -634,17 +620,18 @@ void rotate_water_palet() {
   int seivi;
   static int nytko = 0;
 
+  /* The water colours 224-231 rotate every other frame. */
   if (++nytko == 2) {
     nytko = 0;
-  } else
-    for (l2 = 0; l2 < 3; l2++) {
-      seivi = ruutu.normaalipaletti[224][l2];
-      for (l = 0; l < 7; l++) {
+    return;
+  }
 
-        ruutu.normaalipaletti[l + 224][l2] = ruutu.normaalipaletti[l + 225][l2];
-      }
-      ruutu.normaalipaletti[l + 224][l2] = seivi;
-    }
+  for (l2 = 0; l2 < 3; l2++) {
+    seivi = ruutu.normaalipaletti[224][l2];
+    for (l = 0; l < 7; l++)
+      ruutu.normaalipaletti[l + 224][l2] = ruutu.normaalipaletti[l + 225][l2];
+    ruutu.normaalipaletti[231][l2] = seivi;
+  }
 
   setpal_range(&ruutu.normaalipaletti[224], 224, 8, 1);
 }
@@ -672,14 +659,8 @@ void airfield_checks() {
 
     player_was_on_airfield[l] = 0;
 
-    if (!player_upsidedown[l]) {
-      yyy = 5;
-      xxx = 5;
-
-    } else {
-      yyy = -5;
-      xxx = 5;
-    }
+    xxx = 5;
+    yyy = player_upsidedown[l] ? -5 : 5;
 
     plane_tire_y = ((player_y[l]) +
                     (((-xxx * util::wutil::sinit[player_angle[l] >> 8] +
@@ -764,15 +745,9 @@ void init_player(int l, int pommit) {
     if (playing_solo && miss_pl_x[l]) {
       plane_coming[l] = 0;
       plane_present[l] = 1;
-      if (miss_plane_direction[l]) {
-        player_x[l] = miss_pl_x[l] << 8;
-        player_angle[l] = 0;
-        player_upsidedown[l] = 0;
-      } else {
-        player_x[l] = miss_pl_x[l] << 8;
-        player_angle[l] = 180 << 8;
-        player_upsidedown[l] = 1;
-      }
+      player_x[l] = miss_pl_x[l] << 8;
+      player_angle[l] = 180 << 8;
+      player_upsidedown[l] = 1;
 
       player_y[l] = miss_pl_y[l] << 8;
       player_on_airfield[l] = 0;
@@ -789,22 +764,7 @@ void init_player(int l, int pommit) {
     } else {
       plane_coming[l] = 1;
       plane_wants_out[l] = 1;
-      if (leveldata.plane_direction[player_tsides[l]]) {
-        player_x[l] = (hangar_x[player_tsides[l]] + 38) << 8;
-        player_angle[l] = TAIL_HIT_ANGLE << 8;
-        player_upsidedown[l] = 0;
-      } else {
-        player_x[l] = (hangar_x[player_tsides[l]] + 38) << 8;
-        player_angle[l] = (180 + 6 - TAIL_HIT_ANGLE) << 8;
-        player_upsidedown[l] = 1;
-      }
-
-      player_y[l] =
-          (leveldata.airfield_y[player_tsides[l]] - PLANE_MODIFICATION) << 8;
-      player_on_airfield[l] = player_tsides[l] + 1;
-      player_was_on_airfield[l] = player_tsides[l] + 1;
-      controls_power[l] = 0;
-      player_speed[l] = 0;
+      place_plane_at_hangar(l);
 
       if (computer_active[l]) {
         current_mission[l] = AIM_TAKEOFF;
@@ -852,14 +812,49 @@ void init_player(int l, int pommit) {
   }
 }
 
+/* Index of the command line option, or 0 if it is not given. */
 int findparameter(const char *jono) {
   int laskuri;
 
   for (laskuri = 1; laskuri < parametri_kpl; laskuri++)
-    if (!strncmp(parametrit[laskuri], jono, strlen(jono)))
+    if (!strcmp(parametrit[laskuri], jono))
       return (laskuri);
 
   return (0);
+}
+
+/* Value glued to an option, e.g. "-levelfoo" gives "foo", or nullptr. */
+const char *findparameter_value(const char *jono) {
+  int laskuri;
+  size_t len = strlen(jono);
+
+  for (laskuri = 1; laskuri < parametri_kpl; laskuri++)
+    if (!strncmp(parametrit[laskuri], jono, len) && parametrit[laskuri][len])
+      return parametrit[laskuri] + len;
+
+  return nullptr;
+}
+
+/* Read joystick joy as the controls of player l. */
+static void read_joystick(int joy, int l) {
+  int inmenu = hangarmenu_active[l] || in_closing[l];
+
+  get_joystick_action(joy, inmenu, &new_mc_down[l], &new_mc_up[l],
+                      &new_mc_power[l], &new_mc_roll[l], &new_mc_guns[l],
+                      &new_mc_bomb[l], power_on_off, power_reverse,
+                      &controls_power2[l], in_closing[l],
+                      &power_break_active[l]);
+  if (!joystick_has_roll_button(joy) && !inmenu) {
+    // Autoroll code
+    new_mc_roll[l] = 0;
+    if (new_mc_down[l] == new_mc_up[l]) /* not turning up/down */
+      if ((player_upsidedown[l] &&
+           (player_angle[l] < 23040 || player_angle[l] > 69120)) ||
+          (!player_upsidedown[l] &&
+           (player_angle[l] < 69120 && player_angle[l] > 23040)))
+        if (!player_rolling[l])
+          new_mc_roll[l] = 1;
+  }
 }
 
 void controls() {
@@ -879,7 +874,10 @@ void controls() {
   unsigned char rbyte;
   int rcount;
 
-  if (findparameter("-record")) {
+  /* stop one frame early, record_random is indexed with the next frame */
+  bool record_full = record_counter + 16 >= 16 * RECORD_FRAMES;
+
+  if (recording_game && !record_full) {
     for (rcount = 0; rcount < 16; rcount++) {
 
       rbyte = 0;
@@ -896,7 +894,11 @@ void controls() {
     record_random[record_counter >> 4] = util::wutil::wrandom(2147483647);
   }
 
-  if (findparameter("-playback")) {
+  if (playing_back_game) {
+    if (record_full) {
+      printf("End of recording\n");
+      exit(0);
+    }
     for (rcount = 0; rcount < 16; rcount++) {
       rbyte = record_data[record_counter++];
 
@@ -1015,46 +1017,14 @@ void controls() {
     int is_joy = 0;
 
     if (playing_solo && config.joystick[4] != -1) {
-      get_joystick_action(4, (hangarmenu_active[l] || in_closing[l]),
-                          &new_mc_down[l], &new_mc_up[l], &new_mc_power[l],
-                          &new_mc_roll[l], &new_mc_guns[l], &new_mc_bomb[l],
-                          power_on_off, power_reverse, &controls_power2[l],
-                          in_closing[l], &power_break_active[l]);
-      if (!joystick_has_roll_button(4) &&
-          !(hangarmenu_active[l] || in_closing[l])) {
-        // Autoroll code
-        new_mc_roll[l] = 0;
-        if (new_mc_down[l] == new_mc_up[l]) /* not turning up/down */
-          if ((player_upsidedown[l] &&
-               (player_angle[l] < 23040 || player_angle[l] > 69120)) ||
-              (!player_upsidedown[l] &&
-               (player_angle[l] < 69120 && player_angle[l] > 23040)))
-            if (!player_rolling[l])
-              new_mc_roll[l] = 1;
-      }
+      read_joystick(4, l);
       is_joy = 1;
     }
 
     if (is_joy == 0) {
       for (int i = 0; i < 4; i++) {
         if (config.joystick[i] == l) {
-          get_joystick_action(i, (hangarmenu_active[l] || in_closing[l]),
-                              &new_mc_down[l], &new_mc_up[l], &new_mc_power[l],
-                              &new_mc_roll[l], &new_mc_guns[l], &new_mc_bomb[l],
-                              power_on_off, power_reverse, &controls_power2[l],
-                              in_closing[l], &power_break_active[l]);
-          if (!joystick_has_roll_button(i) &&
-              !(hangarmenu_active[l] || in_closing[l])) {
-            // Autoroll code
-            new_mc_roll[l] = 0;
-            if (new_mc_down[l] == new_mc_up[l]) /* not turning up/down */
-              if ((player_upsidedown[l] &&
-                   (player_angle[l] < 23040 || player_angle[l] > 69120)) ||
-                  (!player_upsidedown[l] &&
-                   (player_angle[l] < 69120 && player_angle[l] > 23040)))
-                if (!player_rolling[l])
-                  new_mc_roll[l] = 1;
-          }
+          read_joystick(i, l);
           is_joy = 1;
           break;
         }
@@ -1062,15 +1032,22 @@ void controls() {
     }
 
     if (is_joy == 0) {
+      /* The solo player flies with the keys of the pilot in the roster,
+         multiplayer pilots with the keyset of their seat. */
+      keymap keys;
+      if (playing_solo) {
+        const rosteri &r = roster[config.player_number[solo_country]];
+        keys = {r.up, r.down, r.roll, r.power, r.guns, r.bombs};
+      } else {
+        keys = player_keys[l];
+      }
 
-      if ((playing_solo ? key[roster[config.player_number[solo_country]].down]
-                        : key[player_keys[l].down]))
+      if (key[keys.down])
         new_mc_down[l] = 1;
       else
         new_mc_down[l] = 0;
 
-      if ((playing_solo ? key[roster[config.player_number[solo_country]].up]
-                        : key[player_keys[l].up]))
+      if (key[keys.up])
         new_mc_up[l] = 1;
       else
         new_mc_up[l] = 0;
@@ -1079,18 +1056,14 @@ void controls() {
         // Toggle power is off
         if (!power_reverse) {
           // ..and no reverse
-          if ((playing_solo
-                   ? key[roster[config.player_number[solo_country]].power]
-                   : key[player_keys[l].power]))
+          if (key[keys.power])
             new_mc_power[l] = 1;
           else
             new_mc_power[l] = 0;
         } else {
           // Toggle off but reverse - we need to prevent takeoff with
           // power_break_active
-          if ((playing_solo
-                   ? key[roster[config.player_number[solo_country]].power]
-                   : key[player_keys[l].power])) {
+          if (key[keys.power]) {
             // Power is pressed
             new_mc_power[l] = 0;
             if (power_break_active[l])
@@ -1105,9 +1078,7 @@ void controls() {
         }
       } else {
         // Toggle power is on
-        if ((playing_solo
-                 ? key[roster[config.player_number[solo_country]].power]
-                 : key[player_keys[l].power])) {
+        if (key[keys.power]) {
           if (!controls_power2[l]) {
             if (new_mc_power[l])
               new_mc_power[l] = 0;
@@ -1124,25 +1095,16 @@ void controls() {
       }
 
       new_mc_bomb[l] = 0;
-
-      if ((playing_solo ? key[roster[config.player_number[solo_country]].bombs]
-                        : key[player_keys[l].bombs])) {
+      if (key[keys.bombs])
         new_mc_bomb[l] = 1;
-      }
 
       new_mc_roll[l] = 0;
-      if ((playing_solo ? key[roster[config.player_number[solo_country]].roll]
-                        : key[player_keys[l].roll])) {
-
+      if (key[keys.roll])
         new_mc_roll[l] = 1;
-      }
 
       new_mc_guns[l] = 0;
-
-      if ((playing_solo ? key[roster[config.player_number[solo_country]].guns]
-                        : key[player_keys[l].guns])) {
+      if (key[keys.guns])
         new_mc_guns[l] = 1;
-      }
     }
 
     if (player_spinning[l]) {
@@ -1159,14 +1121,39 @@ void controls() {
   }
 }
 
+/* Plane l crashes if the level pixel (nx, ny) is not sky. Returns whether
+ * it did. */
+static bool crash_into_terrain(int l, int nx, int ny) {
+  if (nx < 0 || nx >= 2400 || ny >= 200) {
+    nx = 0;
+    ny = 199;
+  }
+
+  if (ny < 0)
+    ny = 0;
+
+  unsigned char kohta = level_bitmap[nx + ny * 2400];
+
+  if ((kohta >= 112 && kohta <= 119) || in_closing[l] || player_on_airfield[l])
+    return false;
+
+  if (!player_spinning[l]) {
+    player_shots_down[l][l]++;
+    player_points[l]--;
+  }
+
+  crash_plane(l, kohta < 231 && kohta > 224);
+  return true;
+}
+
 void detect_collision() {
   int xl, yl, xa, ya, sx, sy;
   int l, l2;
   int laskx, lasky;
   int px[16], py[16];
-  int temp;
   int nx, ny;
   int yyy, xxx;
+  const unsigned char *sprite, *sprite2;
 
   for (l = 0; l < 16; l++) {
     if (!plane_present[l])
@@ -1180,7 +1167,8 @@ void detect_collision() {
     if (!plane_present[l])
       continue;
 
-    temp = (player_angle[l] >> 8) / 6;
+    sprite = plane_p[l][(player_angle[l] >> 8) / 6][player_rolling[l]]
+                    [player_upsidedown[l]];
     for (l2 = 0; l2 < 16; l2++) {
       if (l2 == l)
         continue;
@@ -1190,6 +1178,8 @@ void detect_collision() {
 
       if ((px[l] + 19) >= px[l2] && px[l] <= (px[l2] + 19) &&
           (py[l] + 19) >= py[l2] && py[l] <= (py[l2] + 19)) {
+        sprite2 = plane_p[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]]
+                         [player_upsidedown[l2]];
         sx = px[l2] - px[l];
         sy = py[l2] - py[l];
 
@@ -1210,84 +1200,42 @@ void detect_collision() {
           yl = 19;
         }
 
-        for (lasky = ya; lasky <= yl; lasky++)
-          for (laskx = xa; laskx <= xl; laskx++) {
-            if (plane_p[l][temp][player_rolling[l]][player_upsidedown[l]]
-                       [lasky * 20 + laskx] != 255)
-              if (plane_p[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]]
-                         [player_upsidedown[l2]]
-                         [(lasky - sy) * 20 + (laskx - sx)] != 255) {
-                if (collision_detect) {
-                  if (!in_closing[l]) {
-
-                    in_closing[l] = 2;
-                    plane_present[l] = 0;
-                    start_parts(l);
-                    player_shots_down[l][l]++;
-                    player_points[l]--;
-                    if (config.sound_on && config.sfx_on)
-                      play_2d_sample(sample_crash[util::wutil::wrandom(2)],
-                                     player_x_8[solo_country], player_x_8[l]);
-                  }
-                  if (!in_closing[l2]) {
-                    in_closing[l2] = 2;
-                    plane_present[l2] = 0;
-                    start_parts(l2);
-                    player_shots_down[l2][l2]++;
-                    player_points[l2]--;
-                    if (config.sound_on && config.sfx_on)
-                      play_2d_sample(sample_crash[util::wutil::wrandom(2)],
-                                     player_x_8[solo_country], player_x_8[l]);
-                  }
+        /* Once both planes are breaking up (or collisions are off), the
+           remaining overlapping pixels change nothing, so the first one
+           is enough. */
+        bool hit = false;
+        for (lasky = ya; lasky <= yl && !hit; lasky++)
+          for (laskx = xa; laskx <= xl && !hit; laskx++) {
+            if (sprite[lasky * 20 + laskx] != 255 &&
+                sprite2[(lasky - sy) * 20 + (laskx - sx)] != 255) {
+              hit = true;
+              if (collision_detect) {
+                if (!in_closing[l]) {
+                  crash_plane(l);
+                  player_shots_down[l][l]++;
+                  player_points[l]--;
+                }
+                if (!in_closing[l2]) {
+                  crash_plane(l2);
+                  player_shots_down[l2][l2]++;
+                  player_points[l2]--;
                 }
               }
+            }
           }
       }
     }
+
+    /* The nose ... */
     nx = (player_x[l] + 12 * util::wutil::cosinit[player_angle[l] >> 8]) >> 8;
     ny = (player_y[l] - 12 * util::wutil::sinit[player_angle[l] >> 8]) >> 8;
 
-    if (nx < 0 || nx >= 2400 || ny >= 200) {
-      nx = 0;
-      ny = 199;
-    }
-
-    if (ny < 0)
-      ny = 0;
-
-    if (((level_bitmap[nx + ny * 2400]) < 112 ||
-         ((level_bitmap[nx + ny * 2400])) > 119) &&
-        !in_closing[l] && !player_on_airfield[l]) {
-      if (!player_spinning[l]) {
-        player_shots_down[l][l]++;
-        player_points[l]--;
-      }
-
-      in_closing[l] = 2;
-      plane_present[l] = 0;
-      start_parts(l);
-
-      if (config.sound_on && config.sfx_on) {
-        if (level_bitmap[nx + ny * 2400] < 231 &&
-            level_bitmap[nx + ny * 2400] > 224)
-          play_2d_sample(sample_spcrash, player_x_8[solo_country],
-                         player_x_8[l]);
-        else
-          play_2d_sample(sample_crash[util::wutil::wrandom(2)], player_x_8[solo_country],
-                         player_x_8[l]);
-      }
-
+    if (crash_into_terrain(l, nx, ny))
       continue;
-    }
 
-    if (!player_upsidedown[l]) {
-      yyy = 5;
-      xxx = 5;
-
-    } else {
-      yyy = -5;
-      xxx = 5;
-    }
+    /* ... and the wheels must stay in the sky. */
+    xxx = 5;
+    yyy = player_upsidedown[l] ? -5 : 5;
 
     nx = (player_x[l] >> 8) + ((+xxx * util::wutil::cosinit[player_angle[l] >> 8] +
                                 yyy * util::wutil::sinit[player_angle[l] >> 8] + 128) >>
@@ -1296,37 +1244,7 @@ void detect_collision() {
                                 yyy * util::wutil::cosinit[player_angle[l] >> 8] + 128) >>
                                8);
 
-    if (nx < 0 || nx >= 2400 || ny >= 200) {
-      nx = 0;
-      ny = 199;
-    }
-
-    if (ny < 0)
-      ny = 0;
-
-    if (((level_bitmap[nx + ny * 2400]) < 112 ||
-         ((level_bitmap[nx + ny * 2400])) > 119) &&
-        !in_closing[l] && !player_on_airfield[l]) {
-      if (!player_spinning[l]) {
-        player_shots_down[l][l]++;
-        player_points[l]--;
-      }
-
-      in_closing[l] = 2;
-      plane_present[l] = 0;
-      start_parts(l);
-
-      if (config.sound_on && config.sfx_on) {
-        if (level_bitmap[nx + ny * 2400] < 231 &&
-            level_bitmap[nx + ny * 2400] > 224)
-          play_2d_sample(sample_spcrash, player_x_8[solo_country],
-                         player_x_8[l]);
-        else
-          play_2d_sample(sample_crash[util::wutil::wrandom(2)], player_x_8[solo_country],
-                         player_x_8[l]);
-      }
-      continue;
-    }
+    crash_into_terrain(l, nx, ny);
   }
 }
 
@@ -1377,6 +1295,7 @@ static uint32_t crc32_le(uint32_t crc, unsigned char const *p, size_t len) {
   return crc;
 }
 
+/* -debugtrace prints a checksum of every frame (see tools/compare-baseline). */
 void do_debug_trace() {
   static int first_call = 1;
   static int enabled = 0;
@@ -1384,6 +1303,8 @@ void do_debug_trace() {
   if (first_call) {
     if (findparameter("-debugtrace")) {
       enabled = 1;
+      /* keep the trace complete even if the game crashes */
+      setvbuf(stdout, nullptr, _IOLBF, 0);
     }
     first_call = 0;
   }
@@ -1401,6 +1322,23 @@ void do_debug_trace() {
     vircr_checksum = crc32_le(~0, vircr, len);
 
     printf("%d %08x\n", frame_laskuri, vircr_checksum);
+  }
+}
+
+/* The pause key is down: wait until it is released, then pressed and
+ * released again. */
+static void pause_game(int pause_key) {
+  while (key[pause_key]) { // still pressed
+    io::timing::nopeuskontrolli();
+    update_key_state();
+  }
+  while (!key[pause_key]) { // released
+    io::timing::nopeuskontrolli();
+    update_key_state();
+  }
+  while (key[pause_key]) { // pressed again
+    io::timing::nopeuskontrolli();
+    update_key_state();
   }
 }
 
@@ -1505,43 +1443,28 @@ void main_engine() {
 
     tyhjaa_vircr();
 
-    if (split_num == 0) {
-      maisema->blit(0, -4, 0, 0, screen_width_less, screen_height_less);
-    } else if (split_num == 1) {
-      maisema->blit(-screen_width, 192, 0, 0, screen_width_less,
+    /* The level is shown cut into split_num + 1 strips, one above the
+       other, the last one drawn first. */
+    for (l = split_num; l >= 0; l--)
+      maisema->blit(-l * screen_width, l * 196 - 4, 0, 0, screen_width_less,
                     screen_height_less);
-      maisema->blit(0, -4, 0, 0, screen_width_less, screen_height_less);
-    } else {
-      maisema->blit(-2 * screen_width, 388, 0, 0, screen_width_less,
-                    screen_height_less);
-      maisema->blit(-screen_width, 192, 0, 0, screen_width_less,
-                    screen_height_less);
-      maisema->blit(0, -4, 0, 0, screen_width_less, screen_height_less);
-    }
 
     for (l = 0; l < MAX_STRUCTURES; l++) {
       if (structures[l][0] != nullptr) {
         if (leveldata.struct_hit[l])
           continue;
 
-        structures[l][0]->blit(
-            leveldata.struct_x[l] -
-                (leveldata.struct_x[l] / screen_width) * screen_width,
-            leveldata.struct_y[l] +
-                (leveldata.struct_x[l] / screen_width) * 196 - 4);
+        int strip = leveldata.struct_x[l] / screen_width;
+        int strip_x = leveldata.struct_x[l] - strip * screen_width;
+
+        structures[l][0]->blit(strip_x, leveldata.struct_y[l] + strip * 196 - 4);
 
         structures[l][0]->info(&xx, &yy);
 
-        if ((leveldata.struct_x[l] -
-             (leveldata.struct_x[l] / screen_width) * screen_width) +
-                xx >
-            screen_width)
-          structures[l][0]->blit(
-              leveldata.struct_x[l] -
-                  (leveldata.struct_x[l] / screen_width) * screen_width -
-                  screen_width,
-              leveldata.struct_y[l] +
-                  (leveldata.struct_x[l] / screen_width + 1) * 196 - 4);
+        /* A structure crossing the cut continues on the next strip. */
+        if (strip_x + xx > screen_width)
+          structures[l][0]->blit(strip_x - screen_width,
+                                 leveldata.struct_y[l] + (strip + 1) * 196 - 4);
       }
     }
 
@@ -1613,18 +1536,35 @@ void main_engine() {
 
   //// Record
 
-  if (findparameter("-record") || findparameter("-playback")) {
-    record_data = (char *)util::wutil::walloc(16 * 24 * 1280);
-    record_random = (int *)util::wutil::walloc(4 * 24 * 1280);
+  recording_game = findparameter("-record") != 0;
+  playing_back_game = findparameter("-playback") != 0;
+
+  if (recording_game || playing_back_game) {
+    record_data = (char *)util::wutil::walloc(16 * RECORD_FRAMES);
+    record_random = (int *)util::wutil::walloc(4 * RECORD_FRAMES);
   }
 
-  if (findparameter("-playback")) {
+  if (playing_back_game) {
     record_file = settings_open("record.dta", "rb");
-    fread(record_data, 24 * 1280, 16, record_file);
+    if (record_file == nullptr) {
+      fprintf(stderr, "No recording (record.dta) in the settings directory\n");
+      exit(1);
+    }
+    if (fread(record_data, RECORD_FRAMES, 16, record_file) != 16) {
+      fprintf(stderr, "record.dta is damaged or truncated\n");
+      exit(1);
+    }
     fclose(record_file);
 
     record_file = settings_open("record.000", "rb");
-    fread(record_random, 24 * 1280, 4, record_file);
+    if (record_file == nullptr) {
+      fprintf(stderr, "No recording (record.000) in the settings directory\n");
+      exit(1);
+    }
+    if (fread(record_random, RECORD_FRAMES, 4, record_file) != 4) {
+      fprintf(stderr, "record.000 is damaged or truncated\n");
+      exit(1);
+    }
     record_random_swap_endianess();
     fclose(record_file);
   }
@@ -1637,41 +1577,15 @@ void main_engine() {
   while (flag) {
     update_key_state();
 
-    if (key[SDLK_PAUSE]) {
-      // wait until pause key is released, then pressed and released again
-      while (key[SDLK_PAUSE]) { // still pressed
-        io::timing::nopeuskontrolli();
-        update_key_state();
-      }
-      while (!key[SDLK_PAUSE]) { // released
-        io::timing::nopeuskontrolli();
-        update_key_state();
-      }
-      while (key[SDLK_PAUSE]) { // pressed again
-        io::timing::nopeuskontrolli();
-        update_key_state();
-      }
-    }
+    if (key[TK_PAUSE])
+      pause_game(TK_PAUSE);
     // use F4 as an alias for the Pause key
     // because Pause does not always work reliably
     // (and is not present on all keyboards)
-    if (key[SDLK_F4]) {
-      // wait until F4 is released, then pressed and released again
-      while (key[SDLK_F4]) { // still pressed
-        io::timing::nopeuskontrolli();
-        update_key_state();
-      }
-      while (!key[SDLK_F4]) { // released
-        io::timing::nopeuskontrolli();
-        update_key_state();
-      }
-      while (key[SDLK_F4]) { // pressed again
-        io::timing::nopeuskontrolli();
-        update_key_state();
-      }
-    }
+    if (key[TK_F4])
+      pause_game(TK_F4);
 
-    if (key[SDLK_ESCAPE]) {
+    if (key[TK_ESCAPE]) {
       flag = 0;
       mission_interrupted = 1;
     }
@@ -1771,7 +1685,7 @@ void main_engine() {
         if (!solo_dest_remaining) { solo_success = 1; }
       }
 
-      if (key[SDLK_F1] && key[SDLK_F2] && key[SDLK_F3]) {
+      if (key[TK_F1] && key[TK_F2] && key[TK_F3]) {
         frost->printf(40, 40, "SoloDestRemaining: %d. l=%d\n",
                       solo_dest_remaining, l);
       }
@@ -1789,13 +1703,13 @@ void main_engine() {
     do_debug_trace();
 
     if (current_mode == SVGA_MODE) {
-      do_all_clear(0);
+      do_all_clear();
     }
 
     rotate_water_palet();
 
     if (current_mode == VGA_MODE) {
-      if (solo_mode == -1) { do_all(1); }
+      if (solo_mode == -1) { do_all(); }
     }
 
     if (playing_solo && hangarmenu_active[solo_country]) {
@@ -1820,18 +1734,18 @@ void main_engine() {
 
   //// Record
 
-  if (findparameter("-record")) {
+  if (recording_game) {
     record_file = settings_open("record.dta", "wb");
-    fwrite(record_data, 24 * 1280, 16, record_file);
+    fwrite(record_data, RECORD_FRAMES, 16, record_file);
     fclose(record_file);
 
     record_file = settings_open("record.000", "wb");
     record_random_swap_endianess();
-    fwrite(record_random, 24 * 1280, 4, record_file);
+    fwrite(record_random, RECORD_FRAMES, 4, record_file);
     fclose(record_file);
   }
 
-  if (findparameter("-record") || findparameter("-playback")) {
+  if (recording_game || playing_back_game) {
     free(record_data);
     free(record_random);
   }
@@ -1858,11 +1772,12 @@ void do_aftermath(int show_it_all) {
   int best_in_record = 0;
   int sisennys;
   int mission_success = 0;
+  int objective_missed = 0;
 
   std::unique_ptr<Bitmap> temp;
   std::unique_ptr<Bitmap> temp2;
   std::unique_ptr<Bitmap> fly(new Bitmap("FLY"));
-  std::unique_ptr<Bitmap> exit(new Bitmap("EXIT"));
+  std::unique_ptr<Bitmap> exitkuva(new Bitmap("EXIT"));
 
   gfx::fades::random_fade_out();
 
@@ -1914,7 +1829,6 @@ void do_aftermath(int show_it_all) {
 
     tempt = 0;
 
-    l2 = 0;
     for (l = 0; l < MAX_STRUCTURES; l++) {
       if (!leveldata.struct_x[l])
         continue;
@@ -1924,7 +1838,7 @@ void do_aftermath(int show_it_all) {
         if (leveldata.struct_type[l] == 1) {
           if (infan_x[l] && (infan_state[l] != 3) && (infan_state[l] != 4) &&
               (infan_state[l] != 5))
-            l2 = 1;
+            objective_missed = 1;
           else {
             tempt += 1;
             infantry_score += 1;
@@ -1934,7 +1848,7 @@ void do_aftermath(int show_it_all) {
         if (leveldata.struct_type[l] == 2) {
           if (!infan_x[l] || (infan_state[l] == 3) || (infan_state[l] == 4) ||
               (infan_state[l] == 5))
-            l2 = 1;
+            objective_missed = 1;
         }
 
         if (player_sides[leveldata.struct_owner[l]] == 0) {
@@ -1959,7 +1873,7 @@ void do_aftermath(int show_it_all) {
 
         if (leveldata.struct_type[l] == 1) {
           if (!struct_state[l])
-            l2 = 1;
+            objective_missed = 1;
           else {
             tempt += 5;
             struct_score += 5;
@@ -1968,7 +1882,7 @@ void do_aftermath(int show_it_all) {
 
         if (leveldata.struct_type[l] == 2) {
           if (struct_state[l])
-            l2 = 1;
+            objective_missed = 1;
         }
 
         if (leveldata.struct_owner[l] != 4 &&
@@ -1994,7 +1908,7 @@ void do_aftermath(int show_it_all) {
 
       if (kkbase_mission[l] == 1) {
         if (kkbase_status[l] != 2) {
-          l2 = 1;
+          objective_missed = 1;
         } else {
           tempt += 5;
           aaa_score += 5;
@@ -2003,7 +1917,7 @@ void do_aftermath(int show_it_all) {
 
       if (kkbase_mission[l] == 2) {
         if (kkbase_status[l] == 2)
-          l2 = 1;
+          objective_missed = 1;
       }
 
       if (player_sides[leveldata.struct_owner[kkbase_number[l]]] == 0) {
@@ -2059,7 +1973,7 @@ void do_aftermath(int show_it_all) {
     frost->printf(110, 120, "Difficulty bonus :");
     frost->printf(210, 120, "%-6d", some_score);
 
-    if (((l2 == 0) && (number_of_planes[solo_country] >= 0)) &&
+    if (!objective_missed && (number_of_planes[solo_country] >= 0) &&
         (!mission_interrupted)) {
       if (tempt < 1)
         tempt = 1;
@@ -2193,8 +2107,6 @@ void do_aftermath(int show_it_all) {
     }
   }
 
-  //// Bug up ^^^^
-
   if (show_it_all) {
     l = 1;
 
@@ -2237,7 +2149,7 @@ void do_aftermath(int show_it_all) {
           }
 
           if (x >= 54 && y >= 191 && x <= 70 && y <= 199) {
-            exit->blit(54, 191);
+            exitkuva->blit(54, 191);
 
             if (n1)
               l = 0;
@@ -2269,10 +2181,45 @@ void do_aftermath(int show_it_all) {
     letter_menu();
 }
 
+/* A copy of the picture mirrored left to right (mirror_x) or upside down
+ * (mirror_y), for the sprites that the data holds facing one way only. */
+static std::unique_ptr<Bitmap> mirror_x(Bitmap *source, const char *name) {
+  int w, h;
+  unsigned char *src = source->info(&w, &h);
+  unsigned char *dst = (unsigned char *)util::wutil::walloc(w * h);
+  std::unique_ptr<Bitmap> pic = std::make_unique<Bitmap>(w, h, dst, name, true);
+
+  for (int x = 0; x < w; x++)
+    for (int y = 0; y < h; y++)
+      dst[(w - 1 - x) + y * w] = src[x + y * w];
+
+  return pic;
+}
+
+static std::unique_ptr<Bitmap> mirror_y(Bitmap *source, const char *name) {
+  int w, h;
+  unsigned char *src = source->info(&w, &h);
+  unsigned char *dst = (unsigned char *)util::wutil::walloc(w * h);
+  std::unique_ptr<Bitmap> pic = std::make_unique<Bitmap>(w, h, dst, name, true);
+
+  for (int x = 0; x < w; x++)
+    for (int y = 0; y < h; y++)
+      dst[x + (h - 1 - y) * w] = src[x + y * w];
+
+  return pic;
+}
+
+/* Sprite of plane colour l1 at angle index angle (0-60, 6 degrees each),
+ * roll frame l3, flying right (side 0) or left (side 1). */
+static void set_plane_sprite(int l1, int angle, int l3, int side,
+                             std::unique_ptr<Bitmap> pic) {
+  plane_p[l1][angle][l3][side] = pic->info();
+  planes[l1][angle][l3][side] = std::move(pic);
+}
+
 void load_up() {
   int l, l1, l2, l3;
-  int xxx, yyy;
-  unsigned char *point1, *point2;
+  unsigned char *point1;
 
   loading_text("DKS-file directory structure loaded.");
   loading_text("Loading Trigonometric functions.");
@@ -2361,7 +2308,7 @@ void load_up() {
   for (l = 0; l < 2501; l++)
     point1[l] = gfx::extra::converted_explosion[l];
 
-  plane1 = std::make_unique<Bitmap>(61, 41, point1, "explosion");
+  plane1 = std::make_unique<Bitmap>(61, 41, point1, "explosion", true);
 
   for (l = 0; l < 4; l++)
     for (l2 = 0; l2 < EXPLOX_FRAMES; l2++)
@@ -2401,42 +2348,19 @@ void load_up() {
   plane1 = std::make_unique<Bitmap>("MEKAN1");
   for (l = 0; l < 14; l++) {
     mekan_running[l][0] = std::make_unique<Bitmap>(1 + 14 * l, 1, 13, 11, plane1);
-
-    point1 = (unsigned char *)util::wutil::walloc(13 * 11);
-
-    point2 = mekan_running[l][0]->info(&xxx, &yyy);
-    mekan_running[l][1] = std::make_unique<Bitmap>(13, 11, point1, "mekan1");
-
-    for (xxx = 0; xxx < 13; xxx++)
-      for (yyy = 0; yyy < 11; yyy++)
-        point1[xxx + yyy * 13] = point2[12 - xxx + yyy * 13];
+    mekan_running[l][1] = mirror_x(mekan_running[l][0].get(), "mekan1");
   }
 
   plane1 = std::make_unique<Bitmap>("MEKAN2");
   for (l = 0; l < 14; l++) {
     mekan_pushing[0][l][0] = std::make_unique<Bitmap>(1 + 14 * l, 1, 13, 11, plane1);
-
-    point1 = (unsigned char *)util::wutil::walloc(13 * 11);
-    point2 = mekan_pushing[0][l][0]->info(&xxx, &yyy);
-    mekan_pushing[0][l][1] = std::make_unique<Bitmap>(13, 11, point1, "mekan2");
-
-    for (xxx = 0; xxx < 13; xxx++)
-      for (yyy = 0; yyy < 11; yyy++)
-        point1[xxx + yyy * 13] = point2[12 - xxx + yyy * 13];
+    mekan_pushing[0][l][1] = mirror_x(mekan_pushing[0][l][0].get(), "mekan2");
   }
 
   plane1 = std::make_unique<Bitmap>("MEKAN3");
   for (l = 0; l < 9; l++) {
     mekan_pushing[1][l][1] = std::make_unique<Bitmap>(1 + 14 * l, 1, 13, 11, plane1);
-
-    point1 = (unsigned char *)util::wutil::walloc(13 * 11);
-
-    point2 = mekan_pushing[1][l][1]->info(&xxx, &yyy);
-    mekan_pushing[1][l][0] = std::make_unique<Bitmap>(13, 11, point1, "mekan3");
-
-    for (xxx = 0; xxx < 13; xxx++)
-      for (yyy = 0; yyy < 11; yyy++)
-        point1[xxx + yyy * 13] = point2[12 - xxx + yyy * 13];
+    mekan_pushing[1][l][0] = mirror_x(mekan_pushing[1][l][1].get(), "mekan3");
   }
 
   loading_text("Loading Infantry");
@@ -2478,88 +2402,31 @@ void load_up() {
     loading_text("Mirroring infantry.");
 
     for (l = 0; l < 4; l++) {
-      point1 = (unsigned char *)util::wutil::walloc(15 * 14);
-
-      point2 = infantry_dropping[l][0]->info(&xxx, &yyy);
-      infantry_dropping[l][1] = std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_dropping");
-
-      for (xxx = 0; xxx < 15; xxx++)
-        for (yyy = 0; yyy < 14; yyy++)
-          point1[xxx + yyy * 15] = point2[14 - xxx + yyy * 15];
-
-      point1 = (unsigned char *)util::wutil::walloc(15 * 14);
-
-      point2 = infantry_after_drop[l][0]->info(&xxx, &yyy);
+      infantry_dropping[l][1] =
+          mirror_x(infantry_dropping[l][0].get(), "mirr_inf_dropping");
       infantry_after_drop[l][1] =
-              std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_after_drop");
+          mirror_x(infantry_after_drop[l][0].get(), "mirr_inf_after_drop");
 
-      for (xxx = 0; xxx < 15; xxx++)
-        for (yyy = 0; yyy < 14; yyy++)
-          point1[xxx + yyy * 15] = point2[14 - xxx + yyy * 15];
-
-      for (l2 = 0; l2 < 12; l2++) {
-        point1 = (unsigned char *)util::wutil::walloc(15 * 14);
-
-        point2 = infantry_walking[l][0][l2]->info(&xxx, &yyy);
+      for (l2 = 0; l2 < 12; l2++)
         infantry_walking[l][1][l2] =
-                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_walking");
+            mirror_x(infantry_walking[l][0][l2].get(), "mirr_inf_walking");
 
-        for (xxx = 0; xxx < 15; xxx++)
-          for (yyy = 0; yyy < 14; yyy++)
-            point1[xxx + yyy * 15] = point2[14 - xxx + yyy * 15];
-      }
-
-      for (l2 = 0; l2 < 7; l2++) {
-        point1 = (unsigned char *)util::wutil::walloc(15 * 14);
-
-        point2 = infantry_dying[l][0][l2]->info(&xxx, &yyy);
-        infantry_dying[l][1][l2] = std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_dying");
-
-        for (xxx = 0; xxx < 15; xxx++)
-          for (yyy = 0; yyy < 14; yyy++)
-            point1[xxx + yyy * 15] = point2[14 - xxx + yyy * 15];
-      }
+      for (l2 = 0; l2 < 7; l2++)
+        infantry_dying[l][1][l2] =
+            mirror_x(infantry_dying[l][0][l2].get(), "mirr_inf_dying");
 
       for (l2 = 0; l2 < 6; l2++) {
-        point1 = (unsigned char *)util::wutil::walloc(15 * 14);
-
-        point2 = infantry_aiming[l][0][l2]->info(&xxx, &yyy);
         infantry_aiming[l][1][l2] =
-                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_aiming");
-
-        for (xxx = 0; xxx < 15; xxx++)
-          for (yyy = 0; yyy < 14; yyy++)
-            point1[xxx + yyy * 15] = point2[14 - xxx + yyy * 15];
-
-        point1 = (unsigned char *)util::wutil::walloc(15 * 14);
-        point2 = infantry_shooting[l][0][l2]->info(&xxx, &yyy);
+            mirror_x(infantry_aiming[l][0][l2].get(), "mirr_inf_aiming");
         infantry_shooting[l][1][l2] =
-                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_shooting");
-
-        for (xxx = 0; xxx < 15; xxx++)
-          for (yyy = 0; yyy < 14; yyy++)
-            point1[xxx + yyy * 15] = point2[14 - xxx + yyy * 15];
+            mirror_x(infantry_shooting[l][0][l2].get(), "mirr_inf_shooting");
       }
 
       for (l2 = 0; l2 < 10; l2++) {
-        point1 = (unsigned char *)util::wutil::walloc(15 * 14);
-        point2 = infantry_wavedeath[l][0][l2]->info(&xxx, &yyy);
         infantry_wavedeath[l][1][l2] =
-                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_wavedeath");
-
-        for (xxx = 0; xxx < 15; xxx++)
-          for (yyy = 0; yyy < 14; yyy++)
-            point1[xxx + yyy * 15] = point2[14 - xxx + yyy * 15];
-
-        point1 = (unsigned char *)util::wutil::walloc(15 * 14);
-
-        point2 = infantry_bdying[l][0][l2]->info(&xxx, &yyy);
+            mirror_x(infantry_wavedeath[l][0][l2].get(), "mirr_inf_wavedeath");
         infantry_bdying[l][1][l2] =
-                std::make_unique<Bitmap>(15, 14, point1, "mirr_inf_bdying");
-
-        for (xxx = 0; xxx < 15; xxx++)
-          for (yyy = 0; yyy < 14; yyy++)
-            point1[xxx + yyy * 15] = point2[14 - xxx + yyy * 15];
+            mirror_x(infantry_bdying[l][0][l2].get(), "mirr_inf_bdying");
       }
     }
   } // debug
@@ -2570,148 +2437,71 @@ void load_up() {
     bomb[0] = std::make_unique<Bitmap>("BOMB");
 
     for (l = 1; l < 61; l++) {
-      bomb[l] = rotate_bitmap(bomb[0], l * 6);
+      bomb[l] = rotate_bitmap(bomb[0].get(), l * 6);
     }
 
     loading_text("Loading main planepicture.");
     plane1 = std::make_unique<Bitmap>("PLANES");
 
+    /* The data holds the planes flying right. Rotating gives the angles
+       from -90 to 90 degrees (indices 45-59 and 0-15), the rest comes
+       from mirroring. */
     loading_text("Generating rotated pictures.");
     for (l3 = 0; l3 < 4; l3++)
       for (l2 = 0; l2 < 4; l2++) {
-        planes[l2][0][l3][0] =
-                std::make_unique<Bitmap>(1 + l3 * 21, 1 + l2 * 21, 20, 20, plane1);
-        plane_p[l2][0][l3][0] = planes[l2][0][l3][0]->info(&xxx, &yyy);
-        for (l = 1; l < 16; l++) {
-          planes[l2][l][l3][0] = rotate_bitmap(planes[l2][0][l3][0], l * 6);
-          plane_p[l2][l][l3][0] = planes[l2][l][l3][0]->info(&xxx, &yyy);
-        }
+        set_plane_sprite(l2, 0, l3, 0,
+                         std::make_unique<Bitmap>(1 + l3 * 21, 1 + l2 * 21, 20,
+                                                  20, plane1));
+        for (l = 1; l < 16; l++)
+          set_plane_sprite(l2, l, l3, 0,
+                           rotate_bitmap(planes[l2][0][l3][0].get(), l * 6));
+        for (l = 45; l < 60; l++)
+          set_plane_sprite(l2, l, l3, 0,
+                           rotate_bitmap(planes[l2][0][l3][0].get(), l * 6));
+      }
+
+    /* Mirrored left to right the planes fly left, i.e. at 180 - angle.
+       Mirrored upside down they fly right inverted, at -angle (index
+       60 - l2, with 0 kept at 0). The upside down pass runs second, so
+       straight up and down (15 and 45) come from it, as before. */
+    for (l3 = 0; l3 < 4; l3++)
+      for (l1 = 0; l1 < 4; l1++) {
+        for (l2 = 0; l2 < 16; l2++)
+          set_plane_sprite(l1, 30 - l2, l3, 1,
+                           mirror_x(planes[l1][l2][l3][0].get(), "mirr_plane"));
+        for (l2 = 45; l2 < 60; l2++)
+          set_plane_sprite(l1, 90 - l2, l3, 1,
+                           mirror_x(planes[l1][l2][l3][0].get(), "mirr_plane"));
       }
 
     for (l3 = 0; l3 < 4; l3++)
-      for (l2 = 0; l2 < 4; l2++) {
-        planes[l2][0][l3][0] =
-                std::make_unique<Bitmap>(1 + l3 * 21, 1 + l2 * 21, 20, 20, plane1);
-        plane_p[l2][0][l3][0] = planes[l2][0][l3][0]->info(&xxx, &yyy);
-        for (l = 45; l < 60; l++) {
-          planes[l2][l][l3][0] = rotate_bitmap(planes[l2][0][l3][0], l * 6);
-          plane_p[l2][l][l3][0] = planes[l2][l][l3][0]->info(&xxx, &yyy);
-        }
+      for (l1 = 0; l1 < 4; l1++) {
+        for (l2 = 0; l2 < 16; l2++)
+          set_plane_sprite(l1, l2 ? 60 - l2 : 0, l3, 1,
+                           mirror_y(planes[l1][l2][l3][0].get(), "mirr_plane"));
+        for (l2 = 45; l2 < 60; l2++)
+          set_plane_sprite(l1, 60 - l2, l3, 1,
+                           mirror_y(planes[l1][l2][l3][0].get(), "mirr_plane"));
       }
 
+    /* Planes flying left and inverted (right side up on the screen) give
+       the remaining angles of the planes flying right. */
     for (l3 = 0; l3 < 4; l3++)
-      for (l2 = 0; l2 < 16; l2++)
-        for (l1 = 0; l1 < 4; l1++) {
-          point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
-          point2 = (unsigned char *)util::wutil::walloc(400);
-          if (!l2) {
-            planes[l1][30][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_1");
-            plane_p[l1][30][l3][1] = point2;
-          } else {
-            planes[l1][30 - l2][l3][1] =
-                    std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_2");
-            plane_p[l1][30 - l2][l3][1] = point2;
+      for (l1 = 0; l1 < 4; l1++)
+        for (l2 = 16; l2 < 45; l2++)
+          set_plane_sprite(l1, 60 - l2, l3, 0,
+                           mirror_y(planes[l1][l2][l3][1].get(), "mirr_plane"));
+
+    /* Players 5-16 fly with the sprites of players 1-4. */
+    static const int sprite_owner[16] = {0, 1, 2, 3, 0, 1, 2, 3,
+                                         0, 1, 2, 3, 1, 2, 3, 0};
+    for (l1 = 4; l1 < 16; l1++)
+      for (l = 0; l < 61; l++)
+        for (l2 = 0; l2 < 4; l2++)
+          for (l3 = 0; l3 < 2; l3++) {
+            plane_p[l1][l][l2][l3] = plane_p[sprite_owner[l1]][l][l2][l3];
+            planes[l1][l][l2][l3] = planes[sprite_owner[l1]][l][l2][l3];
           }
-          for (xxx = 0; xxx < 20; xxx++)
-            for (yyy = 0; yyy < 20; yyy++)
-              point2[(19 - xxx) + yyy * 20] = point1[xxx + yyy * 20];
-        }
-
-    for (l3 = 0; l3 < 4; l3++)
-      for (l2 = 45; l2 < 60; l2++)
-        for (l1 = 0; l1 < 4; l1++) {
-          point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
-          point2 = (unsigned char *)util::wutil::walloc(400);
-
-          planes[l1][90 - l2][l3][1] =
-                  std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_3");
-          plane_p[l1][90 - l2][l3][1] = point2;
-
-          for (xxx = 0; xxx < 20; xxx++)
-            for (yyy = 0; yyy < 20; yyy++)
-              point2[(19 - xxx) + yyy * 20] = point1[xxx + yyy * 20];
-        }
-
-    for (l3 = 0; l3 < 4; l3++)
-      for (l2 = 0; l2 < 16; l2++)
-        for (l1 = 0; l1 < 4; l1++) {
-          point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
-          point2 = (unsigned char *)util::wutil::walloc(400);
-          if (!l2) {
-            planes[l1][0][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_4");
-            plane_p[l1][0][l3][1] = point2;
-          } else {
-            planes[l1][60 - l2][l3][1] =
-                    std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_5");
-            plane_p[l1][60 - l2][l3][1] = point2;
-          }
-          for (xxx = 0; xxx < 20; xxx++)
-            for (yyy = 0; yyy < 20; yyy++)
-              point2[xxx + (19 - yyy) * 20] = point1[xxx + yyy * 20];
-        }
-
-    for (l3 = 0; l3 < 4; l3++)
-      for (l2 = 45; l2 < 60; l2++)
-        for (l1 = 0; l1 < 4; l1++) {
-          point1 = planes[l1][l2][l3][0]->info(&xxx, &yyy);
-          point2 = (unsigned char *)util::wutil::walloc(400);
-          if (!l2) {
-            planes[l1][0][l3][1] = std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_6");
-            plane_p[l1][0][l3][1] = point2;
-          } else {
-            planes[l1][60 - l2][l3][1] =
-                    std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_7");
-            plane_p[l1][60 - l2][l3][1] = point2;
-          }
-          for (xxx = 0; xxx < 20; xxx++)
-            for (yyy = 0; yyy < 20; yyy++)
-              point2[xxx + (19 - yyy) * 20] = point1[xxx + yyy * 20];
-        }
-
-    for (l3 = 0; l3 < 4; l3++)
-      for (l2 = 16; l2 < 45; l2++)
-        for (l1 = 0; l1 < 4; l1++) {
-          point1 = planes[l1][l2][l3][1]->info(&xxx, &yyy);
-          point2 = (unsigned char *)util::wutil::walloc(400);
-
-          planes[l1][60 - l2][l3][0] =
-                  std::make_unique<Bitmap>(20, 20, point2, "mirr_plane_8");
-          plane_p[l1][60 - l2][l3][0] = point2;
-
-          for (xxx = 0; xxx < 20; xxx++)
-            for (yyy = 0; yyy < 20; yyy++)
-              point2[xxx + (19 - yyy) * 20] = point1[xxx + yyy * 20];
-        }
-
-    for (l = 0; l < 61; l++)
-      for (l2 = 0; l2 < 4; l2++)
-        for (l3 = 0; l3 < 2; l3++) {
-          plane_p[4][l][l2][l3] = plane_p[0][l][l2][l3];
-          plane_p[5][l][l2][l3] = plane_p[1][l][l2][l3];
-          plane_p[6][l][l2][l3] = plane_p[2][l][l2][l3];
-          plane_p[7][l][l2][l3] = plane_p[3][l][l2][l3];
-          plane_p[8][l][l2][l3] = plane_p[0][l][l2][l3];
-          plane_p[9][l][l2][l3] = plane_p[1][l][l2][l3];
-          plane_p[10][l][l2][l3] = plane_p[2][l][l2][l3];
-          plane_p[11][l][l2][l3] = plane_p[3][l][l2][l3];
-          plane_p[12][l][l2][l3] = plane_p[1][l][l2][l3];
-          plane_p[13][l][l2][l3] = plane_p[2][l][l2][l3];
-          plane_p[14][l][l2][l3] = plane_p[3][l][l2][l3];
-          plane_p[15][l][l2][l3] = plane_p[0][l][l2][l3];
-
-          planes[4][l][l2][l3] = std::move(planes[0][l][l2][l3]);
-          planes[5][l][l2][l3] = std::move(planes[1][l][l2][l3]);
-          planes[6][l][l2][l3] = std::move(planes[2][l][l2][l3]);
-          planes[7][l][l2][l3] = std::move(planes[3][l][l2][l3]);
-          planes[8][l][l2][l3] = std::move(planes[0][l][l2][l3]);
-          planes[9][l][l2][l3] = std::move(planes[1][l][l2][l3]);
-          planes[10][l][l2][l3] = std::move(planes[2][l][l2][l3]);
-          planes[11][l][l2][l3] = std::move(planes[3][l][l2][l3]);
-          planes[12][l][l2][l3] = std::move(planes[1][l][l2][l3]);
-          planes[13][l][l2][l3] = std::move(planes[2][l][l2][l3]);
-          planes[14][l][l2][l3] = std::move(planes[3][l][l2][l3]);
-          planes[15][l][l2][l3] = std::move(planes[0][l][l2][l3]);
-        }
 
   } // debug
 
@@ -2771,14 +2561,15 @@ void load_level() {
 
   loading_text("Loading levelinfo.");
 
-  if (!findparameter("-level")) {
+  const char *level_arg = findparameter_value("-level");
+  if (level_arg == nullptr) {
     if (!playing_solo) {
-      sprintf(levelname, "level%d", config.current_multilevel + 1);
+      snprintf(levelname, sizeof(levelname), "level%d", config.current_multilevel + 1);
     } else {
-      sprintf(levelname, "%d-%d", solo_country, solo_mission);
+      snprintf(levelname, sizeof(levelname), "%d-%d", solo_country, solo_mission);
     }
   } else {
-    sprintf(levelname, parametrit[findparameter("-level")] + 6);
+    snprintf(levelname, sizeof(levelname), "%s", level_arg);
   }
 
   if (!dksopen(levelname)) {
@@ -2798,18 +2589,18 @@ void load_level() {
   // Byte order conversion
 
   for (i = 0; i < MAX_STRUCTURES; i++) {
-    leveldata.struct_x[i] = SDL_SwapLE32(leveldata.struct_x[i]);
-    leveldata.struct_y[i] = SDL_SwapLE32(leveldata.struct_y[i]);
-    leveldata.struct_hit[i] = SDL_SwapLE32(leveldata.struct_hit[i]);
-    leveldata.struct_owner[i] = SDL_SwapLE32(leveldata.struct_owner[i]);
-    leveldata.struct_type[i] = SDL_SwapLE32(leveldata.struct_type[i]);
+    leveldata.struct_x[i] = SDL_Swap32LE(leveldata.struct_x[i]);
+    leveldata.struct_y[i] = SDL_Swap32LE(leveldata.struct_y[i]);
+    leveldata.struct_hit[i] = SDL_Swap32LE(leveldata.struct_hit[i]);
+    leveldata.struct_owner[i] = SDL_Swap32LE(leveldata.struct_owner[i]);
+    leveldata.struct_type[i] = SDL_Swap32LE(leveldata.struct_type[i]);
   }
 
   for (i = 0; i < 4; i++) {
-    leveldata.airfield_x[i] = SDL_SwapLE32(leveldata.airfield_x[i]);
-    leveldata.airfield_y[i] = SDL_SwapLE32(leveldata.airfield_y[i]);
-    leveldata.airfield_lenght[i] = SDL_SwapLE32(leveldata.airfield_lenght[i]);
-    leveldata.plane_direction[i] = SDL_SwapLE32(leveldata.plane_direction[i]);
+    leveldata.airfield_x[i] = SDL_Swap32LE(leveldata.airfield_x[i]);
+    leveldata.airfield_y[i] = SDL_Swap32LE(leveldata.airfield_y[i]);
+    leveldata.airfield_lenght[i] = SDL_Swap32LE(leveldata.airfield_lenght[i]);
+    leveldata.plane_direction[i] = SDL_Swap32LE(leveldata.plane_direction[i]);
   }
 
   for (l = 0; l < 4; l++) {
@@ -2819,14 +2610,8 @@ void load_level() {
     leveldata.airfield_lenght[l] -= 8;
   }
 
-  for (l = 0; l < 4; l++) {
-    if (leveldata.airfield_x[l] && config.player_type[l]) {
-      plane_present[l] = 0;
-
-    } else {
-      plane_present[l] = 0;
-    }
-  }
+  for (l = 0; l < 4; l++)
+    plane_present[l] = 0;
 
   loading_text("Loading scenery.");
 
@@ -2950,32 +2735,34 @@ void load_level() {
         structures[l][0] = std::make_unique<Bitmap>(leveldata.pd_name[l]);
 
       } else {
-        temppic = std::make_unique<Bitmap>(leveldata.pd_name[l]);
-        temppic->info(&struct_width[l], &struct_heigth[l]);
-
-        structures[l][0] =
-                std::make_unique<Bitmap>(leveldata.struct_x[l], leveldata.struct_y[l],
-                       struct_width[l], struct_heigth[l], maisema);
-
-        temppic->blit_to_bitmap(structures[l][0], 0, 0);
-
-        for (l2 = 0; l2 < NUMBER_OF_STRUCT_NAMES; l2++) {
-          if (!strcmp(struct_names[l2 * 2], leveldata.pd_name[l])) {
-            temppic = std::make_unique<Bitmap>(struct_names[l2 * 2 + 1]);
-
-            structures[l][1] =
-                    std::make_unique<Bitmap>(leveldata.struct_x[l], leveldata.struct_y[l],
-                           struct_width[l], struct_heigth[l], maisema);
-
-            temppic->blit_to_bitmap(structures[l][1], 0, 0);
-
+        for (l2 = 0; l2 < NUMBER_OF_STRUCT_NAMES; l2++)
+          if (!strcmp(struct_names[l2 * 2], leveldata.pd_name[l]))
             break;
-          }
-        }
 
         if (l2 == NUMBER_OF_STRUCT_NAMES) {
           structures[l][0] = std::make_unique<Bitmap>(leveldata.pd_name[l]);
           structures[l][0]->info(&struct_width[l], &struct_heigth[l]);
+
+        } else {
+          /* A structure that can be destroyed is drawn in both states on
+             a copy of the scenery behind it, so that drawing the ruin
+             replaces the whole building. */
+          temppic = std::make_unique<Bitmap>(leveldata.pd_name[l]);
+          temppic->info(&struct_width[l], &struct_heigth[l]);
+
+          structures[l][0] =
+                  std::make_unique<Bitmap>(leveldata.struct_x[l], leveldata.struct_y[l],
+                         struct_width[l], struct_heigth[l], maisema);
+
+          temppic->blit_to_bitmap(structures[l][0], 0, 0);
+
+          temppic = std::make_unique<Bitmap>(struct_names[l2 * 2 + 1]);
+
+          structures[l][1] =
+                  std::make_unique<Bitmap>(leveldata.struct_x[l], leveldata.struct_y[l],
+                         struct_width[l], struct_heigth[l], maisema);
+
+          temppic->blit_to_bitmap(structures[l][1], 0, 0);
         }
       }
     }
@@ -2987,7 +2774,7 @@ void load_level() {
       hangar_y[l] = 0;
 
     } else {
-      for (l2 = 0; l2 < 100; l2++) {
+      for (l2 = 0; l2 < MAX_STRUCTURES; l2++) {
         if (!strcmp(leveldata.pd_name[l2], "HANGAR")) {
           if (leveldata.struct_x[l2] + 4 >= leveldata.airfield_x[l])
             if (leveldata.struct_x[l2] <=
@@ -2996,7 +2783,7 @@ void load_level() {
         }
       }
 
-      if (l2 == 100) {
+      if (l2 == MAX_STRUCTURES) {
         hangar_x[l] = 0;
         hangar_y[l] = 0;
 
@@ -3011,17 +2798,6 @@ void load_level() {
 
   level_bitmap = maisema->info(&xx, &yy);
 
-  for (l = 0; l < 2400; l++) {
-    terrain_level[l] = 0;
-
-    for (l2 = 199; l2 >= 0; l2--)
-      if (level_bitmap[l + l2 * 2400] >= 112 &&
-          level_bitmap[l + l2 * 2400] <= 119) {
-        terrain_level[l] = l2;
-        break;
-      }
-  }
-
   if (current_mode == VGA_MODE && !findparameter("-debugnographics")) {
     loading_text("Initializing screen.");
     if (!findparameter("-black"))
@@ -3029,6 +2805,16 @@ void load_level() {
     else
       init_vga("PALET3");
   }
+}
+
+/* Plane l flies with the stats of plane type src. */
+static void copy_plane_stats(int l, int src) {
+  plane_power[l] = t_plane_power[src];
+  plane_manover[l] = t_plane_manover[src];
+  plane_mass[l] = t_plane_mass[src];
+  plane_bombs[l] = t_plane_bombs[src];
+  plane_gas[l] = t_plane_gas[src];
+  plane_ammo[l] = t_plane_ammo[src];
 }
 
 void init_data() {
@@ -3077,7 +2863,7 @@ void init_data() {
     plane_wants_out[l] = 0;
   }
 
-  for (l = 0; l < 100; l++)
+  for (l = 0; l < MAX_STRUCTURES; l++)
     bombs_going[l] = -1;
 
   for (l = 0; l < MAX_FLAMES; l++)
@@ -3115,106 +2901,20 @@ void init_data() {
       }
     }
 
-    for (l = 0; l < 4; l++) {
-      plane_power[l] = t_plane_power[l];
-      plane_manover[l] = t_plane_manover[l];
-      plane_mass[l] = t_plane_mass[l];
-      plane_bombs[l] = t_plane_bombs[l];
-      plane_gas[l] = t_plane_gas[l];
-      plane_ammo[l] = t_plane_ammo[l];
-    }
+    for (l = 0; l < 4; l++)
+      copy_plane_stats(l, l);
   } else {
-    if (config.all_planes_are) {
-      for (l = 0; l < 16; l++) {
-        plane_power[l] = t_plane_power[config.all_planes_are - 1];
-        plane_manover[l] = t_plane_manover[config.all_planes_are - 1];
-        plane_mass[l] = t_plane_mass[config.all_planes_are - 1];
-        plane_bombs[l] = t_plane_bombs[config.all_planes_are - 1];
-        plane_gas[l] = t_plane_gas[config.all_planes_are - 1];
-        plane_ammo[l] = t_plane_ammo[config.all_planes_are - 1];
-      }
+    /* In multiplayer every plane can be set to the same type. */
+    for (l = 0; l < 16; l++)
+      copy_plane_stats(l, config.all_planes_are ? config.all_planes_are - 1
+                                                : l);
 
-    } else {
-      for (l = 0; l < 16; l++) {
-        plane_power[l] = t_plane_power[l];
-        plane_manover[l] = t_plane_manover[l];
-        plane_mass[l] = t_plane_mass[l];
-        plane_bombs[l] = t_plane_bombs[l];
-        plane_gas[l] = t_plane_gas[l];
-        plane_ammo[l] = t_plane_ammo[l];
-      }
-    }
-
-    if (config.alliance) {
-      switch (config.alliance) {
-      case 1:
-        player_sides[0] = 0;
-        player_sides[1] = 0;
-        player_sides[2] = 1;
-        player_sides[3] = 1;
-
-        player_sides[4] = 0;
-        player_sides[5] = 0;
-        player_sides[6] = 1;
-        player_sides[7] = 1;
-
-        player_sides[8] = 0;
-        player_sides[9] = 0;
-        player_sides[10] = 1;
-        player_sides[11] = 1;
-
-        player_sides[12] = 0;
-        player_sides[13] = 0;
-        player_sides[14] = 1;
-        player_sides[15] = 1;
-
-        break;
-
-      case 2:
-        player_sides[0] = 0;
-        player_sides[1] = 1;
-        player_sides[2] = 0;
-        player_sides[3] = 1;
-
-        player_sides[4] = 0;
-        player_sides[5] = 1;
-        player_sides[6] = 0;
-        player_sides[7] = 1;
-
-        player_sides[8] = 0;
-        player_sides[9] = 1;
-        player_sides[10] = 0;
-        player_sides[11] = 1;
-
-        player_sides[12] = 0;
-        player_sides[13] = 1;
-        player_sides[14] = 0;
-        player_sides[15] = 1;
-        break;
-
-      case 3:
-        player_sides[0] = 0;
-        player_sides[1] = 1;
-        player_sides[2] = 1;
-        player_sides[3] = 0;
-
-        player_sides[4] = 0;
-        player_sides[5] = 1;
-        player_sides[6] = 1;
-        player_sides[7] = 0;
-
-        player_sides[8] = 0;
-        player_sides[9] = 1;
-        player_sides[10] = 1;
-        player_sides[11] = 0;
-
-        player_sides[12] = 0;
-        player_sides[13] = 1;
-        player_sides[14] = 1;
-        player_sides[15] = 0;
-        break;
-      }
-    }
+    /* Alliances: which of the four colours (l & 3) is on which side. */
+    static const int alliance_sides[3][4] = {
+        {0, 0, 1, 1}, {0, 1, 0, 1}, {0, 1, 1, 0}};
+    if (config.alliance >= 1 && config.alliance <= 3)
+      for (l = 0; l < 16; l++)
+        player_sides[l] = alliance_sides[config.alliance - 1][l & 3];
   }
 
   for (l = 0; l < 16; l++) {
@@ -3348,9 +3048,7 @@ int main(int argc, char *argv[]) {
   FILE *faili;
   std::unique_ptr<Bitmap> lakuva1;
 
-  for (laskuri = 0; laskuri < argc; laskuri++)
-    strcpy(parametrit[laskuri], argv[laskuri]);
-
+  parametrit = argv;
   parametri_kpl = argc;
 
   if (findparameter("-?") || findparameter("-h") || findparameter("--help") ||
@@ -3363,21 +3061,38 @@ int main(int argc, char *argv[]) {
     printf("the GNU General Public License version 3 or (at your option) a "
            "later version.\n");
     printf("This program has absolutely no warranty.\n\n");
-    printf("-help,-h         Help on options\n");
+    printf("-help,-h,-?      Help on options\n");
     printf("-fullscreen,-f   Start game in fullscreen mode (default)\n");
     printf("-nofullscreen,-w Start game in windowed mode\n");
-    printf("-nosound,-s      Start game without sounds and it will be saved in "
-           "the setting\n");
-    printf("-sound,-l        Start game with sounds and it will be saved in "
-           "the setting\n");
-    printf(
-        "-2, -3, -4       Zoom the 320x200-pixel game window 2x, 3x or 4x\n");
-    printf("-2svga           Zoom the 800x600-pixel window 2x to produce "
-           "1600x1200-pixel window\n");
-    printf("-nosplit         Use the 2400x200-pixel window instead of 800x600 "
-           "to have window with no splits\n");
-    printf("-1split          Use the 1200x400-pixel window instead of 800x600 "
-           "to have window with 1 split only\n\n");
+    printf("-nosound,-s      Start without sounds; saved in the settings\n");
+    printf("-sound,-l        Start with sounds; saved in the settings\n");
+    printf("-nomusic         Do not play music in the menus\n");
+    printf("-reverse         Swap the left and right sound channels\n");
+    printf("-2, -3, -4       Open the 320x200 game window 2x, 3x or 4x as "
+           "large\n");
+    printf("                 (default: the largest whole multiple up to "
+           "1280x800)\n");
+    printf("-2svga           Open the 800x600 window at 1600x1200\n");
+    printf("-1split          Use a 1200x404 window with one split instead of "
+           "800x600\n");
+    printf("-nosplit         Use a 2400x208 window with no splits\n");
+    printf("-nosplash        Skip the splash screens\n");
+    printf("-autostart       Skip the menus and start the configured game\n");
+    printf("-autoquit        Quit when that game ends\n");
+    printf("-solomenumission N  Start solo mission N (0-5) with "
+           "-autostart\n");
+    printf("-level<name>     Play level <name> from the data file or a "
+           "file\n");
+    printf("-loadtexts       Print loading progress\n");
+    printf("-record          Record the game into the settings directory\n");
+    printf("-playback        Replay a recorded game\n");
+    printf("-speed           Run without the frame rate limit (for "
+           "replays)\n");
+    printf("-debugtrace      Print a checksum of every frame\n");
+    printf("-sdldraw         Draw with SDL surfaces instead of the frame "
+           "buffer\n");
+    printf("-writehsfile     Also write the solo high scores to "
+           "higsscor.txt\n\n");
     exit(0);
   }
 
@@ -3389,11 +3104,7 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  main_engine_random_seed = time(0);
   util::wutil::wrandom_sanity_check();
-
-  main_version = MAIN_VERSION;
-  sub_version = SUB_VERSION;
 
   load_config();
 
@@ -3488,26 +3199,6 @@ int main(int argc, char *argv[]) {
     sample_alku->right_volume = 0;
     sample_alku->left_volume = 0;
   }
-
-#ifdef NO_TRADEMARK_PROBLEMS
-  lakuva1 = std::make_unique<Bitmap>("START1", 0);
-  init_vga("PALETA");
-
-  lakuva1->blit(0, 0);
-  do_all();
-
-  while (!kbhit() && !findparameter("-autostart")) {
-    koords(&x, &y, &n1, &n2);
-
-    if (n1 || n2) {
-      wait_mouse_relase();
-      break;
-    }
-  }
-#endif
-
-  while (kbhit() && !findparameter("-autostart"))
-    getch();
 
   loading_text("Loading roster.");
   load_roster();

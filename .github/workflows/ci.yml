@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Every job builds the game and its tools, replays all recorded games as a
+# smoke test, and compares every frame against the previous commit (push) or
+# the base branch (pull request) with tools/compare-baseline. The comparison
+# is skipped when no buildable base commit is known.
+
+jobs:
+  linux:
+    name: Linux (Debian trixie)
+    runs-on: ubuntu-latest
+    container: debian:trixie
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential cmake make pkg-config git perl ca-certificates \
+            libsdl3-dev libmikmod-dev
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Trust the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Build
+        run: make
+      - name: Smoke test
+        run: tools/smoke-test build
+      - name: Compare against base
+        run: tools/ci-compare "${{ github.event.pull_request.base.sha || github.event.before }}"
+
+  macos:
+    name: macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install dependencies
+        run: brew install sdl3 libmikmod pkg-config
+      - name: Build
+        run: make
+      - name: Smoke test
+        run: tools/smoke-test build
+      - name: Compare against base
+        run: tools/ci-compare "${{ github.event.pull_request.base.sha || github.event.before }}"
+
+  windows:
+    name: Windows (MSYS2 UCRT64)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    env:
+      CMAKE_GENERATOR: Ninja
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            git make perl
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-sdl3
+            mingw-w64-ucrt-x86_64-libmikmod
+      - name: Build
+        run: make
+      - name: Smoke test
+        run: tools/smoke-test build
+      - name: Compare against base
+        run: tools/ci-compare "${{ github.event.pull_request.base.sha || github.event.before }}"
+
+  deb:
+    name: Debian package (trixie)
+    runs-on: ubuntu-latest
+    container: debian:trixie
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential debhelper cmake pkg-config git ca-certificates \
+            libsdl3-dev libmikmod-dev
+      - uses: actions/checkout@v4
+      - name: Trust the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Build the package
+        run: |
+          dpkg-buildpackage -us -uc -b
+          mkdir -p dist && mv ../triplane_*.deb dist/
+          ls -l dist
+      - name: Install and run the packaged game
+        # The package installs into /usr/games, which is not on PATH here.
+        run: |
+          apt-get install -y --no-install-recommends ./dist/triplane_*.deb
+          dpkg -L triplane | grep -E 'games/|man6'
+          /usr/games/triplane -help | head -3
+          home=$(mktemp -d)
+          cp -R triplane-testsuite/multi2/. "$home"
+          SDL_VIDEODRIVER=dummy SDL_AUDIO_DRIVER=dummy TRIPLANE_HOME="$home" \
+            timeout 300 /usr/games/triplane $(cat "$home/args") < /dev/null \
+            > "$home/out" 2> "$home/err" || true
+          frames=$(grep -cE '^[0-9]+ [0-9a-f]{8}$' "$home/out" || true)
+          echo "installed game replayed $frames frames"
+          if [ "$frames" -eq 0 ]; then cat "$home/err"; exit 1; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: triplane-deb
+          path: dist/*.deb

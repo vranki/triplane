@@ -1,2 +1,2 @@
--playback -autostart -solomenumission 0 -autoquit -speed -debugtrace -nofullscreen
+-playback -autostart -solomenumission 0 -autoquit -speed -debugtrace -nosound -nofullscreen
 

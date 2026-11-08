@@ -20,8 +20,6 @@
 
 #include "constants.h"
 
-constexpr int32_t SPEED = 4;
-
 constexpr int32_t MEKAN_DIRECTION_LEFT = 0;
 constexpr int32_t MEKAN_DIRECTION_RIGHT = 1;
 

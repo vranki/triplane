@@ -29,7 +29,7 @@
 #include "settings.h"
 #include "world/constants.h"
 #include "gfx/bitmap.h"
-#include <SDL/SDL.h>
+#include <SDL3/SDL.h>
 
 #define DKS_FILENAME "fokker.dks"
 #define CALIBRATION_FILENAME "joystic.dta"
@@ -42,7 +42,8 @@ extern std::unique_ptr<Bitmap> pwon;
 extern std::unique_ptr<Bitmap> pwoff;
 extern std::unique_ptr<Bitmap> picons[4];
 extern std::unique_ptr<Bitmap> plane1;
-extern std::unique_ptr<Bitmap> planes[16][61][4][2];
+/* Players 5-16 share the sprites of players 1-4, so ownership is shared. */
+extern std::shared_ptr<Bitmap> planes[16][61][4][2];
 extern std::unique_ptr<Bitmap> bomb[61];
 extern std::unique_ptr<Bitmap> boards[4];
 extern std::unique_ptr<Bitmap> closed;
@@ -124,13 +125,11 @@ extern std::unique_ptr<gfx::font::Font> grid2;
 
 //\ Parameter control
 
-extern char parametrit[40][40];
+extern char **parametrit;
 extern int parametri_kpl;
 
 //\ Shots control
 
-extern int pohja;
-extern int play_shot[16];
 extern int shots_flying_x[MAX_SHOTS];
 extern int shots_flying_y[MAX_SHOTS];
 extern int shots_flying_x_speed[MAX_SHOTS];
@@ -263,8 +262,6 @@ extern int kkbase_number[MAX_AA_GUNS];
 //\\ Computer players
 
 extern int computer_active[16];
-extern int going_left;
-extern int going_up;
 extern int terrain_level[2400];
 extern int wide_terrain_level[2400];
 extern int current_mission[16];
@@ -274,14 +271,12 @@ extern int mission_target[16];
 extern int distances[16];
 extern int angles[16];
 
-extern int bombs_going[100];
+extern int bombs_going[MAX_STRUCTURES];
 
 //\\ Configuration
 
 extern short joystick_exists;
 
-extern int modem_com_port;
-extern int modem_com_speed;
 
 extern unsigned char *level_bitmap;
 extern int current_mode;
@@ -295,14 +290,9 @@ extern int solo_dest_remaining;
 extern int status_frames;
 extern int status_state;
 
-extern char mission_names[24][30];
-
 extern int mission_re_fly;
 
 extern int mission_duration;
-
-extern int modem_port_open;
-extern int modem_master;
 
 extern int mc_up[16];
 extern int mc_down[16];
@@ -311,19 +301,15 @@ extern int mc_roll[16];
 extern int mc_guns[16];
 extern int mc_power[16];
 
-extern int main_version;
-extern int sub_version;
-
-extern int main_engine_random_seed;
 
 /***************************** Functions **************************************/
 
 extern int small_warning(const char *message);
 extern int findparameter(const char *jono);
+const char *findparameter_value(const char *jono);
 extern void kangas_terrain_to_screen(int leftx);
 extern void main_engine();
 extern void do_aftermath(int show_it_all);
-extern void clear_level();
 extern void init_player(int l, int pommit = 1);
 extern void cause_damage(int amount, int plane);
 extern void do_flags();

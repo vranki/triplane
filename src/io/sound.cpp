@@ -25,7 +25,6 @@
 
 int is_there_sound = 1;
 int reverbed_channels = 0;
-int soundcard_type = SOUNDCARD_NONE;
 
 int play_sample(sb_sample *sample_ptr) {
   if (is_there_sound) {
@@ -39,7 +38,7 @@ int play_sample(sb_sample *sample_ptr) {
 }
 
 int play_2d_sample(sb_sample *sample_ptr, int player, int target) {
-  int balance = 7;
+  int balance;
 
   if (!playing_solo || config.svga) {
     play_sample(sample_ptr);
@@ -76,7 +75,6 @@ int play_2d_sample(sb_sample *sample_ptr, int player, int target) {
 }
 
 void init_sounds() {
-  soundcard_type = SOUNDCARD_NONE;
 
   if (sdl_init_sounds() != 0) {
     is_there_sound = 0;
@@ -84,7 +82,6 @@ void init_sounds() {
 
   } else {
     is_there_sound = 1;
-    soundcard_type = SOUNDCARD_SDL;
   }
 
   return;

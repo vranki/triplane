@@ -110,6 +110,26 @@ int t_plane_ammo[16] = {96, 96, 127, 80, 96, 96, 127, 80,
 
 int player_was_on_airfield[16];
 
+/* Mass of plane c with its load of ammunition, bombs and gas. */
+int plane_loaded_mass(int c) {
+  int mass = plane_mass[c];
+
+  mass += player_ammo[c] / 10;
+  if (plane_bombs[c] != 6)
+    mass += player_bombs[c] * 12;
+  else
+    mass += player_bombs[c] * 10;
+
+  mass += player_gas[c] / 160;
+  return mass;
+}
+
+/* How fast plane c of the given mass turns, in 1/256 degrees per frame,
+ * before the speed is taken into account. */
+int plane_turn_rate(int c, int mass) {
+  return (plane_manover[c] << 8) / (mass + 200);
+}
+
 void model_planes() {
   int c;
   int mass;
@@ -133,14 +153,7 @@ void model_planes() {
       controls_down[c] = 0;
     }
 
-    mass = plane_mass[c];
-    mass += player_ammo[c] / 10;
-    if (plane_bombs[c] != 6)
-      mass += player_bombs[c] * 12;
-    else
-      mass += player_bombs[c] * 10;
-
-    mass += player_gas[c] / 160;
+    mass = plane_loaded_mass(c);
 
     if (player_y[c] < 0 && !player_spinning[c]) {
       spinning_remaining[c] = util::wutil::wrandom(10) + 25;
@@ -156,7 +169,7 @@ void model_planes() {
       }
     }
 
-    initial_turn = (plane_manover[c] << 8) / (mass + 200);
+    initial_turn = plane_turn_rate(c, mass);
 
     if (player_speed[c] < 768 || player_spinning[c] || spinning_remaining[c]) {
       if ((!player_on_airfield[c]) && (!player_was_on_airfield[c])) {
@@ -295,14 +308,8 @@ void model_planes() {
       player_y[c] -= player_y_speed[c] >> 8;
 
     if (player_on_airfield[c]) {
-      if (!player_upsidedown[c]) {
-        yyy = 5;
-        xxx = 5;
-
-      } else {
-        yyy = -5;
-        xxx = 5;
-      }
+      xxx = 5;
+      yyy = player_upsidedown[c] ? -5 : 5;
 
       plane_tire_y = (player_y[c]) +
                      (((-xxx * util::wutil::sinit[player_angle[c] >> 8] +

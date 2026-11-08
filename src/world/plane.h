@@ -60,5 +60,7 @@ extern int t_plane_ammo[16];
 
 void model_planes();
 int get_player_points(int player);
+int plane_loaded_mass(int c);
+int plane_turn_rate(int c, int mass);
 
 #endif

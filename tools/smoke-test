@@ -1,0 +1,65 @@
+#!/bin/bash
+#
+# Build sanity check that needs no baseline: replay every recorded game in
+# triplane-testsuite/ with the given build and require that each one draws
+# frames and ends without crashing.
+#
+# Usage: tools/smoke-test [BUILD_DIR]        (default: build)
+# Environment: MAX_FRAMES (default 2000), TIME_LIMIT seconds (default 300)
+
+set -u
+
+build_dir=${1:-build}
+max_frames=${MAX_FRAMES:-2000}
+time_limit=${TIME_LIMIT:-300}
+
+cd "$(git rev-parse --show-toplevel)"
+build_dir=$(cd "$build_dir" && pwd) || { echo "No build directory $1" >&2; exit 2; }
+
+work=$(mktemp -d "${TMPDIR:-/tmp}/triplane-smoke.XXXXXXXX")
+trap 'rm -rf "$work"' EXIT
+
+failed=0
+for test in triplane-testsuite/*/; do
+    test=${test%/}
+    name=$(basename "$test")
+    [ -f "$test/args" ] || continue
+    home="$work/$name"
+    mkdir -p "$home"
+    cp -R "$test/." "$home/"
+
+    (
+        cd "$build_dir"
+        SDL_VIDEODRIVER=dummy SDL_AUDIO_DRIVER=dummy \
+        TRIPLANE_HOME="$home" TRIPLANE_DATA="$build_dir" \
+            perl -e 'alarm shift; exec @ARGV or die "exec: $!\n"' \
+                "$time_limit" ./triplane $(cat "$home/args") \
+                < /dev/null 2> "$home/err" |
+            awk -v max="$max_frames" '
+                { print }
+                /^[0-9]+ [0-9a-f]{8}$/ { if (++n >= max) exit }' > "$home/out"
+        echo "${PIPESTATUS[0]}" > "$home/status"
+    )
+
+    status=$(cat "$home/status")
+    frames=$(grep -cE '^[0-9]+ [0-9a-f]{8}$' "$home/out")
+
+    if [ "$frames" -eq 0 ]; then
+        echo "$name: FAILED, no frames (exit status $status)"
+        sed 's/^/  /' "$home/err" | head -20
+        failed=1
+    elif [ "$status" -eq 0 ] || [ "$status" -eq 1 ]; then
+        echo "$name: OK, $frames frames, game ended"
+    elif { [ "$status" -eq 141 ] || [ "$status" -eq 142 ]; } && [ "$frames" -ge "$max_frames" ]; then
+        echo "$name: OK, stopped after $frames frames"
+    elif [ "$status" -eq 142 ]; then
+        echo "$name: FAILED, hit the ${time_limit}s time limit after $frames frames"
+        failed=1
+    else
+        echo "$name: FAILED, exit status $status after $frames frames"
+        sed 's/^/  /' "$home/err" | head -20
+        failed=1
+    fi
+done
+
+exit $failed

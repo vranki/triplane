@@ -1,0 +1,30 @@
+#!/bin/bash
+#
+# Run tools/compare-baseline against a base commit when CI knows one that
+# can be built. Skips (successfully) when there is no usable base: the first
+# push of a branch, a force push, or a base from before the SDL3 port.
+#
+# Usage: tools/ci-compare BASE_SHA [compare-baseline options]
+
+set -u
+base=${1:-}
+shift || true
+
+if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+    echo "No base commit known, skipping the baseline comparison."
+    exit 0
+fi
+if ! git cat-file -e "$base^{commit}" 2> /dev/null; then
+    echo "Base commit $base is not in the checkout, skipping the baseline comparison."
+    exit 0
+fi
+if ! git cat-file -e "$base:tools/compare-baseline" 2> /dev/null; then
+    echo "Base commit $base predates the baseline test, skipping the comparison."
+    exit 0
+fi
+if [ "$(git rev-parse "$base")" = "$(git rev-parse HEAD)" ]; then
+    echo "Base commit is HEAD, nothing to compare."
+    exit 0
+fi
+
+exec tools/compare-baseline -b "$base" "$@"

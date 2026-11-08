@@ -18,2036 +18,363 @@
  * tjt@users.sourceforge.net
  */
 
-#include <cstdint>
+/* Solo mission data */
 
-constexpr int32_t NUMBER_OF_COUNTRIES = 4;
-constexpr int32_t NUMBER_OF_MISSIONS = 6;
-
-constexpr int32_t GERMANY = 0;
-constexpr int32_t FINLAND = 1;
-constexpr int32_t ENGLAND = 2;
-constexpr int32_t JAPAN = 3;
-
-constexpr int32_t TRUE = 1;
-constexpr int32_t FALSE = 0;
-
-constexpr int32_t GERMAN_1 = 0;
-constexpr int32_t FINLAND_1 = 1;
-constexpr int32_t ENGLAND_1 = 2;
-constexpr int32_t JAPAN_1 = 3;
-constexpr int32_t GERMAN_2 = 4;
-constexpr int32_t FINLAND_2 = 5;
-constexpr int32_t ENGLAND_2 = 6;
-constexpr int32_t JAPAN_2 = 7;
-constexpr int32_t GERMAN_3 = 8;
-constexpr int32_t FINLAND_3 = 9;
-constexpr int32_t ENGLAND_3 = 10;
-constexpr int32_t JAPAN_3 = 11;
-
-constexpr int32_t ALLIED = 0;
-constexpr int32_t ENEMY = 1;
-constexpr int32_t NEUTRAL = 2;
-
-constexpr int32_t BOMBER = 0;
-constexpr int32_t PLANE = 1;
-constexpr int32_t FIGHTER = 2;
-
-constexpr int32_t LEFT = 0;
-constexpr int32_t RIGHT = 1;
-
-extern int player_sides[16];
+#include "tripmis.h"
+#include "../triplane.h"
+#include "constants.h"
+#include <array>
 
 int number_of_planes[16];
-int miss_plane_direction[16];
 int miss_pl_x[16];
 int miss_pl_y[16];
 int fighter[16];
-char mission_names[24][30] = {"Coast Islands",
-                              "Japanese Counter-Attack",
-                              "English Channel",
-                              "Treachery",
-                              "Capture",
-                              "Against Odds",
-                              "Beach-Head",
-                              "Complex Wipeout",
-                              "Beach-Head II",
-                              "Troop Escort",
-                              "Wood War",
-                              "Showtime",
-                              "Storehunt",
-                              "Patriot Flight",
-                              "Bombing Raid",
-                              "Radio Interference",
-                              "Channel Tunnel",
-                              "Lord of the Lagoon",
-                              "Tactical Bombardment",
-                              "Finnish Outpost",
-                              "Ransom",
-                              "Harbor Hazard",
-                              "Sweating Sauna",
-                              "Oasis Offence"};
 
-void init_mission(int coutry, int number);
-void init_germany(int number);
-void init_finland(int number);
-void init_england(int number);
-void init_japan(int number);
+namespace {
+
+constexpr int NUMBER_OF_COUNTRIES = 4;
+constexpr int NUMBER_OF_MISSIONS = 6;
+constexpr int SLOTS = 12;
+
+/* A slot that starts the mission in the air (facing left) at x, y. */
+struct Spawn {
+  int slot;
+  int x;
+  int y;
+};
+
+struct Mission {
+  const char *name;
+  std::array<int, SLOTS> sides;   /* player_sides[] */
+  std::array<int, SLOTS> planes;  /* number_of_planes[] */
+  std::array<int, SLOTS> fighter; /* fighter[] */
+  std::array<Spawn, 3> spawns;    /* miss_pl_x[] and miss_pl_y[]; the rest is 0 */
+};
+
+/* One row per mission, in mission_names order: six German, six Finnish,
+   six English and six Japanese missions. Slot order in each array is
+   GERMAN_1, FINLAND_1, ENGLAND_1, JAPAN_1, GERMAN_2, ... JAPAN_3. */
+constexpr std::array<Mission, NUMBER_OF_COUNTRIES * NUMBER_OF_MISSIONS> missions = {{
+    /* German mission 0 */
+    {"Coast Islands",
+     {
+      ALLIED, NEUTRAL, NEUTRAL, ENEMY, ALLIED, NEUTRAL,
+      NEUTRAL, ENEMY, ALLIED, NEUTRAL, NEUTRAL, ENEMY,
+     },
+     {3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     {
+      BOMBER, BOMBER, BOMBER, BOMBER, BOMBER, BOMBER,
+      BOMBER, BOMBER, BOMBER, BOMBER, BOMBER, BOMBER,
+     },
+     {{}}},
+    /* German mission 1 */
+    {"Japanese Counter-Attack",
+     {
+      ALLIED, NEUTRAL, NEUTRAL, ENEMY, ALLIED, NEUTRAL,
+      NEUTRAL, ENEMY, ALLIED, NEUTRAL, NEUTRAL, ENEMY,
+     },
+     {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1},
+     {
+      PLANE, PLANE, PLANE, BOMBER, PLANE, PLANE,
+      PLANE, FIGHTER, PLANE, PLANE, PLANE, BOMBER,
+     },
+     {{{JAPAN_1, 1750, 150}, {JAPAN_3, 2002, 145}}}},
+    /* German mission 2 */
+    {"English Channel",
+     {
+      ALLIED, NEUTRAL, ENEMY, NEUTRAL, ALLIED, NEUTRAL,
+      ENEMY, NEUTRAL, ALLIED, NEUTRAL, NEUTRAL, NEUTRAL,
+     },
+     {1, 0, 2, 0, 2, 0, 2, 0, 1, 0, 0, 0},
+     {
+      FIGHTER, BOMBER, FIGHTER, BOMBER, BOMBER, BOMBER,
+      BOMBER, BOMBER, FIGHTER, BOMBER, BOMBER, BOMBER,
+     },
+     {{}}},
+    /* German mission 3 */
+    {"Treachery",
+     {
+      ALLIED, ENEMY, ENEMY, ALLIED, ALLIED, ENEMY,
+      ENEMY, ALLIED, ALLIED, ENEMY, ENEMY, ALLIED,
+     },
+     {3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0},
+     {
+      PLANE, PLANE, PLANE, PLANE, BOMBER, BOMBER,
+      BOMBER, BOMBER, BOMBER, BOMBER, BOMBER, BOMBER,
+     },
+     {{}}},
+    /* German mission 4 */
+    {"Capture",
+     {
+      ALLIED, ENEMY, ENEMY, ENEMY, ALLIED, ENEMY,
+      ENEMY, ENEMY, ALLIED, ENEMY, ENEMY, ENEMY,
+     },
+     {5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     {
+      PLANE, BOMBER, BOMBER, BOMBER, BOMBER, BOMBER,
+      BOMBER, BOMBER, BOMBER, BOMBER, BOMBER, BOMBER,
+     },
+     {{}}},
+    /* German mission 5 */
+    {"Against Odds",
+     {
+      ALLIED, ENEMY, ENEMY, ENEMY, ALLIED, ENEMY,
+      ENEMY, ENEMY, ALLIED, ENEMY, ENEMY, ENEMY,
+     },
+     {7, 3, 3, 3, 6, 3, 3, 3, 6, 3, 3, 3},
+     {
+      PLANE, PLANE, PLANE, PLANE, FIGHTER, FIGHTER,
+      FIGHTER, FIGHTER, BOMBER, BOMBER, BOMBER, BOMBER,
+     },
+     {{}}},
+    /* Finnish mission 0 */
+    {"Beach-Head",
+     {
+      ENEMY, ALLIED, NEUTRAL, NEUTRAL, ENEMY, ALLIED,
+      NEUTRAL, NEUTRAL, ENEMY, ALLIED, NEUTRAL, NEUTRAL,
+     },
+     {0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     {
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+     },
+     {{}}},
+    /* Finnish mission 1 */
+    {"Complex Wipeout",
+     {
+      NEUTRAL, ALLIED, ENEMY, NEUTRAL, NEUTRAL, ALLIED,
+      ENEMY, NEUTRAL, NEUTRAL, ALLIED, ENEMY, NEUTRAL,
+     },
+     {0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     {
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+     },
+     {{}}},
+    /* Finnish mission 2 */
+    {"Beach-Head II",
+     {
+      ENEMY, ALLIED, NEUTRAL, NEUTRAL, ENEMY, ALLIED,
+      NEUTRAL, NEUTRAL, ENEMY, ALLIED, NEUTRAL, NEUTRAL,
+     },
+     {3, 3, 0, 0, 3, 3, 0, 0, 3, 3, 0, 0},
+     {
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+     },
+     {{}}},
+    /* Finnish mission 3 */
+    {"Troop Escort",
+     {
+      ENEMY, ALLIED, ALLIED, ENEMY, ENEMY, ALLIED,
+      NEUTRAL, NEUTRAL, ENEMY, ALLIED, NEUTRAL, NEUTRAL,
+     },
+     {0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     {
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+     },
+     {{}}},
+    /* Finnish mission 4 */
+    {"Wood War",
+     {
+      NEUTRAL, ALLIED, ENEMY, ENEMY, NEUTRAL, ALLIED,
+      ENEMY, ENEMY, NEUTRAL, ALLIED, ENEMY, ENEMY,
+     },
+     {0, 3, 3, 3, 0, 2, 3, 3, 0, 2, 0, 0},
+     {
+      PLANE, PLANE, BOMBER, FIGHTER, PLANE, PLANE,
+      BOMBER, FIGHTER, PLANE, PLANE, PLANE, PLANE,
+     },
+     {{}}},
+    /* Finnish mission 5 */
+    {"Showtime",
+     {
+      ENEMY, ALLIED, ENEMY, ENEMY, ENEMY, ALLIED,
+      ENEMY, ENEMY, ENEMY, ALLIED, ENEMY, ENEMY,
+     },
+     {3, 7, 3, 3, 3, 6, 3, 3, 3, 6, 3, 3},
+     {
+      FIGHTER, PLANE, FIGHTER, FIGHTER, PLANE, FIGHTER,
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+     },
+     {{}}},
+    /* English mission 0 */
+    {"Storehunt",
+     {
+      NEUTRAL, ENEMY, ALLIED, NEUTRAL, NEUTRAL, ENEMY,
+      ALLIED, NEUTRAL, NEUTRAL, ENEMY, ALLIED, NEUTRAL,
+     },
+     {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     {
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+     },
+     {{}}},
+    /* English mission 1 */
+    {"Patriot Flight",
+     {
+      NEUTRAL, NEUTRAL, ALLIED, ENEMY, NEUTRAL, NEUTRAL,
+      ALLIED, ENEMY, NEUTRAL, NEUTRAL, ALLIED, ENEMY,
+     },
+     {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     {
+      PLANE, PLANE, FIGHTER, PLANE, PLANE, PLANE,
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+     },
+     {{{ENGLAND_1, 2333, 15}}}},
+    /* English mission 2 */
+    {"Bombing Raid",
+     {
+      NEUTRAL, NEUTRAL, ALLIED, ENEMY, NEUTRAL, NEUTRAL,
+      ALLIED, ENEMY, NEUTRAL, NEUTRAL, ALLIED, ENEMY,
+     },
+     {0, 0, 3, 5, 0, 0, 2, 5, 0, 0, 2, 0},
+     {
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+     },
+     {{}}},
+    /* English mission 3 */
+    {"Radio Interference",
+     {
+      ALLIED, NEUTRAL, ALLIED, ENEMY, ALLIED, NEUTRAL,
+      ALLIED, ENEMY, ALLIED, NEUTRAL, ALLIED, ENEMY,
+     },
+     {1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0},
+     {
+      PLANE, PLANE, PLANE, FIGHTER, PLANE, PLANE,
+      PLANE, FIGHTER, PLANE, PLANE, PLANE, FIGHTER,
+     },
+     {{{JAPAN_1, 2300, 10}}}},
+    /* English mission 4 */
+    {"Channel Tunnel",
+     {
+      ENEMY, ENEMY, ALLIED, ENEMY, ENEMY, ENEMY,
+      ALLIED, ENEMY, ENEMY, ENEMY, ALLIED, ENEMY,
+     },
+     {1, 1, 2, 1, 0, 0, 1, 0, 0, 0, 1, 0},
+     {
+      FIGHTER, FIGHTER, PLANE, FIGHTER, PLANE, PLANE,
+      FIGHTER, PLANE, PLANE, PLANE, BOMBER, PLANE,
+     },
+     {{{GERMAN_1, 2300, 10}, {FINLAND_1, 2100, 50}, {JAPAN_1, 2200, 30}}}},
+    /* English mission 5 */
+    {"Lord of the Lagoon",
+     {
+      ENEMY, ENEMY, ALLIED, ENEMY, ENEMY, ENEMY,
+      ALLIED, ENEMY, ENEMY, ENEMY, ALLIED, ENEMY,
+     },
+     {3, 3, 7, 3, 3, 3, 6, 3, 3, 3, 6, 3},
+     {
+      FIGHTER, FIGHTER, FIGHTER, FIGHTER, FIGHTER, FIGHTER,
+      FIGHTER, FIGHTER, FIGHTER, FIGHTER, FIGHTER, FIGHTER,
+     },
+     {{}}},
+    /* Japanese mission 0 */
+    {"Tactical Bombardment",
+     {
+      NEUTRAL, ENEMY, NEUTRAL, ALLIED, NEUTRAL, ENEMY,
+      NEUTRAL, ALLIED, NEUTRAL, ENEMY, NEUTRAL, ALLIED,
+     },
+     {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
+     {
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+     },
+     {{}}},
+    /* Japanese mission 1 */
+    {"Finnish Outpost",
+     {
+      ENEMY, ENEMY, NEUTRAL, ALLIED, ENEMY, ENEMY,
+      NEUTRAL, ALLIED, ENEMY, ENEMY, NEUTRAL, ALLIED,
+     },
+     {3, 0, 0, 3, 3, 0, 0, 3, 3, 0, 0, 3},
+     {
+      PLANE, PLANE, PLANE, PLANE, FIGHTER, FIGHTER,
+      FIGHTER, FIGHTER, BOMBER, BOMBER, BOMBER, BOMBER,
+     },
+     {{}}},
+    /* Japanese mission 2 */
+    {"Ransom",
+     {
+      ENEMY, NEUTRAL, NEUTRAL, ALLIED, ENEMY, NEUTRAL,
+      NEUTRAL, ALLIED, ENEMY, NEUTRAL, NEUTRAL, ALLIED,
+     },
+     {0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0},
+     {
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+     },
+     {{}}},
+    /* Japanese mission 3 */
+    {"Harbor Hazard",
+     {
+      ALLIED, ENEMY, ENEMY, ALLIED, ALLIED, ENEMY,
+      ENEMY, ALLIED, ALLIED, ENEMY, ENEMY, ALLIED,
+     },
+     {5, 1, 5, 5, 5, 1, 5, 5, 0, 1, 0, 0},
+     {
+      FIGHTER, FIGHTER, BOMBER, PLANE, FIGHTER, FIGHTER,
+      FIGHTER, PLANE, FIGHTER, FIGHTER, BOMBER, PLANE,
+     },
+     {{{FINLAND_1, 2160, 100}, {FINLAND_2, 2200, 130}, {FINLAND_3, 2240, 160}}}},
+    /* Japanese mission 4 */
+    {"Sweating Sauna",
+     {
+      ENEMY, ENEMY, ENEMY, ALLIED, ENEMY, ENEMY,
+      ENEMY, ALLIED, ENEMY, ENEMY, ENEMY, ALLIED,
+     },
+     {0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0},
+     {
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+      PLANE, PLANE, PLANE, PLANE, PLANE, PLANE,
+     },
+     {{}}},
+    /* Japanese mission 5 */
+    {"Oasis Offence",
+     {
+      ENEMY, ENEMY, ENEMY, ALLIED, ENEMY, ENEMY,
+      ENEMY, ALLIED, ENEMY, ENEMY, ENEMY, ALLIED,
+     },
+     {3, 3, 3, 6, 3, 3, 3, 6, 3, 3, 3, 6},
+     {
+      FIGHTER, FIGHTER, FIGHTER, PLANE, PLANE, PLANE,
+      PLANE, FIGHTER, PLANE, PLANE, PLANE, PLANE,
+     },
+     {{}}},
+}};
+
+constexpr std::array<const char *, missions.size()> make_names() {
+  std::array<const char *, missions.size()> names{};
+  for (std::size_t i = 0; i < missions.size(); i++)
+    names[i] = missions[i].name;
+  return names;
+}
+
+} // namespace
+
+constexpr std::array<const char *, 24> mission_names = make_names();
 
 void init_mission(int country, int number) {
-  switch (country) {
-  case GERMANY:
-    init_germany(number);
-    break;
+  if (country < 0 || country >= NUMBER_OF_COUNTRIES || number < 0 ||
+      number >= NUMBER_OF_MISSIONS)
+    return;
 
-  case FINLAND:
-    init_finland(number);
-    break;
+  const Mission &m = missions[country * NUMBER_OF_MISSIONS + number];
 
-  case ENGLAND:
-    init_england(number);
-    break;
-
-  case JAPAN:
-    init_japan(number);
-    break;
+  for (int slot = 0; slot < SLOTS; slot++) {
+    player_sides[slot] = m.sides[slot];
+    number_of_planes[slot] = m.planes[slot];
+    miss_pl_x[slot] = 0;
+    miss_pl_y[slot] = 0;
+    fighter[slot] = m.fighter[slot];
   }
-}
 
-void init_germany(int number) {
-  switch (number) {
-  case 0:
-    player_sides[GERMAN_1] = ALLIED;
-    player_sides[FINLAND_1] = NEUTRAL;
-    player_sides[ENGLAND_1] = NEUTRAL;
-    player_sides[JAPAN_1] = ENEMY;
-    player_sides[GERMAN_2] = ALLIED;
-    player_sides[FINLAND_2] = NEUTRAL;
-    player_sides[ENGLAND_2] = NEUTRAL;
-    player_sides[JAPAN_2] = ENEMY;
-    player_sides[GERMAN_3] = ALLIED;
-    player_sides[FINLAND_3] = NEUTRAL;
-    player_sides[ENGLAND_3] = NEUTRAL;
-    player_sides[JAPAN_3] = ENEMY;
-
-    number_of_planes[GERMAN_1] = 3;
-    number_of_planes[FINLAND_1] = 0;
-    number_of_planes[ENGLAND_1] = 0;
-    number_of_planes[JAPAN_1] = 0;
-    number_of_planes[GERMAN_2] = 0;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 0;
-    number_of_planes[JAPAN_2] = 0;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = 0;
-    fighter[FINLAND_1] = 0;
-    fighter[ENGLAND_1] = 0;
-    fighter[JAPAN_1] = 0;
-    fighter[GERMAN_2] = 0;
-    fighter[FINLAND_2] = 0;
-    fighter[ENGLAND_2] = 0;
-    fighter[JAPAN_2] = 0;
-    fighter[GERMAN_3] = 0;
-    fighter[FINLAND_3] = 0;
-    fighter[ENGLAND_3] = 0;
-    fighter[JAPAN_3] = 0;
-    break;
-    // Japanese counter attack
-  case 1:
-    player_sides[GERMAN_1] = ALLIED;
-    player_sides[FINLAND_1] = NEUTRAL;
-    player_sides[ENGLAND_1] = NEUTRAL;
-    player_sides[JAPAN_1] = ENEMY;
-    player_sides[GERMAN_2] = ALLIED;
-    player_sides[FINLAND_2] = NEUTRAL;
-    player_sides[ENGLAND_2] = NEUTRAL;
-    player_sides[JAPAN_2] = ENEMY;
-    player_sides[GERMAN_3] = ALLIED;
-    player_sides[FINLAND_3] = NEUTRAL;
-    player_sides[ENGLAND_3] = NEUTRAL;
-    player_sides[JAPAN_3] = ENEMY;
-
-    number_of_planes[GERMAN_1] = 1;
-    number_of_planes[FINLAND_1] = 0;
-    number_of_planes[ENGLAND_1] = 0;
-    number_of_planes[JAPAN_1] = 1;
-    number_of_planes[GERMAN_2] = 0;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 0;
-    number_of_planes[JAPAN_2] = 0;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 1;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = LEFT;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = LEFT;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = LEFT;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 1750;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 2002;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 150;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 145;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = PLANE;
-    fighter[JAPAN_1] = BOMBER;
-    fighter[GERMAN_2] = PLANE;
-    fighter[FINLAND_2] = PLANE;
-    fighter[ENGLAND_2] = PLANE;
-    fighter[JAPAN_2] = FIGHTER;
-    fighter[GERMAN_3] = PLANE;
-    fighter[FINLAND_3] = PLANE;
-    fighter[ENGLAND_3] = PLANE;
-    fighter[JAPAN_3] = BOMBER;
-    break;
-    // English Canal
-  case 2:
-    player_sides[GERMAN_1] = ALLIED;
-    player_sides[FINLAND_1] = NEUTRAL;
-    player_sides[ENGLAND_1] = ENEMY;
-    player_sides[JAPAN_1] = NEUTRAL;
-    player_sides[GERMAN_2] = ALLIED;
-    player_sides[FINLAND_2] = NEUTRAL;
-    player_sides[ENGLAND_2] = ENEMY;
-    player_sides[JAPAN_2] = NEUTRAL;
-    player_sides[GERMAN_3] = ALLIED;
-    player_sides[FINLAND_3] = NEUTRAL;
-    player_sides[ENGLAND_3] = NEUTRAL;
-    player_sides[JAPAN_3] = NEUTRAL;
-
-    number_of_planes[GERMAN_1] = 1;
-    number_of_planes[FINLAND_1] = 0;
-    number_of_planes[ENGLAND_1] = 2;
-    number_of_planes[JAPAN_1] = 0;
-    number_of_planes[GERMAN_2] = 2;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 2;
-    number_of_planes[JAPAN_2] = 0;
-    number_of_planes[GERMAN_3] = 1;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = FIGHTER;
-    fighter[FINLAND_1] = 0;
-    fighter[ENGLAND_1] = FIGHTER;
-    fighter[JAPAN_1] = 0;
-    fighter[GERMAN_2] = BOMBER;
-    fighter[FINLAND_2] = 0;
-    fighter[ENGLAND_2] = BOMBER;
-    fighter[JAPAN_2] = 0;
-    fighter[GERMAN_3] = FIGHTER;
-    fighter[FINLAND_3] = 0;
-    fighter[ENGLAND_3] = 0;
-    fighter[JAPAN_3] = 0;
-    break;
-    // Treachery
-  case 3:
-    player_sides[GERMAN_1] = ALLIED;
-    player_sides[FINLAND_1] = ENEMY;
-    player_sides[ENGLAND_1] = ENEMY;
-    player_sides[JAPAN_1] = ALLIED;
-    player_sides[GERMAN_2] = ALLIED;
-    player_sides[FINLAND_2] = ENEMY;
-    player_sides[ENGLAND_2] = ENEMY;
-    player_sides[JAPAN_2] = ALLIED;
-    player_sides[GERMAN_3] = ALLIED;
-    player_sides[FINLAND_3] = ENEMY;
-    player_sides[ENGLAND_3] = ENEMY;
-    player_sides[JAPAN_3] = ALLIED;
-
-    number_of_planes[GERMAN_1] = 3;
-    number_of_planes[FINLAND_1] = 3;
-    number_of_planes[ENGLAND_1] = 3;
-    number_of_planes[JAPAN_1] = 3;
-    number_of_planes[GERMAN_2] = 0;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 0;
-    number_of_planes[JAPAN_2] = 0;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = PLANE;
-    fighter[JAPAN_1] = PLANE;
-    fighter[GERMAN_2] = 0;
-    fighter[FINLAND_2] = 0;
-    fighter[ENGLAND_2] = 0;
-    fighter[JAPAN_2] = 0;
-    fighter[GERMAN_3] = 0;
-    fighter[FINLAND_3] = 0;
-    fighter[ENGLAND_3] = 0;
-    fighter[JAPAN_3] = 0;
-    break;
-    // Capture
-  case 4:
-    player_sides[GERMAN_1] = ALLIED;
-    player_sides[FINLAND_1] = ENEMY;
-    player_sides[ENGLAND_1] = ENEMY;
-    player_sides[JAPAN_1] = ENEMY;
-    player_sides[GERMAN_2] = ALLIED;
-    player_sides[FINLAND_2] = ENEMY;
-    player_sides[ENGLAND_2] = ENEMY;
-    player_sides[JAPAN_2] = ENEMY;
-    player_sides[GERMAN_3] = ALLIED;
-    player_sides[FINLAND_3] = ENEMY;
-    player_sides[ENGLAND_3] = ENEMY;
-    player_sides[JAPAN_3] = ENEMY;
-
-    number_of_planes[GERMAN_1] = 5;
-    number_of_planes[FINLAND_1] = 0;
-    number_of_planes[ENGLAND_1] = 0;
-    number_of_planes[JAPAN_1] = 0;
-    number_of_planes[GERMAN_2] = 0;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 0;
-    number_of_planes[JAPAN_2] = 0;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = 0;
-    fighter[ENGLAND_1] = 0;
-    fighter[JAPAN_1] = 0;
-    fighter[GERMAN_2] = 0;
-    fighter[FINLAND_2] = 0;
-    fighter[ENGLAND_2] = 0;
-    fighter[JAPAN_2] = 0;
-    fighter[GERMAN_3] = 0;
-    fighter[FINLAND_3] = 0;
-    fighter[ENGLAND_3] = 0;
-    fighter[JAPAN_3] = 0;
-    break;
-    // Against odds
-  case 5:
-    player_sides[GERMAN_1] = ALLIED;
-    player_sides[FINLAND_1] = ENEMY;
-    player_sides[ENGLAND_1] = ENEMY;
-    player_sides[JAPAN_1] = ENEMY;
-    player_sides[GERMAN_2] = ALLIED;
-    player_sides[FINLAND_2] = ENEMY;
-    player_sides[ENGLAND_2] = ENEMY;
-    player_sides[JAPAN_2] = ENEMY;
-    player_sides[GERMAN_3] = ALLIED;
-    player_sides[FINLAND_3] = ENEMY;
-    player_sides[ENGLAND_3] = ENEMY;
-    player_sides[JAPAN_3] = ENEMY;
-
-    number_of_planes[GERMAN_1] = 7;
-    number_of_planes[FINLAND_1] = 3;
-    number_of_planes[ENGLAND_1] = 3;
-    number_of_planes[JAPAN_1] = 3;
-    number_of_planes[GERMAN_2] = 6;
-    number_of_planes[FINLAND_2] = 3;
-    number_of_planes[ENGLAND_2] = 3;
-    number_of_planes[JAPAN_2] = 3;
-    number_of_planes[GERMAN_3] = 6;
-    number_of_planes[FINLAND_3] = 3;
-    number_of_planes[ENGLAND_3] = 3;
-    number_of_planes[JAPAN_3] = 3;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = PLANE;
-    fighter[JAPAN_1] = PLANE;
-    fighter[GERMAN_2] = FIGHTER;
-    fighter[FINLAND_2] = FIGHTER;
-    fighter[ENGLAND_2] = FIGHTER;
-    fighter[JAPAN_2] = FIGHTER;
-    fighter[GERMAN_3] = BOMBER;
-    fighter[FINLAND_3] = BOMBER;
-    fighter[ENGLAND_3] = BOMBER;
-    fighter[JAPAN_3] = BOMBER;
-    break;
-  }
-}
-
-void init_finland(int number) {
-  switch (number) {
-    // Beach head
-  case 0:
-    player_sides[GERMAN_1] = ENEMY;
-    player_sides[FINLAND_1] = ALLIED;
-    player_sides[ENGLAND_1] = NEUTRAL;
-    player_sides[JAPAN_1] = NEUTRAL;
-    player_sides[GERMAN_2] = ENEMY;
-    player_sides[FINLAND_2] = ALLIED;
-    player_sides[ENGLAND_2] = NEUTRAL;
-    player_sides[JAPAN_2] = NEUTRAL;
-    player_sides[GERMAN_3] = ENEMY;
-    player_sides[FINLAND_3] = ALLIED;
-    player_sides[ENGLAND_3] = NEUTRAL;
-    player_sides[JAPAN_3] = NEUTRAL;
-
-    number_of_planes[GERMAN_1] = 0;
-    number_of_planes[FINLAND_1] = 2;
-    number_of_planes[ENGLAND_1] = 0;
-    number_of_planes[JAPAN_1] = 0;
-    number_of_planes[GERMAN_2] = 0;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 0;
-    number_of_planes[JAPAN_2] = 0;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = PLANE;
-    fighter[JAPAN_1] = PLANE;
-    fighter[GERMAN_2] = PLANE;
-    fighter[FINLAND_2] = PLANE;
-    fighter[ENGLAND_2] = PLANE;
-    fighter[JAPAN_2] = PLANE;
-    fighter[GERMAN_3] = PLANE;
-    fighter[FINLAND_3] = PLANE;
-    fighter[ENGLAND_3] = PLANE;
-    fighter[JAPAN_3] = PLANE;
-    break;
-    // Complex Wipeout
-  case 1:
-    player_sides[GERMAN_1] = NEUTRAL;
-    player_sides[FINLAND_1] = ALLIED;
-    player_sides[ENGLAND_1] = ENEMY;
-    player_sides[JAPAN_1] = NEUTRAL;
-    player_sides[GERMAN_2] = NEUTRAL;
-    player_sides[FINLAND_2] = ALLIED;
-    player_sides[ENGLAND_2] = ENEMY;
-    player_sides[JAPAN_2] = NEUTRAL;
-    player_sides[GERMAN_3] = NEUTRAL;
-    player_sides[FINLAND_3] = ALLIED;
-    player_sides[ENGLAND_3] = ENEMY;
-    player_sides[JAPAN_3] = NEUTRAL;
-
-    number_of_planes[GERMAN_1] = 0;
-    number_of_planes[FINLAND_1] = 3;
-    number_of_planes[ENGLAND_1] = 0;
-    number_of_planes[JAPAN_1] = 0;
-    number_of_planes[GERMAN_2] = 0;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 0;
-    number_of_planes[JAPAN_2] = 0;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = PLANE;
-    fighter[JAPAN_1] = PLANE;
-    fighter[GERMAN_2] = PLANE;
-    fighter[FINLAND_2] = PLANE;
-    fighter[ENGLAND_2] = PLANE;
-    fighter[JAPAN_2] = PLANE;
-    fighter[GERMAN_3] = PLANE;
-    fighter[FINLAND_3] = PLANE;
-    fighter[ENGLAND_3] = PLANE;
-    fighter[JAPAN_3] = PLANE;
-    break;
-    // Beach head 2
-  case 2:
-    player_sides[GERMAN_1] = ENEMY;
-    player_sides[FINLAND_1] = ALLIED;
-    player_sides[ENGLAND_1] = NEUTRAL;
-    player_sides[JAPAN_1] = NEUTRAL;
-    player_sides[GERMAN_2] = ENEMY;
-    player_sides[FINLAND_2] = ALLIED;
-    player_sides[ENGLAND_2] = NEUTRAL;
-    player_sides[JAPAN_2] = NEUTRAL;
-    player_sides[GERMAN_3] = ENEMY;
-    player_sides[FINLAND_3] = ALLIED;
-    player_sides[ENGLAND_3] = NEUTRAL;
-    player_sides[JAPAN_3] = NEUTRAL;
-
-    number_of_planes[GERMAN_1] = 3;
-    number_of_planes[FINLAND_1] = 3;
-    number_of_planes[ENGLAND_1] = 0;
-    number_of_planes[JAPAN_1] = 0;
-    number_of_planes[GERMAN_2] = 3;
-    number_of_planes[FINLAND_2] = 3;
-    number_of_planes[ENGLAND_2] = 0;
-    number_of_planes[JAPAN_2] = 0;
-    number_of_planes[GERMAN_3] = 3;
-    number_of_planes[FINLAND_3] = 3;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = PLANE;
-    fighter[JAPAN_1] = PLANE;
-    fighter[GERMAN_2] = PLANE;
-    fighter[FINLAND_2] = PLANE;
-    fighter[ENGLAND_2] = PLANE;
-    fighter[JAPAN_2] = PLANE;
-    fighter[GERMAN_3] = PLANE;
-    fighter[FINLAND_3] = PLANE;
-    fighter[ENGLAND_3] = PLANE;
-    fighter[JAPAN_3] = PLANE;
-    break;
-    // Troop escort
-  case 3:
-    player_sides[GERMAN_1] = ENEMY;
-    player_sides[FINLAND_1] = ALLIED;
-    player_sides[ENGLAND_1] = ALLIED;
-    player_sides[JAPAN_1] = ENEMY;
-    player_sides[GERMAN_2] = ENEMY;
-    player_sides[FINLAND_2] = ALLIED;
-    player_sides[ENGLAND_2] = NEUTRAL;
-    player_sides[JAPAN_2] = NEUTRAL;
-    player_sides[GERMAN_3] = ENEMY;
-    player_sides[FINLAND_3] = ALLIED;
-    player_sides[ENGLAND_3] = NEUTRAL;
-    player_sides[JAPAN_3] = NEUTRAL;
-
-    number_of_planes[GERMAN_1] = 0;
-    number_of_planes[FINLAND_1] = 2;
-    number_of_planes[ENGLAND_1] = 2;
-    number_of_planes[JAPAN_1] = 0;
-    number_of_planes[GERMAN_2] = 0;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 0;
-    number_of_planes[JAPAN_2] = 0;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = PLANE;
-    fighter[JAPAN_1] = PLANE;
-    fighter[GERMAN_2] = PLANE;
-    fighter[FINLAND_2] = PLANE;
-    fighter[ENGLAND_2] = PLANE;
-    fighter[JAPAN_2] = PLANE;
-    fighter[GERMAN_3] = PLANE;
-    fighter[FINLAND_3] = PLANE;
-    fighter[ENGLAND_3] = PLANE;
-    fighter[JAPAN_3] = PLANE;
-    break;
-    // Wood war
-  case 4:
-    player_sides[GERMAN_1] = NEUTRAL;
-    player_sides[FINLAND_1] = ALLIED;
-    player_sides[ENGLAND_1] = ENEMY;
-    player_sides[JAPAN_1] = ENEMY;
-    player_sides[GERMAN_2] = NEUTRAL;
-    player_sides[FINLAND_2] = ALLIED;
-    player_sides[ENGLAND_2] = ENEMY;
-    player_sides[JAPAN_2] = ENEMY;
-    player_sides[GERMAN_3] = NEUTRAL;
-    player_sides[FINLAND_3] = ALLIED;
-    player_sides[ENGLAND_3] = ENEMY;
-    player_sides[JAPAN_3] = ENEMY;
-
-    number_of_planes[GERMAN_1] = 0;
-    number_of_planes[FINLAND_1] = 3;
-    number_of_planes[ENGLAND_1] = 3;
-    number_of_planes[JAPAN_1] = 3;
-    number_of_planes[GERMAN_2] = 0;
-    number_of_planes[FINLAND_2] = 2;
-    number_of_planes[ENGLAND_2] = 3;
-    number_of_planes[JAPAN_2] = 3;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 2;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = BOMBER;
-    fighter[JAPAN_1] = FIGHTER;
-    fighter[GERMAN_2] = PLANE;
-    fighter[FINLAND_2] = PLANE;
-    fighter[ENGLAND_2] = BOMBER;
-    fighter[JAPAN_2] = FIGHTER;
-    fighter[GERMAN_3] = PLANE;
-    fighter[FINLAND_3] = PLANE;
-    fighter[ENGLAND_3] = PLANE;
-    fighter[JAPAN_3] = PLANE;
-    break;
-    // Show time
-  case 5:
-    player_sides[GERMAN_1] = ENEMY;
-    player_sides[FINLAND_1] = ALLIED;
-    player_sides[ENGLAND_1] = ENEMY;
-    player_sides[JAPAN_1] = ENEMY;
-    player_sides[GERMAN_2] = ENEMY;
-    player_sides[FINLAND_2] = ALLIED;
-    player_sides[ENGLAND_2] = ENEMY;
-    player_sides[JAPAN_2] = ENEMY;
-    player_sides[GERMAN_3] = ENEMY;
-    player_sides[FINLAND_3] = ALLIED;
-    player_sides[ENGLAND_3] = ENEMY;
-    player_sides[JAPAN_3] = ENEMY;
-
-    number_of_planes[GERMAN_1] = 3;
-    number_of_planes[FINLAND_1] = 7;
-    number_of_planes[ENGLAND_1] = 3;
-    number_of_planes[JAPAN_1] = 3;
-    number_of_planes[GERMAN_2] = 3;
-    number_of_planes[FINLAND_2] = 6;
-    number_of_planes[ENGLAND_2] = 3;
-    number_of_planes[JAPAN_2] = 3;
-    number_of_planes[GERMAN_3] = 3;
-    number_of_planes[FINLAND_3] = 6;
-    number_of_planes[ENGLAND_3] = 3;
-    number_of_planes[JAPAN_3] = 3;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = FIGHTER;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = FIGHTER;
-    fighter[JAPAN_1] = FIGHTER;
-    fighter[GERMAN_2] = PLANE;
-    fighter[FINLAND_2] = FIGHTER;
-    fighter[ENGLAND_2] = PLANE;
-    fighter[JAPAN_2] = PLANE;
-    fighter[GERMAN_3] = PLANE;
-    fighter[FINLAND_3] = PLANE;
-    fighter[ENGLAND_3] = PLANE;
-    fighter[JAPAN_3] = PLANE;
-    break;
-  }
-}
-
-void init_england(int number) {
-  switch (number) {
-    // Storehunt
-  case 0:
-    player_sides[GERMAN_1] = NEUTRAL;
-    player_sides[FINLAND_1] = ENEMY;
-    player_sides[ENGLAND_1] = ALLIED;
-    player_sides[JAPAN_1] = NEUTRAL;
-    player_sides[GERMAN_2] = NEUTRAL;
-    player_sides[FINLAND_2] = ENEMY;
-    player_sides[ENGLAND_2] = ALLIED;
-    player_sides[JAPAN_2] = NEUTRAL;
-    player_sides[GERMAN_3] = NEUTRAL;
-    player_sides[FINLAND_3] = ENEMY;
-    player_sides[ENGLAND_3] = ALLIED;
-    player_sides[JAPAN_3] = NEUTRAL;
-
-    number_of_planes[GERMAN_1] = 0;
-    number_of_planes[FINLAND_1] = 0;
-    number_of_planes[ENGLAND_1] = 1;
-    number_of_planes[JAPAN_1] = 0;
-    number_of_planes[GERMAN_2] = 0;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 0;
-    number_of_planes[JAPAN_2] = 0;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = PLANE;
-    fighter[JAPAN_1] = PLANE;
-    fighter[GERMAN_2] = PLANE;
-    fighter[FINLAND_2] = PLANE;
-    fighter[ENGLAND_2] = PLANE;
-    fighter[JAPAN_2] = PLANE;
-    fighter[GERMAN_3] = PLANE;
-    fighter[FINLAND_3] = PLANE;
-    fighter[ENGLAND_3] = PLANE;
-    fighter[JAPAN_3] = PLANE;
-    break;
-    // Patriot Flight
-  case 1:
-    player_sides[GERMAN_1] = NEUTRAL;
-    player_sides[FINLAND_1] = NEUTRAL;
-    player_sides[ENGLAND_1] = ALLIED;
-    player_sides[JAPAN_1] = ENEMY;
-    player_sides[GERMAN_2] = NEUTRAL;
-    player_sides[FINLAND_2] = NEUTRAL;
-    player_sides[ENGLAND_2] = ALLIED;
-    player_sides[JAPAN_2] = ENEMY;
-    player_sides[GERMAN_3] = NEUTRAL;
-    player_sides[FINLAND_3] = NEUTRAL;
-    player_sides[ENGLAND_3] = ALLIED;
-    player_sides[JAPAN_3] = ENEMY;
-
-    number_of_planes[GERMAN_1] = 0;
-    number_of_planes[FINLAND_1] = 0;
-    number_of_planes[ENGLAND_1] = 1;
-    number_of_planes[JAPAN_1] = 0;
-    number_of_planes[GERMAN_2] = 0;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 0;
-    number_of_planes[JAPAN_2] = 0;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = LEFT;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 2333;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 15;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = FIGHTER;
-    fighter[JAPAN_1] = PLANE;
-    fighter[GERMAN_2] = PLANE;
-    fighter[FINLAND_2] = PLANE;
-    fighter[ENGLAND_2] = PLANE;
-    fighter[JAPAN_2] = PLANE;
-    fighter[GERMAN_3] = PLANE;
-    fighter[FINLAND_3] = PLANE;
-    fighter[ENGLAND_3] = PLANE;
-    fighter[JAPAN_3] = PLANE;
-    break;
-    // Bombing raid
-  case 2:
-    player_sides[GERMAN_1] = NEUTRAL;
-    player_sides[FINLAND_1] = NEUTRAL;
-    player_sides[ENGLAND_1] = ALLIED;
-    player_sides[JAPAN_1] = ENEMY;
-    player_sides[GERMAN_2] = NEUTRAL;
-    player_sides[FINLAND_2] = NEUTRAL;
-    player_sides[ENGLAND_2] = ALLIED;
-    player_sides[JAPAN_2] = ENEMY;
-    player_sides[GERMAN_3] = NEUTRAL;
-    player_sides[FINLAND_3] = NEUTRAL;
-    player_sides[ENGLAND_3] = ALLIED;
-    player_sides[JAPAN_3] = ENEMY;
-
-    number_of_planes[GERMAN_1] = 0;
-    number_of_planes[FINLAND_1] = 0;
-    number_of_planes[ENGLAND_1] = 3;
-    number_of_planes[JAPAN_1] = 5;
-    number_of_planes[GERMAN_2] = 0;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 2;
-    number_of_planes[JAPAN_2] = 5;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 2;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = PLANE;
-    fighter[JAPAN_1] = PLANE;
-    fighter[GERMAN_2] = PLANE;
-    fighter[FINLAND_2] = PLANE;
-    fighter[ENGLAND_2] = PLANE;
-    fighter[JAPAN_2] = PLANE;
-    fighter[GERMAN_3] = PLANE;
-    fighter[FINLAND_3] = PLANE;
-    fighter[ENGLAND_3] = PLANE;
-    fighter[JAPAN_3] = PLANE;
-    break;
-    // Radio interference
-  case 3:
-    player_sides[GERMAN_1] = ALLIED;
-    player_sides[FINLAND_1] = NEUTRAL;
-    player_sides[ENGLAND_1] = ALLIED;
-    player_sides[JAPAN_1] = ENEMY;
-    player_sides[GERMAN_2] = ALLIED;
-    player_sides[FINLAND_2] = NEUTRAL;
-    player_sides[ENGLAND_2] = ALLIED;
-    player_sides[JAPAN_2] = ENEMY;
-    player_sides[GERMAN_3] = ALLIED;
-    player_sides[FINLAND_3] = NEUTRAL;
-    player_sides[ENGLAND_3] = ALLIED;
-    player_sides[JAPAN_3] = ENEMY;
-
-    number_of_planes[GERMAN_1] = 1;
-    number_of_planes[FINLAND_1] = 0;
-    number_of_planes[ENGLAND_1] = 1;
-    number_of_planes[JAPAN_1] = 1;
-    number_of_planes[GERMAN_2] = 0;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 0;
-    number_of_planes[JAPAN_2] = 0;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 2300;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 10;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = PLANE;
-    fighter[JAPAN_1] = FIGHTER;
-    fighter[GERMAN_2] = PLANE;
-    fighter[FINLAND_2] = PLANE;
-    fighter[ENGLAND_2] = PLANE;
-    fighter[JAPAN_2] = FIGHTER;
-    fighter[GERMAN_3] = PLANE;
-    fighter[FINLAND_3] = PLANE;
-    fighter[ENGLAND_3] = PLANE;
-    fighter[JAPAN_3] = FIGHTER;
-    break;
-    // Canal tunnel
-  case 4:
-    player_sides[GERMAN_1] = ENEMY;
-    player_sides[FINLAND_1] = ENEMY;
-    player_sides[ENGLAND_1] = ALLIED;
-    player_sides[JAPAN_1] = ENEMY;
-    player_sides[GERMAN_2] = ENEMY;
-    player_sides[FINLAND_2] = ENEMY;
-    player_sides[ENGLAND_2] = ALLIED;
-    player_sides[JAPAN_2] = ENEMY;
-    player_sides[GERMAN_3] = ENEMY;
-    player_sides[FINLAND_3] = ENEMY;
-    player_sides[ENGLAND_3] = ALLIED;
-    player_sides[JAPAN_3] = ENEMY;
-
-    number_of_planes[GERMAN_1] = 1;
-    number_of_planes[FINLAND_1] = 1;
-    number_of_planes[ENGLAND_1] = 2;
-    number_of_planes[JAPAN_1] = 1;
-    number_of_planes[GERMAN_2] = 0;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 1;
-    number_of_planes[JAPAN_2] = 0;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 1;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 2300;
-    miss_pl_x[FINLAND_1] = 2100;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 2200;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 10;
-    miss_pl_y[FINLAND_1] = 50;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 30;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = FIGHTER;
-    fighter[FINLAND_1] = FIGHTER;
-    fighter[ENGLAND_1] = PLANE;
-    fighter[JAPAN_1] = FIGHTER;
-    fighter[GERMAN_2] = PLANE;
-    fighter[FINLAND_2] = PLANE;
-    fighter[ENGLAND_2] = FIGHTER;
-    fighter[JAPAN_2] = PLANE;
-    fighter[GERMAN_3] = PLANE;
-    fighter[FINLAND_3] = PLANE;
-    fighter[ENGLAND_3] = BOMBER;
-    fighter[JAPAN_3] = PLANE;
-    break;
-    // Carrier command
-  case 5:
-    player_sides[GERMAN_1] = ENEMY;
-    player_sides[FINLAND_1] = ENEMY;
-    player_sides[ENGLAND_1] = ALLIED;
-    player_sides[JAPAN_1] = ENEMY;
-    player_sides[GERMAN_2] = ENEMY;
-    player_sides[FINLAND_2] = ENEMY;
-    player_sides[ENGLAND_2] = ALLIED;
-    player_sides[JAPAN_2] = ENEMY;
-    player_sides[GERMAN_3] = ENEMY;
-    player_sides[FINLAND_3] = ENEMY;
-    player_sides[ENGLAND_3] = ALLIED;
-    player_sides[JAPAN_3] = ENEMY;
-
-    number_of_planes[GERMAN_1] = 3;
-    number_of_planes[FINLAND_1] = 3;
-    number_of_planes[ENGLAND_1] = 7;
-    number_of_planes[JAPAN_1] = 3;
-    number_of_planes[GERMAN_2] = 3;
-    number_of_planes[FINLAND_2] = 3;
-    number_of_planes[ENGLAND_2] = 6;
-    number_of_planes[JAPAN_2] = 3;
-    number_of_planes[GERMAN_3] = 3;
-    number_of_planes[FINLAND_3] = 3;
-    number_of_planes[ENGLAND_3] = 6;
-    number_of_planes[JAPAN_3] = 3;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = FIGHTER;
-    fighter[FINLAND_1] = FIGHTER;
-    fighter[ENGLAND_1] = FIGHTER;
-    fighter[JAPAN_1] = FIGHTER;
-    fighter[GERMAN_2] = FIGHTER;
-    fighter[FINLAND_2] = FIGHTER;
-    fighter[ENGLAND_2] = FIGHTER;
-    fighter[JAPAN_2] = FIGHTER;
-    fighter[GERMAN_3] = FIGHTER;
-    fighter[FINLAND_3] = FIGHTER;
-    fighter[ENGLAND_3] = FIGHTER;
-    fighter[JAPAN_3] = FIGHTER;
-    break;
-  }
-}
-
-void init_japan(int number) {
-  switch (number) {
-    // Tactical bombardment
-  case 0:
-    player_sides[GERMAN_1] = NEUTRAL;
-    player_sides[FINLAND_1] = ENEMY;
-    player_sides[ENGLAND_1] = NEUTRAL;
-    player_sides[JAPAN_1] = ALLIED;
-    player_sides[GERMAN_2] = NEUTRAL;
-    player_sides[FINLAND_2] = ENEMY;
-    player_sides[ENGLAND_2] = NEUTRAL;
-    player_sides[JAPAN_2] = ALLIED;
-    player_sides[GERMAN_3] = NEUTRAL;
-    player_sides[FINLAND_3] = ENEMY;
-    player_sides[ENGLAND_3] = NEUTRAL;
-    player_sides[JAPAN_3] = ALLIED;
-
-    number_of_planes[GERMAN_1] = 0;
-    number_of_planes[FINLAND_1] = 0;
-    number_of_planes[ENGLAND_1] = 0;
-    number_of_planes[JAPAN_1] = 1;
-    number_of_planes[GERMAN_2] = 0;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 0;
-    number_of_planes[JAPAN_2] = 0;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = PLANE;
-    fighter[JAPAN_1] = PLANE;
-    fighter[GERMAN_2] = PLANE;
-    fighter[FINLAND_2] = PLANE;
-    fighter[ENGLAND_2] = PLANE;
-    fighter[JAPAN_2] = PLANE;
-    fighter[GERMAN_3] = PLANE;
-    fighter[FINLAND_3] = PLANE;
-    fighter[ENGLAND_3] = PLANE;
-    fighter[JAPAN_3] = PLANE;
-    break;
-    // Finnish outpost
-  case 1:
-    player_sides[GERMAN_1] = ENEMY;
-    player_sides[FINLAND_1] = ENEMY;
-    player_sides[ENGLAND_1] = NEUTRAL;
-    player_sides[JAPAN_1] = ALLIED;
-    player_sides[GERMAN_2] = ENEMY;
-    player_sides[FINLAND_2] = ENEMY;
-    player_sides[ENGLAND_2] = NEUTRAL;
-    player_sides[JAPAN_2] = ALLIED;
-    player_sides[GERMAN_3] = ENEMY;
-    player_sides[FINLAND_3] = ENEMY;
-    player_sides[ENGLAND_3] = NEUTRAL;
-    player_sides[JAPAN_3] = ALLIED;
-
-    number_of_planes[GERMAN_1] = 3;
-    number_of_planes[FINLAND_1] = 0;
-    number_of_planes[ENGLAND_1] = 0;
-    number_of_planes[JAPAN_1] = 3;
-    number_of_planes[GERMAN_2] = 3;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 0;
-    number_of_planes[JAPAN_2] = 3;
-    number_of_planes[GERMAN_3] = 3;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 3;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = PLANE;
-    fighter[JAPAN_1] = PLANE;
-    fighter[GERMAN_2] = FIGHTER;
-    fighter[FINLAND_2] = FIGHTER;
-    fighter[ENGLAND_2] = FIGHTER;
-    fighter[JAPAN_2] = FIGHTER;
-    fighter[GERMAN_3] = BOMBER;
-    fighter[FINLAND_3] = BOMBER;
-    fighter[ENGLAND_3] = BOMBER;
-    fighter[JAPAN_3] = BOMBER;
-    break;
-    // Ransom
-  case 2:
-    player_sides[GERMAN_1] = ENEMY;
-    player_sides[FINLAND_1] = NEUTRAL;
-    player_sides[ENGLAND_1] = NEUTRAL;
-    player_sides[JAPAN_1] = ALLIED;
-    player_sides[GERMAN_2] = ENEMY;
-    player_sides[FINLAND_2] = NEUTRAL;
-    player_sides[ENGLAND_2] = NEUTRAL;
-    player_sides[JAPAN_2] = ALLIED;
-    player_sides[GERMAN_3] = ENEMY;
-    player_sides[FINLAND_3] = NEUTRAL;
-    player_sides[ENGLAND_3] = NEUTRAL;
-    player_sides[JAPAN_3] = ALLIED;
-
-    number_of_planes[GERMAN_1] = 0;
-    number_of_planes[FINLAND_1] = 0;
-    number_of_planes[ENGLAND_1] = 0;
-    number_of_planes[JAPAN_1] = 2;
-    number_of_planes[GERMAN_2] = 0;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 0;
-    number_of_planes[JAPAN_2] = 0;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = PLANE;
-    fighter[JAPAN_1] = PLANE;
-    fighter[GERMAN_2] = PLANE;
-    fighter[FINLAND_2] = PLANE;
-    fighter[ENGLAND_2] = PLANE;
-    fighter[JAPAN_2] = PLANE;
-    fighter[GERMAN_3] = PLANE;
-    fighter[FINLAND_3] = PLANE;
-    fighter[ENGLAND_3] = PLANE;
-    fighter[JAPAN_3] = PLANE;
-    break;
-    // Harbor Hazard
-  case 3:
-    player_sides[GERMAN_1] = ALLIED;
-    player_sides[FINLAND_1] = ENEMY;
-    player_sides[ENGLAND_1] = ENEMY;
-    player_sides[JAPAN_1] = ALLIED;
-    player_sides[GERMAN_2] = ALLIED;
-    player_sides[FINLAND_2] = ENEMY;
-    player_sides[ENGLAND_2] = ENEMY;
-    player_sides[JAPAN_2] = ALLIED;
-    player_sides[GERMAN_3] = ALLIED;
-    player_sides[FINLAND_3] = ENEMY;
-    player_sides[ENGLAND_3] = ENEMY;
-    player_sides[JAPAN_3] = ALLIED;
-
-    number_of_planes[GERMAN_1] = 5;
-    number_of_planes[FINLAND_1] = 1;
-    number_of_planes[ENGLAND_1] = 5;
-    number_of_planes[JAPAN_1] = 5;
-    number_of_planes[GERMAN_2] = 5;
-    number_of_planes[FINLAND_2] = 1;
-    number_of_planes[ENGLAND_2] = 5;
-    number_of_planes[JAPAN_2] = 5;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 1;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = LEFT;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = LEFT;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = LEFT;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 2160;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 2200;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 2240;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 100;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 130;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 160;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = FIGHTER;
-    fighter[FINLAND_1] = FIGHTER;
-    fighter[ENGLAND_1] = BOMBER;
-    fighter[JAPAN_1] = PLANE;
-    fighter[GERMAN_2] = FIGHTER;
-    fighter[FINLAND_2] = FIGHTER;
-    fighter[ENGLAND_2] = FIGHTER;
-    fighter[JAPAN_2] = PLANE;
-    fighter[GERMAN_3] = FIGHTER;
-    fighter[FINLAND_3] = FIGHTER;
-    fighter[ENGLAND_3] = BOMBER;
-    fighter[JAPAN_3] = PLANE;
-    break;
-    // Sweating sauna
-  case 4:
-    player_sides[GERMAN_1] = ENEMY;
-    player_sides[FINLAND_1] = ENEMY;
-    player_sides[ENGLAND_1] = ENEMY;
-    player_sides[JAPAN_1] = ALLIED;
-    player_sides[GERMAN_2] = ENEMY;
-    player_sides[FINLAND_2] = ENEMY;
-    player_sides[ENGLAND_2] = ENEMY;
-    player_sides[JAPAN_2] = ALLIED;
-    player_sides[GERMAN_3] = ENEMY;
-    player_sides[FINLAND_3] = ENEMY;
-    player_sides[ENGLAND_3] = ENEMY;
-    player_sides[JAPAN_3] = ALLIED;
-
-    number_of_planes[GERMAN_1] = 0;
-    number_of_planes[FINLAND_1] = 0;
-    number_of_planes[ENGLAND_1] = 0;
-    number_of_planes[JAPAN_1] = 2;
-    number_of_planes[GERMAN_2] = 0;
-    number_of_planes[FINLAND_2] = 0;
-    number_of_planes[ENGLAND_2] = 0;
-    number_of_planes[JAPAN_2] = 0;
-    number_of_planes[GERMAN_3] = 0;
-    number_of_planes[FINLAND_3] = 0;
-    number_of_planes[ENGLAND_3] = 0;
-    number_of_planes[JAPAN_3] = 0;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = PLANE;
-    fighter[FINLAND_1] = PLANE;
-    fighter[ENGLAND_1] = PLANE;
-    fighter[JAPAN_1] = PLANE;
-    fighter[GERMAN_2] = PLANE;
-    fighter[FINLAND_2] = PLANE;
-    fighter[ENGLAND_2] = PLANE;
-    fighter[JAPAN_2] = PLANE;
-    fighter[GERMAN_3] = PLANE;
-    fighter[FINLAND_3] = PLANE;
-    fighter[ENGLAND_3] = PLANE;
-    fighter[JAPAN_3] = PLANE;
-    break;
-    // Oasis Offence
-  case 5:
-    player_sides[GERMAN_1] = ENEMY;
-    player_sides[FINLAND_1] = ENEMY;
-    player_sides[ENGLAND_1] = ENEMY;
-    player_sides[JAPAN_1] = ALLIED;
-    player_sides[GERMAN_2] = ENEMY;
-    player_sides[FINLAND_2] = ENEMY;
-    player_sides[ENGLAND_2] = ENEMY;
-    player_sides[JAPAN_2] = ALLIED;
-    player_sides[GERMAN_3] = ENEMY;
-    player_sides[FINLAND_3] = ENEMY;
-    player_sides[ENGLAND_3] = ENEMY;
-    player_sides[JAPAN_3] = ALLIED;
-
-    number_of_planes[GERMAN_1] = 3;
-    number_of_planes[FINLAND_1] = 3;
-    number_of_planes[ENGLAND_1] = 3;
-    number_of_planes[JAPAN_1] = 6;
-    number_of_planes[GERMAN_2] = 3;
-    number_of_planes[FINLAND_2] = 3;
-    number_of_planes[ENGLAND_2] = 3;
-    number_of_planes[JAPAN_2] = 6;
-    number_of_planes[GERMAN_3] = 3;
-    number_of_planes[FINLAND_3] = 3;
-    number_of_planes[ENGLAND_3] = 3;
-    number_of_planes[JAPAN_3] = 6;
-
-    miss_plane_direction[GERMAN_1] = 0;
-    miss_plane_direction[FINLAND_1] = 0;
-    miss_plane_direction[ENGLAND_1] = 0;
-    miss_plane_direction[JAPAN_1] = 0;
-    miss_plane_direction[GERMAN_2] = 0;
-    miss_plane_direction[FINLAND_2] = 0;
-    miss_plane_direction[ENGLAND_2] = 0;
-    miss_plane_direction[JAPAN_2] = 0;
-    miss_plane_direction[GERMAN_3] = 0;
-    miss_plane_direction[FINLAND_3] = 0;
-    miss_plane_direction[ENGLAND_3] = 0;
-    miss_plane_direction[JAPAN_3] = 0;
-
-    miss_pl_x[GERMAN_1] = 0;
-    miss_pl_x[FINLAND_1] = 0;
-    miss_pl_x[ENGLAND_1] = 0;
-    miss_pl_x[JAPAN_1] = 0;
-    miss_pl_x[GERMAN_2] = 0;
-    miss_pl_x[FINLAND_2] = 0;
-    miss_pl_x[ENGLAND_2] = 0;
-    miss_pl_x[JAPAN_2] = 0;
-    miss_pl_x[GERMAN_3] = 0;
-    miss_pl_x[FINLAND_3] = 0;
-    miss_pl_x[ENGLAND_3] = 0;
-    miss_pl_x[JAPAN_3] = 0;
-
-    miss_pl_y[GERMAN_1] = 0;
-    miss_pl_y[FINLAND_1] = 0;
-    miss_pl_y[ENGLAND_1] = 0;
-    miss_pl_y[JAPAN_1] = 0;
-    miss_pl_y[GERMAN_2] = 0;
-    miss_pl_y[FINLAND_2] = 0;
-    miss_pl_y[ENGLAND_2] = 0;
-    miss_pl_y[JAPAN_2] = 0;
-    miss_pl_y[GERMAN_3] = 0;
-    miss_pl_y[FINLAND_3] = 0;
-    miss_pl_y[ENGLAND_3] = 0;
-    miss_pl_y[JAPAN_3] = 0;
-
-    fighter[GERMAN_1] = FIGHTER;
-    fighter[FINLAND_1] = FIGHTER;
-    fighter[ENGLAND_1] = FIGHTER;
-    fighter[JAPAN_1] = PLANE;
-    fighter[GERMAN_2] = PLANE;
-    fighter[FINLAND_2] = PLANE;
-    fighter[ENGLAND_2] = PLANE;
-    fighter[JAPAN_2] = FIGHTER;
-    fighter[GERMAN_3] = PLANE;
-    fighter[FINLAND_3] = PLANE;
-    fighter[ENGLAND_3] = PLANE;
-    fighter[JAPAN_3] = PLANE;
-    break;
+  for (const Spawn &s : m.spawns) {
+    if (s.x || s.y) {
+      miss_pl_x[s.slot] = s.x;
+      miss_pl_y[s.slot] = s.y;
+    }
   }
 }

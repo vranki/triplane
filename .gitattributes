@@ -1,0 +1,23 @@
+# Game data, recordings and settings files are binary; never convert line
+# endings in them. Text files are checked out with LF on every platform so
+# that data/fokker.lst and the replay args files parse the same everywhere.
+* -text
+*.cpp text eol=lf
+*.cc text eol=lf
+*.h text eol=lf
+*.txt text eol=lf
+*.lst text eol=lf
+*.yml text eol=lf
+*.6 text eol=lf
+.gitattributes text eol=lf
+.gitignore text eol=lf
+CMakeLists.txt text eol=lf
+COPYING text eol=lf
+Makefile text eol=lf
+README text eol=lf
+README.install text eol=lf
+debian/** text eol=lf
+doc/** text eol=lf
+tools/** text eol=lf
+triplane-testsuite/README text eol=lf
+triplane-testsuite/*/args text eol=lf

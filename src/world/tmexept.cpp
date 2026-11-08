@@ -25,170 +25,49 @@
 #include "../world/constants.h"
 #include "../world/plane.h"
 #include "tripai.h"
-extern int number_of_planes[16];
+#include "tripmis.h"
 
 /******************************************************************************/
 
 namespace world::tmexept {
 
+namespace {
+
+/* Finnish missions 0 and 2 (Beach-Head, Beach-Head II): infantry of
+   country 0 stops advancing once it has passed x = 325. */
+void finnish_beachhead_game_exeptions() {
+  int l;
+
+  for (l = 0; l < 100; l++) {
+    if (!infan_x[l])
+      continue;
+
+    if (infan_country[l])
+      continue;
+
+    if (infan_x[l] > 325) {
+      if (infan_direction[l])
+        infan_direction[l] = 0;
+    }
+  }
+}
+
+} // namespace
+
 void init_exeptions(int country, int mission) {
-  switch (country) {
-  case GERMANY:
-    german_init_exeptions(mission);
-    break;
-
-  case FINLAND:
-    finnish_init_exeptions(mission);
-    break;
-
-  case ENGLAND:
-    english_init_exeptions(mission);
-    break;
-
-  case JAPAN:
-    japanese_init_exeptions(mission);
+  /* German mission 1 (Japanese Counter-Attack): the two Japanese planes
+     that start in the air begin at an angle of 150 degrees. */
+  if (country == GERMANY && mission == 1) {
+    player_angle[JAPAN_1] = 256 * 150;
+    player_angle[JAPAN_3] = 256 * 150;
   }
 }
 
 void game_exeptions(int country, int mission) {
-  switch (country) {
-  case GERMANY:
-    german_game_exeptions(mission);
-    break;
-
-  case FINLAND:
-    finnish_game_exeptions(mission);
-    break;
-
-  case ENGLAND:
-    english_game_exeptions(mission);
-    break;
-
-  case JAPAN:
-    japanese_game_exeptions(mission);
-  }
-}
-
-void endgame_exeptions(int country, int mission) {
-  switch (country) {
-  case GERMANY:
-    german_end_exeptions(mission);
-    break;
-
-  case FINLAND:
-    finnish_end_exeptions(mission);
-    break;
-
-  case ENGLAND:
-    english_end_exeptions(mission);
-    break;
-
-  case JAPAN:
-    japanese_end_exeptions(mission);
-  }
-}
-
-void german_init_exeptions(int mission) {
-  switch (mission) {
-  case 0:
-    break;
-
-  case 1:
-    player_angle[3] = 256 * 150;
-    player_angle[11] = 256 * 150;
-    break;
-
-  case 2:
-    break;
-
-  case 3:
-    break;
-
-  case 4:
-    break;
-
-  case 5:
-    break;
-  }
-}
-
-void finnish_init_exeptions(int mission) {
-  switch (mission) {
-  case 0:
-    break;
-
-  case 1:
-
-    break;
-
-  case 2:
-    break;
-
-  case 3:
-    break;
-
-  case 4:
-    break;
-
-  case 5:
-    break;
-  }
-}
-
-void english_init_exeptions(int mission) {
-  switch (mission) {
-  case 0:
-    break;
-
-  case 1:
-    break;
-
-  case 2:
-    break;
-
-  case 3:
-    break;
-
-  case 4:
-    break;
-
-  case 5:
-    break;
-  }
-}
-
-void japanese_init_exeptions(int mission) {
-  switch (mission) {
-  case 0:
-    break;
-
-  case 1:
-    break;
-
-  case 2:
-    break;
-
-  case 3:
-    break;
-
-  case 4:
-    break;
-
-  case 5:
-    break;
-  }
-}
-
-void german_game_exeptions(int mission) {
-  switch (mission) {
-  case 0:
-    break;
-
-  case 1:
-    break;
-
-  case 2:
-    if (number_of_planes[4] < 0 && solo_dest_remaining) {
+  if (country == GERMANY && mission == 2) {
+    /* English Channel: once the second German slot has no planes left and
+       targets remain, the mission fails as soon as no bomb is in the air. */
+    if (number_of_planes[GERMAN_2] < 0 && solo_dest_remaining) {
       int l;
 
       for (l = 0; l < 100; l++) {
@@ -199,200 +78,13 @@ void german_game_exeptions(int mission) {
       if (l == 100)
         solo_failed = 1;
     }
-
-    break;
-
-  case 3:
-    break;
-
-  case 4:
-    break;
-
-  case 5:
-    break;
+  } else if (country == FINLAND && (mission == 0 || mission == 2)) {
+    finnish_beachhead_game_exeptions();
   }
 }
 
-void finnish_game_exeptions(int mission) {
-  int l;
-
-  switch (mission) {
-  case 0:
-    for (l = 0; l < 100; l++) {
-      if (!infan_x[l])
-        continue;
-
-      if (infan_country[l])
-        continue;
-
-      if (infan_x[l] > 325) {
-        if (infan_direction[l])
-          infan_direction[l] = 0;
-      }
-    }
-
-    break;
-
-  case 1:
-    break;
-
-  case 2:
-    for (l = 0; l < 100; l++) {
-      if (!infan_x[l])
-        continue;
-
-      if (infan_country[l])
-        continue;
-
-      if (infan_x[l] > 325) {
-        if (infan_direction[l])
-          infan_direction[l] = 0;
-      }
-    }
-
-    break;
-
-  case 3:
-    break;
-
-  case 4:
-    break;
-
-  case 5:
-    break;
-  }
-}
-
-void english_game_exeptions(int mission) {
-  switch (mission) {
-  case 0:
-    break;
-
-  case 1:
-    break;
-
-  case 2:
-    break;
-
-  case 3:
-    break;
-
-  case 4:
-    break;
-
-  case 5:
-    break;
-  }
-}
-
-void japanese_game_exeptions(int mission) {
-  switch (mission) {
-  case 0:
-    break;
-
-  case 1:
-    break;
-
-  case 2:
-    break;
-
-  case 3:
-    break;
-
-  case 4:
-    break;
-
-  case 5:
-    break;
-  }
-}
-
-void german_end_exeptions(int mission) {
-  switch (mission) {
-  case 0:
-    break;
-
-  case 1:
-    break;
-
-  case 2:
-    break;
-
-  case 3:
-    break;
-
-  case 4:
-    break;
-
-  case 5:
-    break;
-  }
-}
-
-void finnish_end_exeptions(int mission) {
-  switch (mission) {
-  case 0:
-    break;
-
-  case 1:
-    break;
-
-  case 2:
-    break;
-
-  case 3:
-    break;
-
-  case 4:
-    break;
-
-  case 5:
-    break;
-  }
-}
-
-void english_end_exeptions(int mission) {
-  switch (mission) {
-  case 0:
-    break;
-
-  case 1:
-    break;
-
-  case 2:
-    break;
-
-  case 3:
-    break;
-
-  case 4:
-    break;
-
-  case 5:
-    break;
-  }
-}
-
-void japanese_end_exeptions(int mission) {
-  switch (mission) {
-  case 0:
-    break;
-
-  case 1:
-    break;
-
-  case 2:
-    break;
-
-  case 3:
-    break;
-
-  case 4:
-    break;
-
-  case 5:
-    break;
-  }
+void endgame_exeptions(int /* country */, int /* mission */) {
+  /* No mission has end-of-game exceptions. */
 }
 
 } // namespace world::tmexept

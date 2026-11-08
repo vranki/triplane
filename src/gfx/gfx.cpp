@@ -80,8 +80,9 @@ void fill_vircr(int x1, int y1, int x2, int y2, unsigned char vari) {
   int lasky;
 
   if (update_vircr_mode) {
+    int stride = (current_mode == VGA_MODE) ? 320 : screen_width;
     for (lasky = y1; lasky <= y2; lasky++)
-      memset(&vircr[x1 + lasky * 320], vari, x2 - x1 + 1);
+      memset(&vircr[x1 + lasky * stride], vari, x2 - x1 + 1);
   }
 
   if (!draw_with_vircr_mode)
@@ -96,8 +97,6 @@ void tyhjaa_vircr() {
       assert(current_mode == SVGA_MODE);
       fill_vircr(0, 0, screen_width_less, screen_height_less, 0);
     }
-
-    do_isa_clear();
   }
 }
 
@@ -114,7 +113,7 @@ static void do_isa_clear() {
   }
 }
 
-void do_all_clear(int /*do_retrace*/) {
+void do_all_clear() {
   do_all();
   do_isa_clear();
 }

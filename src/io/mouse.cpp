@@ -21,26 +21,37 @@
 /*******************************************************************************
 
    Purpose:
-        Mouse handling part of Wsystem 2.0 for DJGPP v.2.0�5
+        Mouse handling part of Wsystem 2.0 for DJGPP v.2.0
 
 *******************************************************************************/
 
 #include "../io/mouse.h"
 #include "../io/video.h"
-#include <SDL/SDL.h>
+#include <SDL3/SDL.h>
+#include "../io/sdl_compat.h"
 
 void hiiri_to(int x, int y) {
-  SDL_WarpMouse(x * pixel_multiplier, y * pixel_multiplier);
+  float wx, wy;
+  SDL_RenderCoordinatesToWindow(video_state.renderer,
+                                (float)(x * pixel_multiplier),
+                                (float)(y * pixel_multiplier), &wx, &wy);
+  SDL_WarpMouseInWindow(video_state.window, wx, wy);
 }
 
 void koords(int *x, int *y, int *n1, int *n2) {
-  Uint8 ret;
+  SDL_MouseButtonFlags ret;
+  float wx, wy, lx, ly;
 
-  SDL_PumpEvents();
-  ret = SDL_GetMouseState(x, y);
-  *n1 = !!(ret & SDL_BUTTON(1));
-  *n2 = !!(ret & SDL_BUTTON(3));
+  pump_events();
+  ret = SDL_GetMouseState(&wx, &wy);
+  *n1 = !!(ret & SDL_BUTTON_LMASK);
+  *n2 = !!(ret & SDL_BUTTON_RMASK);
 
-  *x /= pixel_multiplier;
-  *y /= pixel_multiplier;
+  SDL_RenderCoordinatesFromWindow(video_state.renderer, wx, wy, &lx, &ly);
+  *x = (int)lx / pixel_multiplier;
+  *y = (int)ly / pixel_multiplier;
+  if (video_state.surface) {
+    *x = SDL_clamp(*x, 0, video_state.surface->w / pixel_multiplier - 1);
+    *y = SDL_clamp(*y, 0, video_state.surface->h / pixel_multiplier - 1);
+  }
 }

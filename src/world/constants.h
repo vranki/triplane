@@ -30,7 +30,7 @@ constexpr int32_t MAX_ITGUN_SHOTS = 20;
 constexpr int32_t ITGUN_AGE_VARIETY = 10;
 constexpr int32_t ITGUN_BASE_AGE = 32;
 constexpr int32_t ITGUN_SHOT_RATE = 15;
-constexpr int32_t ITEXPLOSION_FRAMES = 9; // 5
+constexpr int32_t ITEXPLOSION_FRAMES = 9;
 
 constexpr int32_t AA_MG_SHOT_SPEED = 4800;
 constexpr int32_t MAX_AA_GUNS = 16;
@@ -43,9 +43,9 @@ constexpr int32_t MAX_FLAGS = 12;
 constexpr int32_t FLAGS_SPEED = 2;
 
 constexpr int32_t BOMB_GRAVITY = 2000;
-constexpr int32_t MIN_BOMB_PARTS = 25; // 25
-constexpr int32_t MAX_BOMB_PARTS = 50; // 50
-constexpr int32_t MAX_BOMBS = 25;      // 25
+constexpr int32_t MIN_BOMB_PARTS = 25;
+constexpr int32_t MAX_BOMB_PARTS = 50;
+constexpr int32_t MAX_BOMBS = 25;
 constexpr int32_t MAX_STRUCTURES = 100;
 constexpr int32_t BOMB_PRIME_TIME = 20;
 
@@ -68,11 +68,10 @@ constexpr int32_t EXPLOX_RANDOM = 12;
 constexpr int32_t EXPLOX_CONST = 10;
 constexpr int32_t EXPLOX_VARIETY = 25 * 256;
 constexpr int32_t EXPLOX_PHASE_DIFF = 7;
-constexpr int32_t SMOKE_SPEED = -3500;
 constexpr int32_t NUMBER_OF_BITES = 7;
 constexpr int32_t PARTS_SPEED = 270000;
-constexpr int32_t FOBJECTS_GRAVITY = 3000;        // 1600
-constexpr int32_t NUMBER_OF_EXPLOSION_PARTS = 30; // 50
+constexpr int32_t FOBJECTS_GRAVITY = 3000;
+constexpr int32_t NUMBER_OF_EXPLOSION_PARTS = 30;
 constexpr int32_t FOBJECTS_DAMAGE = 8;
 constexpr int32_t NUMBER_OF_FLAMES = 6;
 constexpr int32_t MAX_FLAMES = 20;
@@ -115,8 +114,6 @@ constexpr int32_t AI_GOING_UP_LIMIT = 25 * 256;
 constexpr int32_t AI_ANGLE_MARGINAL = 10 * 256;
 constexpr int32_t AI_ATTACK_DISTANCE = 200;
 constexpr int32_t AIM_GIVEUPFIGHT_DISTANCE = 350;
-constexpr int32_t AI_STALL_WARNING = 1400;
-constexpr int32_t AI_STALL_WARNING2 = 2200;
 
 constexpr int32_t AIM_NOMISSION = -1;
 constexpr int32_t AIM_TAKEOFF = 0;

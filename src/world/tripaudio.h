@@ -28,14 +28,13 @@ extern sb_mod_file *aces_mod;
 
 extern sb_sample *sample_itexp[3];
 extern sb_sample *sample_bomb[4];
-extern sb_sample *sample_hitti;
 extern sb_sample *sample_konsu[4];
-extern sb_sample *sample_propelli;
 extern sb_sample *sample_hit[4];
 extern sb_sample *sample_aagun;
 extern sb_sample *sample_splash[3];
 extern sb_sample *sample_spcrash;
 extern sb_sample *sample_hurr;
+extern sb_sample *sample_itshot;
 extern sb_sample *sample_crash[2];
 extern sb_sample *sample_alku;
 extern sb_sample *sample_die[9];

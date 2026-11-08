@@ -41,7 +41,6 @@ namespace gfx::font {
         void scale();
         void unscale();
         void count_scale();
-        void set_space(int space);
     };
 
 } // namespace gfx::font

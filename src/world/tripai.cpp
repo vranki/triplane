@@ -28,9 +28,6 @@
 #include <cstdint>
 #include "tripai.h"
 
-
-extern sb_sample *sample_die[9];
-
 int infan_x[MAX_INFANTRY];
 int infan_y[MAX_INFANTRY];
 int infan_direction[MAX_INFANTRY];
@@ -50,9 +47,24 @@ int itgun_shot_age[MAX_ITGUN_SHOTS];
 
 int bomb_target;
 
-/******************************************************************************/
+/* Where the plane the AI is steering is heading: left (0/1) and how steeply
+ * up (0 when it is not climbing). Set at the start of do_ai(). */
+static int going_left;
+static int going_up;
+
+/**************************************************************************/
 
 namespace world::tripai {
+
+/* Terrain height at x. Soldiers look a few pixels ahead of their position,
+ * which can point past the right edge of the 2400 pixel wide level. */
+static int terrain_level_at(int x) {
+  if (x < 0)
+    x = 0;
+  else if (x >= 2400)
+    x = 2399;
+  return terrain_level[x];
+}
 
 void do_doors() {
   int l;
@@ -80,13 +92,59 @@ void do_doors() {
   }
 }
 
+/* The mechanic walks back to the hangar door. */
+static void mekan_return(int l) {
+  mekan_mission[l] = MEKAN_MISSION_RETURN;
+  mekan_status[l] = MEKAN_ANIMATION_WALK;
+
+  if (mekan_x[l] > (hangar_x[l] + 38))
+    mekan_direction[l] = MEKAN_DIRECTION_LEFT;
+  else
+    mekan_direction[l] = MEKAN_DIRECTION_RIGHT;
+}
+
+/* The mechanic walks towards the plane. Once there he turns to face it,
+ * takes hold of the propeller or the tail and the pushing phase
+ * push_subtarget begins. */
+static void mekan_move_to_plane(int l, int push_subtarget) {
+  int target = mekan_target[l];
+
+  if (mekan_direction[l] == MEKAN_DIRECTION_RIGHT &&
+      mekan_x[l] >= (player_x_8[target] + 10)) {
+    mekan_x[l] = player_x_8[target] + 10;
+    mekan_direction[l] = MEKAN_DIRECTION_LEFT;
+
+    if (player_angle[target] < 90 * 256)
+      mekan_status[l] = MEKAN_ANIMATION_PUSH_PROPELLER;
+    else
+      mekan_status[l] = MEKAN_ANIMATION_PUSH_TAIL;
+
+    mekan_subtarget[l] = push_subtarget;
+
+  } else if (mekan_direction[l] == MEKAN_DIRECTION_LEFT &&
+             (mekan_x[l] + 13) <= (player_x_8[target] - 10)) {
+    mekan_x[l] = player_x_8[target] - 10 - 13;
+    mekan_direction[l] = MEKAN_DIRECTION_RIGHT;
+
+    if (player_angle[target] < 90 * 256)
+      mekan_status[l] = MEKAN_ANIMATION_PUSH_TAIL;
+    else
+      mekan_status[l] = MEKAN_ANIMATION_PUSH_PROPELLER;
+
+    mekan_subtarget[l] = push_subtarget;
+  }
+}
+
 void do_mekan() {
   int l, l2;
 
-  for (l = 0; l < 4; l++) {
-    if (!hangar_x[l])
-      continue;
+  /* A plane that is moving or breaking up no longer wants in. (Nothing
+     to do on a level without hangars, as before.) */
+  for (l = 0; l < 4; l++)
+    if (hangar_x[l])
+      break;
 
+  if (l < 4)
     for (l2 = 0; l2 < 16; l2++) {
       if (plane_wants_in[l2]) {
         if (player_speed[l2] || (in_closing[l2])) {
@@ -94,6 +152,10 @@ void do_mekan() {
         }
       }
     }
+
+  for (l = 0; l < 4; l++) {
+    if (!hangar_x[l])
+      continue;
 
     switch (mekan_mission[l]) {
     case MEKAN_MISSION_RETURN:
@@ -157,50 +219,13 @@ void do_mekan() {
       }
 
       if (!plane_wants_in[mekan_target[l]]) {
-        mekan_mission[l] = MEKAN_MISSION_RETURN;
-
-        mekan_status[l] = MEKAN_ANIMATION_WALK;
-
-        if (mekan_x[l] > (hangar_x[l] + 38)) {
-          mekan_direction[l] = MEKAN_DIRECTION_LEFT;
-
-        } else {
-          mekan_direction[l] = MEKAN_DIRECTION_RIGHT;
-        }
+        mekan_return(l);
         break;
       }
 
       switch (mekan_subtarget[l]) {
       case MEKAN_PUSH_IN_MOVE_TO_PLANE:
-        if (mekan_direction[l] == MEKAN_DIRECTION_RIGHT &&
-            mekan_x[l] >= (player_x_8[mekan_target[l]] + 10)) {
-          mekan_x[l] = player_x_8[mekan_target[l]] + 10;
-          mekan_direction[l] = MEKAN_DIRECTION_LEFT;
-
-          if (player_angle[mekan_target[l]] < 90 * 256) {
-            mekan_status[l] = MEKAN_ANIMATION_PUSH_PROPELLER;
-
-          } else {
-            mekan_status[l] = MEKAN_ANIMATION_PUSH_TAIL;
-          }
-
-          mekan_subtarget[l] = MEKAN_PUSH_IN_PUSH;
-
-        } else if (mekan_direction[l] == MEKAN_DIRECTION_LEFT &&
-                   (mekan_x[l] + 13) <= (player_x_8[mekan_target[l]] - 10)) {
-          mekan_x[l] = player_x_8[mekan_target[l]] - 10 - 13;
-          mekan_direction[l] = MEKAN_DIRECTION_RIGHT;
-
-          if (player_angle[mekan_target[l]] < 90 * 256) {
-            mekan_status[l] = MEKAN_ANIMATION_PUSH_TAIL;
-
-          } else {
-            mekan_status[l] = MEKAN_ANIMATION_PUSH_PROPELLER;
-          }
-
-          mekan_subtarget[l] = MEKAN_PUSH_IN_PUSH;
-        }
-
+        mekan_move_to_plane(l, MEKAN_PUSH_IN_PUSH);
         break;
       case MEKAN_PUSH_IN_PUSH:
 
@@ -257,17 +282,7 @@ void do_mekan() {
       }
 
       if (!plane_wants_out[mekan_target[l]]) {
-        mekan_mission[l] = MEKAN_MISSION_RETURN;
-
-        mekan_status[l] = MEKAN_ANIMATION_WALK;
-
-        if (mekan_x[l] > (hangar_x[l] + 38)) {
-          mekan_direction[l] = MEKAN_DIRECTION_LEFT;
-
-        } else {
-          mekan_direction[l] = MEKAN_DIRECTION_RIGHT;
-        }
-
+        mekan_return(l);
         break;
       }
 
@@ -281,35 +296,7 @@ void do_mekan() {
 
         break;
       case MEKAN_PUSH_OUT_MOVE_TO_PLANE:
-
-        if (mekan_direction[l] == MEKAN_DIRECTION_RIGHT &&
-            mekan_x[l] >= (player_x_8[mekan_target[l]] + 10)) {
-          mekan_x[l] = player_x_8[mekan_target[l]] + 10;
-          mekan_direction[l] = MEKAN_DIRECTION_LEFT;
-
-          if (player_angle[mekan_target[l]] < 90 * 256) {
-            mekan_status[l] = MEKAN_ANIMATION_PUSH_PROPELLER;
-
-          } else {
-            mekan_status[l] = MEKAN_ANIMATION_PUSH_TAIL;
-          }
-
-          mekan_subtarget[l] = MEKAN_PUSH_OUT_PUSH;
-
-        } else if (mekan_direction[l] == MEKAN_DIRECTION_LEFT &&
-                   (mekan_x[l] + 13) <= (player_x_8[mekan_target[l]] - 10)) {
-          mekan_x[l] = player_x_8[mekan_target[l]] - 10 - 13;
-          mekan_direction[l] = MEKAN_DIRECTION_RIGHT;
-
-          if (player_angle[mekan_target[l]] < 90 * 256) {
-            mekan_status[l] = MEKAN_ANIMATION_PUSH_TAIL;
-
-          } else {
-            mekan_status[l] = MEKAN_ANIMATION_PUSH_PROPELLER;
-          }
-
-          mekan_subtarget[l] = MEKAN_PUSH_OUT_PUSH;
-        }
+        mekan_move_to_plane(l, MEKAN_PUSH_OUT_PUSH);
         break;
 
       case MEKAN_PUSH_OUT_PUSH:
@@ -323,16 +310,7 @@ void do_mekan() {
                PLANE_AIRFIELD_POSITION - 5)) {
 
             plane_wants_out[mekan_target[l]] = 0;
-            mekan_mission[l] = MEKAN_MISSION_RETURN;
-
-            mekan_status[l] = MEKAN_ANIMATION_WALK;
-
-            if (mekan_x[l] > (hangar_x[l] + 38)) {
-              mekan_direction[l] = MEKAN_DIRECTION_LEFT;
-
-            } else {
-              mekan_direction[l] = MEKAN_DIRECTION_RIGHT;
-            }
+            mekan_return(l);
           }
         } else {
           player_x_8[mekan_target[l]] = (mekan_x[l] - 10);
@@ -341,16 +319,7 @@ void do_mekan() {
           if (mekan_x[l] <=
               (leveldata.airfield_x[l] + PLANE_AIRFIELD_POSITION + 5)) {
             plane_wants_out[mekan_target[l]] = 0;
-            mekan_mission[l] = MEKAN_MISSION_RETURN;
-
-            mekan_status[l] = MEKAN_ANIMATION_WALK;
-
-            if (mekan_x[l] > (hangar_x[l] + 38)) {
-              mekan_direction[l] = MEKAN_DIRECTION_LEFT;
-
-            } else {
-              mekan_direction[l] = MEKAN_DIRECTION_RIGHT;
-            }
+            mekan_return(l);
           }
         }
 
@@ -378,25 +347,20 @@ void do_mekan() {
         mekan_x[l] -= 2;
       }
     }
-
-    /*if(!hangar_door_opening[l] && !hangar_door_closing[l])
-       {
-       if(hangar_door_frame[l])
-       hangar_door_closing[l]=1;
-       else
-       hangar_door_opening[l]=1;
-
-       } */
   }
 
   do_doors();
 }
 
-int check_structs(int x, int y, int number) {
+/* Is there an intact gun or structure at (x, y) worth a bomb, i.e. one
+ * whose owner country is_target says so about and that no bomb is already
+ * falling towards? Sets bomb_target and returns 1 if so. */
+template <class Pred>
+static int find_bomb_target(int x, int y, Pred is_target) {
   int l;
 
   for (l = 0; l < MAX_AA_GUNS; l++)
-    if (kkbase_x[l] && player_sides[kkbase_country[l]] == number &&
+    if (kkbase_x[l] && is_target(kkbase_country[l]) &&
         (kkbase_status[l] != 2) && (bombs_going[kkbase_number[l]] == -1)) {
       if (x >= kkbase_x[l] && x <= (kkbase_x[l] + 25) &&
           y >= (kkbase_y[l] - 5) && y <= (kkbase_y[l] + 30)) {
@@ -409,8 +373,7 @@ int check_structs(int x, int y, int number) {
   for (l = 0; l < MAX_STRUCTURES; l++)
     if (leveldata.struct_owner[l] != 4)
       if ((structures[l][1] != nullptr) && (!struct_state[l]) &&
-          (player_sides[leveldata.struct_owner[l]] == number) &&
-          (bombs_going[l] == -1)) {
+          is_target(leveldata.struct_owner[l]) && (bombs_going[l] == -1)) {
         if (x >= leveldata.struct_x[l] &&
             x <= (leveldata.struct_x[l] + struct_width[l]) &&
             y >= (leveldata.struct_y[l] - 5) &&
@@ -423,36 +386,18 @@ int check_structs(int x, int y, int number) {
   return 0;
 }
 
+/* Solo game: the targets are everything of side `side`. */
+int check_structs(int x, int y, int side) {
+  return find_bomb_target(
+      x, y, [side](int owner) { return player_sides[owner] == side; });
+}
+
+/* Multiplayer game: the targets are everything of the other sides, except
+ * the neutral country 4. */
 int check_multi_structs(int x, int y, int number) {
-  int l;
-
-  for (l = 0; l < MAX_AA_GUNS; l++)
-    if (kkbase_x[l] && kkbase_country[l] != 4 &&
-        player_sides[kkbase_country[l]] != player_sides[number] &&
-        (kkbase_status[l] != 2) && (bombs_going[kkbase_number[l]] == -1)) {
-      if (x >= kkbase_x[l] && x <= (kkbase_x[l] + 25) &&
-          y >= (kkbase_y[l] - 5) && y <= (kkbase_y[l] + 30)) {
-        bomb_target = kkbase_number[l];
-
-        return 1;
-      }
-    }
-
-  for (l = 0; l < MAX_STRUCTURES; l++)
-    if (leveldata.struct_owner[l] != 4)
-      if ((structures[l][1] != nullptr) && (!struct_state[l]) &&
-          (player_sides[leveldata.struct_owner[l]] != player_sides[number]) &&
-          (bombs_going[l] == -1)) {
-        if (x >= leveldata.struct_x[l] &&
-            x <= (leveldata.struct_x[l] + struct_width[l]) &&
-            y >= (leveldata.struct_y[l] - 5) &&
-            y <= (leveldata.struct_y[l] + 5 + struct_heigth[l])) {
-          bomb_target = l;
-          return 1;
-        }
-      }
-
-  return 0;
+  return find_bomb_target(x, y, [number](int owner) {
+    return owner != 4 && player_sides[owner] != player_sides[number];
+  });
 }
 
 void ai_do_bombing(int number) {
@@ -483,7 +428,7 @@ void ai_do_bombing(int number) {
     fake_x += fake_x_speed >> 9;
     fake_y -= fake_y_speed >> 9;
 
-    if ((fake_x < 0) | ((fake_x >> 8) >= 2400)) {
+    if ((fake_x < 0) || ((fake_x >> 8) >= 2400)) {
       return;
     }
 
@@ -513,11 +458,9 @@ void start_itgun_explosion(const int number) {
 
   itgun_sound(itgun_shot_x[number] >> 8);
 
-  for (l = 0; l < MAX_FLYING_OBJECTS; l++)
-    if (!fobjects[l].x)
-      break;
+  l = alloc_fobject();
 
-  if (l != MAX_FLYING_OBJECTS) {
+  if (l != -1) {
     fobjects[l].x = itgun_shot_x[number];
     fobjects[l].y = itgun_shot_y[number];
     fobjects[l].x_speed = 0;
@@ -589,28 +532,55 @@ void do_it_shots() {
                               (itgun_shot_y[l] >> 8) * 2400])) > 119)
         itgun_shot_x[l] = 0;
 
+      if (!itgun_shot_x[l])
+        continue; /* left the level or hit the ground */
+
       if (!(itgun_shot_age[l]--)) {
           start_itgun_explosion(l);
       }
 
+      if (!itgun_shot_x[l])
+        continue; /* exploded */
+
       for (l2 = 0; l2 < 16; l2++) {
-        if (plane_present[l2]){
-          if (((player_x[l2] + 2304) > itgun_shot_x[l]) &&
-              ((player_x[l2] - 2304) < itgun_shot_x[l]) &&
-              ((player_y[l2] + 2304) > itgun_shot_y[l]) &&
-              ((player_y[l2] - 2304) < itgun_shot_y[l])) {
-              if (plane_p[l2][(player_angle[l2] >> 8) / 6][player_rolling[l2]]
-                  [player_upsidedown[l2]]
-                  [(itgun_shot_x[l] >> 8) - (player_x_8[l2]) + 10 +
-                   ((itgun_shot_y[l] >> 8) - (player_y_8[l2]) + 10) *
-                   20] != 255) {
-                  start_itgun_explosion(l);
-                  break;
-              }
-          }
-            }
+        if (point_hits_plane(l2, itgun_shot_x[l], itgun_shot_y[l])) {
+          start_itgun_explosion(l);
+          break;
         }
+      }
     }
+  }
+}
+
+/* The soldier has something to shoot at in direction angle: he aims there
+ * and fires every seventh frame. */
+static void infan_aim_and_fire(int l, int angle) {
+  infan_state[l] = 1;
+  if (++infan_last_shot[l] > 6) {
+    infan_last_shot[l] = 0;
+    infan_state[l] = 2;
+
+    angle += util::wutil::wrandom(INFANTRY_AIM_RANDOM) - (INFANTRY_AIM_RANDOM >> 1);
+
+    if (angle >= 360)
+      angle -= 360;
+    if (angle < 0)
+      angle += 360;
+
+    start_shot(infan_x[l] + 7, infan_y[l] + 7, angle, INFANT_SHOTS_SPEED,
+               infan_country[l]);
+  }
+
+  if (angle >= 270 || angle <= 90) {
+    if (angle >= 270) { infan_frame[l] = 0; }
+    else { infan_frame[l] = angle >> 4; }
+
+    infan_direction[l] = 1;
+  } else {
+    if (angle > 180) { infan_frame[l] = 0; }
+    else { infan_frame[l] = (180 - angle) >> 4; }
+
+    infan_direction[l] = 0;
   }
 }
 
@@ -636,35 +606,8 @@ void infan_to_plane(int l) {
     if ((player_on_airfield[infan_country[l]] ||
          ((abs(player_x_8[l2] - player_x_8[infan_country[l]]) > 150) ||
           !plane_present[infan_country[l]])) &&
-        angle <= 180) {
-      infan_state[l] = 1;
-      if (++infan_last_shot[l] > 6) {
-        infan_last_shot[l] = 0;
-        infan_state[l] = 2;
-
-        angle += util::wutil::wrandom(INFANTRY_AIM_RANDOM) - (INFANTRY_AIM_RANDOM >> 1);
-
-        if (angle >= 360)
-          angle -= 360;
-        if (angle < 0)
-          angle += 360;
-
-        start_shot(infan_x[l] + 7, infan_y[l] + 7, angle, INFANT_SHOTS_SPEED,
-                   infan_country[l]);
-      }
-
-      if (angle >= 270 || angle <= 90) {
-        if (angle >= 270) { infan_frame[l] = 0; }
-        else { infan_frame[l] = angle >> 4; }
-
-        infan_direction[l] = 1;
-      } else {
-        if (angle > 180) { infan_frame[l] = 0; }
-        else { infan_frame[l] = (180 - angle) >> 4; }
-
-        infan_direction[l] = 0;
-      }
-    }
+        angle <= 180)
+      infan_aim_and_fire(l, angle);
 
     break;
   }
@@ -687,33 +630,8 @@ void infan_to_infan(int l) {
     util::wutil::calculate_difference(infan_x[l] + 7, infan_y[l] + 7, infan_x[l2] + 7,
                          infan_y[l2] + 7, &distance, &angle);
 
-    if (angle <= 180) {
-      infan_state[l] = 1;
-      if (++infan_last_shot[l] > 6) {
-        infan_last_shot[l] = 0;
-        infan_state[l] = 2;
-
-        angle += util::wutil::wrandom(INFANTRY_AIM_RANDOM) - (INFANTRY_AIM_RANDOM >> 1);
-
-        if (angle >= 360) { angle -= 360; }
-        if (angle < 0) { angle += 360; }
-
-        start_shot(infan_x[l] + 7, infan_y[l] + 7, angle, INFANT_SHOTS_SPEED,
-                   infan_country[l]);
-      }
-
-      if (angle >= 270 || angle <= 90) {
-        if (angle >= 270) { infan_frame[l] = 0; }
-        else { infan_frame[l] = angle >> 4; }
-
-        infan_direction[l] = 1;
-      } else {
-        if (angle > 180) { infan_frame[l] = 0; }
-        else { infan_frame[l] = (180 - angle) >> 4; }
-
-        infan_direction[l] = 0;
-      }
-    }
+    if (angle <= 180)
+      infan_aim_and_fire(l, angle);
 
     break;
   }
@@ -810,7 +728,7 @@ void infan_take_hits(int l) {
     if ((shots_flying_x[l2] >> 8) > infan_x[l] &&
         (shots_flying_x[l2] >> 8) < (infan_x[l] + 14) &&
         (shots_flying_y[l2] >> 8) > infan_y[l] &&
-        (shots_flying_y[l2] >> 8) < (infan_x[l] + 13) &&
+        (shots_flying_y[l2] >> 8) < (infan_y[l] + 13) &&
         shots_flying_infan[l2] != infan_country[l]) {
       // if(wrandom(3))
       //   continue;
@@ -879,8 +797,8 @@ void do_infan() {
           infan_x[l] += infan_x_speed[l];
       }
 
-      angle = terrain_level[infan_x[l] + 11] - 13;
-      distance = terrain_level[infan_x[l] + 3] - 13;
+      angle = terrain_level_at(infan_x[l] + 11) - 13;
+      distance = terrain_level_at(infan_x[l] + 3) - 13;
 
       angle = ((angle < distance) ? angle : distance) - infan_y[l];
 
@@ -916,9 +834,9 @@ void do_infan() {
     }
 
     if (l2 == 8 &&
-        ((terrain_level[infan_x[l] + (infan_direction[l] ? 14 : 0)] - 2) >
-         terrain_level[infan_x[l] + (infan_direction[l] ? 14 : 0) +
-                       (infan_direction[l] ? 1 : -1)])) {
+        ((terrain_level_at(infan_x[l] + (infan_direction[l] ? 14 : 0)) - 2) >
+         terrain_level_at(infan_x[l] + (infan_direction[l] ? 14 : 0) +
+                          (infan_direction[l] ? 1 : -1)))) {
       util::wutil::wtoggle(&infan_direction[l]);
 
     } else {
@@ -927,8 +845,8 @@ void do_infan() {
         infan_x[l] = 0;
     }
 
-    angle = terrain_level[infan_x[l] + 11] - 13;
-    distance = terrain_level[infan_x[l] + 3] - 13;
+    angle = terrain_level_at(infan_x[l] + 11) - 13;
+    distance = terrain_level_at(infan_x[l] + 3) - 13;
 
     diff = ((angle < distance) ? angle : distance) - infan_y[l];
 
@@ -1126,12 +1044,52 @@ void ai_turnminus(int number) {
   controls_down[number] = flaggy ? 0 : 1;
 }
 
+/* Without a fight on, go after the nearest enemy in range. Turn around
+ * before the edge of the level, keep right side up and off the ground. */
+static void ai_look_around(int number, const int distance_enemy[16]) {
+  int l;
+
+  if (current_mission[number] != AIM_CHASE_PLANE)
+    for (l = 0; l < 16; l++) {
+      if (l == number)
+        continue;
+
+      if (!plane_present[l])
+        continue;
+
+      if (player_sides[number] == player_sides[l])
+        continue;
+
+      if (player_ammo[number] && distance_enemy[l] < AI_ATTACK_DISTANCE) {
+        current_mission[number] = AIM_CHASE_PLANE;
+        mission_target[number] = l;
+      }
+    }
+
+  if ((player_x_8[number] < (120 + ((player_speed[number]) / 40)) &&
+       going_left) ||
+      (player_x_8[number] > (2280 - ((player_speed[number]) / 40)) &&
+       !going_left)) {
+    if ((wide_terrain_level[player_x_8[number]] - (player_y_8[number])) >
+        ((player_y_8[number]) + 15))
+      current_mission[number] = AIM_SPLITS;
+    else
+      current_mission[number] = AIM_IMMELMAN;
+    mission_phase[number] = 0;
+
+  } else if ((player_upsidedown[number] && (!going_left)) ||
+             (!player_upsidedown[number] && (going_left)))
+    if (!player_rolling[number])
+      player_rolling[number] = 1;
+
+  ai_evade_terrain(number);
+}
+
 void do_ai(int number) {
   int xdistance, ydistance;
   int distance_enemy[16], angle_enemy[16], angle_difference[16];
   int flaggy;
   int trueangle;
-  int l;
 
   if (!player_exists[number])
     return;
@@ -1216,18 +1174,8 @@ void do_ai(int number) {
       }
 
       int initial_turn;
-      int mass;
       int turn_temp;
-      mass = plane_mass[number];
-      mass += player_ammo[number] / 10;
-      if (plane_bombs[number] != 6)
-        mass += player_bombs[number] * 12;
-      else
-        mass += player_bombs[number] * 10;
-
-      mass += player_gas[number] / 160;
-
-      initial_turn = (plane_manover[number] << 8) / (mass + 200);
+      initial_turn = plane_turn_rate(number, plane_loaded_mass(number));
       turn_temp = 1 + (((player_speed[number] - 768) / 20) >> 8);
       if (!turn_temp)
         turn_temp = 1;
@@ -1457,7 +1405,6 @@ void do_ai(int number) {
         ai_turnplus(number);
       }
     }
-    /// nysv�yslause
 
     if (controls_up[number] && player_speed[number] < (1800)) {
 
@@ -1475,79 +1422,11 @@ void do_ai(int number) {
       }
     }
 
-    if (current_mission[number] != AIM_CHASE_PLANE)
-      for (l = 0; l < 16; l++) {
-        if (l == number)
-          continue;
-
-        if (!plane_present[l])
-          continue;
-
-        if (player_sides[number] == player_sides[l])
-          continue;
-
-        if (player_ammo[number] && distance_enemy[l] < AI_ATTACK_DISTANCE) {
-          current_mission[number] = AIM_CHASE_PLANE;
-          mission_target[number] = l;
-        }
-      }
-
-    if ((player_x_8[number] < (120 + ((player_speed[number]) / 40)) &&
-         going_left) ||
-        (player_x_8[number] > (2280 - ((player_speed[number]) / 40)) &&
-         !going_left)) {
-      if ((wide_terrain_level[player_x_8[number]] - (player_y_8[number])) >
-          ((player_y_8[number]) + 15))
-        current_mission[number] = AIM_SPLITS;
-      else
-        current_mission[number] = AIM_IMMELMAN;
-      mission_phase[number] = 0;
-
-    } else if ((player_upsidedown[number] && (!going_left)) ||
-               (!player_upsidedown[number] && (going_left)))
-      if (!player_rolling[number])
-        player_rolling[number] = 1;
-
-    ai_evade_terrain(number);
-
+    ai_look_around(number, distance_enemy);
     break;
 
   case AIM_NOMISSION:
-    if (current_mission[number] != AIM_CHASE_PLANE)
-      for (l = 0; l < 16; l++) {
-        if (l == number)
-          continue;
-
-        if (!plane_present[l])
-          continue;
-
-        if (player_sides[number] == player_sides[l])
-          continue;
-
-        if (player_ammo[number] && distance_enemy[l] < AI_ATTACK_DISTANCE) {
-          current_mission[number] = AIM_CHASE_PLANE;
-          mission_target[number] = l;
-        }
-      }
-
-    if ((player_x_8[number] < (120 + ((player_speed[number]) / 40)) &&
-         going_left) ||
-        (player_x_8[number] > (2280 - ((player_speed[number]) / 40)) &&
-         !going_left)) {
-      if ((wide_terrain_level[player_x_8[number]] - (player_y_8[number])) >
-          ((player_y_8[number]) + 15))
-        current_mission[number] = AIM_SPLITS;
-      else
-        current_mission[number] = AIM_IMMELMAN;
-      mission_phase[number] = 0;
-
-    } else if ((player_upsidedown[number] && (!going_left)) ||
-               (!player_upsidedown[number] && (going_left)))
-      if (!player_rolling[number])
-        player_rolling[number] = 1;
-
-    ai_evade_terrain(number);
-
+    ai_look_around(number, distance_enemy);
     break;
 
   case AIM_EVADE_TERRAIN:

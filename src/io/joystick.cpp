@@ -22,7 +22,7 @@
 #include "sdl_compat.h"
 #include "../settings.h"
 #include "../util/wutil.h"
-#include <SDL/SDL.h>
+#include <SDL3/SDL.h>
 #include <cassert>
 #include <cstdio>
 #include <cstring>
@@ -37,6 +37,25 @@ joystick_configuration joystick_config[5];
 
 SDL_Joystick *joydev[5] = {nullptr, nullptr, nullptr, nullptr, nullptr};
 
+/* Number of attached joysticks. */
+static int num_joysticks() {
+  int count = 0;
+  SDL_JoystickID *ids = SDL_GetJoysticks(&count);
+  SDL_free(ids);
+  return count;
+}
+
+/* Open the joystick with the given device index (0..count-1). */
+static SDL_Joystick *open_joystick(int index) {
+  int count = 0;
+  SDL_Joystick *joy = nullptr;
+  SDL_JoystickID *ids = SDL_GetJoysticks(&count);
+  if (ids && index < count)
+    joy = SDL_OpenJoystick(ids[index]);
+  SDL_free(ids);
+  return joy;
+}
+
 /**
  * Initializes joystick configuration.
  * @return Bitwise or of JOY1X, JOY1Y, JOY2X and JOY2Y as
@@ -48,18 +67,22 @@ short init_joysticks() {
   joystick_config[0].up.n = 1;
   joystick_config[0].up.threshold =
       (Sint16)(32767 * JOYSTICK_THRESHOLD_MULTIPLIER);
+  joystick_config[0].up.threshold_dir = 0; /* active above the threshold */
   joystick_config[0].down.type = 2;
   joystick_config[0].down.n = 1;
   joystick_config[0].down.threshold =
       (Sint16)(-32767 * JOYSTICK_THRESHOLD_MULTIPLIER);
+  joystick_config[0].down.threshold_dir = 1; /* active below the threshold */
   joystick_config[0].power.type = 2;
   joystick_config[0].power.n = 0;
   joystick_config[0].power.threshold =
       (Sint16)(32767 * JOYSTICK_THRESHOLD_MULTIPLIER);
+  joystick_config[0].power.threshold_dir = 0;
   joystick_config[0].brake.type = 2;
   joystick_config[0].brake.n = 0;
   joystick_config[0].brake.threshold =
       (Sint16)(-32767 * JOYSTICK_THRESHOLD_MULTIPLIER);
+  joystick_config[0].brake.threshold_dir = 1;
   joystick_config[0].guns.type = 1;
   joystick_config[0].guns.n = 0;
   joystick_config[0].guns.threshold = 0;
@@ -87,13 +110,13 @@ short init_joysticks() {
   memcpy(&joystick_config[4], &joystick_config[0],
          sizeof(joystick_configuration));
 
-  if (SDL_NumJoysticks() >= 4)
+  if (num_joysticks() >= 4)
     return JOY1 | JOY2 | JOY3 | JOY4;
-  else if (SDL_NumJoysticks() == 3)
+  else if (num_joysticks() == 3)
     return JOY1 | JOY2 | JOY3;
-  else if (SDL_NumJoysticks() == 2)
+  else if (num_joysticks() == 2)
     return JOY1 | JOY2;
-  else if (SDL_NumJoysticks() == 1)
+  else if (num_joysticks() == 1)
     return JOY1;
   else
     return 0;
@@ -109,8 +132,14 @@ int load_joysticks_data(const char *filename) {
   fp = settings_open(filename, "rb");
 
   if (fp != nullptr) {
-    fread(&joystick_config, sizeof(joystick_configuration), 5, fp);
+    joystick_configuration loaded[5];
+    size_t got = fread(loaded, sizeof(joystick_configuration), 5, fp);
     fclose(fp);
+    if (got != 5) {
+      printf("%s is damaged, using the default joystick settings\n", filename);
+      return 0;
+    }
+    memcpy(joystick_config, loaded, sizeof(joystick_config));
     return 1;
   }
 
@@ -123,6 +152,10 @@ int load_joysticks_data(const char *filename) {
 
 void save_joysticks_data(const char *filename) {
   FILE *fp = settings_open(filename, "wb");
+  if (fp == nullptr) {
+    printf("Unable to write joystick data\n");
+    return;
+  }
   fwrite(&joystick_config, sizeof(joystick_configuration), 5, fp);
   fclose(fp);
 }
@@ -133,50 +166,50 @@ void save_joysticks_data(const char *filename) {
  * @param joy2 = 1 if joystick 2 should be opened
  */
 void open_close_joysticks(int joy1, int joy2, int joy3, int joy4) {
-  if (SDL_NumJoysticks() >= 1) {
-    if (!joy1 && SDL_JoystickOpened(0)) {
-      SDL_JoystickClose(joydev[0]);
+  if (num_joysticks() >= 1) {
+    if (!joy1 && (joydev[0] != nullptr)) {
+      SDL_CloseJoystick(joydev[0]);
       joydev[0] = nullptr;
       joydev[4] = nullptr;
     }
-    if (joy1 && !SDL_JoystickOpened(0)) {
-      joydev[0] = joydev[4] = SDL_JoystickOpen(0);
+    if (joy1 && !(joydev[0] != nullptr)) {
+      joydev[0] = joydev[4] = open_joystick(0);
     }
   }
-  if (SDL_NumJoysticks() >= 2) {
-    if (!joy2 && SDL_JoystickOpened(1)) {
-      SDL_JoystickClose(joydev[1]);
+  if (num_joysticks() >= 2) {
+    if (!joy2 && (joydev[1] != nullptr)) {
+      SDL_CloseJoystick(joydev[1]);
       joydev[1] = nullptr;
     }
-    if (joy2 && !SDL_JoystickOpened(1)) {
-      joydev[1] = SDL_JoystickOpen(1);
+    if (joy2 && !(joydev[1] != nullptr)) {
+      joydev[1] = open_joystick(1);
     }
   }
-  if (SDL_NumJoysticks() >= 3) {
-    if (!joy3 && SDL_JoystickOpened(2)) {
-      SDL_JoystickClose(joydev[2]);
+  if (num_joysticks() >= 3) {
+    if (!joy3 && (joydev[2] != nullptr)) {
+      SDL_CloseJoystick(joydev[2]);
       joydev[2] = nullptr;
     }
-    if (joy3 && !SDL_JoystickOpened(2)) {
-      joydev[2] = SDL_JoystickOpen(2);
+    if (joy3 && !(joydev[2] != nullptr)) {
+      joydev[2] = open_joystick(2);
     }
   }
-  if (SDL_NumJoysticks() >= 4) {
-    if (!joy4 && SDL_JoystickOpened(3)) {
-      SDL_JoystickClose(joydev[3]);
+  if (num_joysticks() >= 4) {
+    if (!joy4 && (joydev[3] != nullptr)) {
+      SDL_CloseJoystick(joydev[3]);
       joydev[3] = nullptr;
     }
-    if (joy4 && !SDL_JoystickOpened(3)) {
-      joydev[3] = SDL_JoystickOpen(3);
+    if (joy4 && !(joydev[3] != nullptr)) {
+      joydev[3] = open_joystick(3);
     }
   }
 }
 
 static int is_joystick_action_active(int t, const joystick_action *a) {
   if (a->type == 1) {
-    return SDL_JoystickGetButton(joydev[t], a->n);
+    return SDL_GetJoystickButton(joydev[t], a->n);
   } else if (a->type == 2) {
-    Sint16 v = SDL_JoystickGetAxis(joydev[t], a->n);
+    Sint16 v = SDL_GetJoystickAxis(joydev[t], a->n);
     if (a->threshold_dir == 1) /* upper bound */
       return (v < a->threshold);
     else
@@ -197,20 +230,12 @@ void get_joystick_action(int t, int inmenu, int *down, int *up, int *power,
                          int power_reverse, unsigned char *controls_power2,
                          int in_closing, int *power_break_active) {
   /*
-   * Special joystick actions for hangar menu are disabled here because
-   * they are unintuitive on gamepads and other non-default joystick
-   * configurations. Comment out next line to re-enable.
-   * FIXME perhaps make this a command-line option or something?
+   * The hangar menu once had its own joystick mapping (guns/bombs as
+   * power/roll). It was unintuitive on gamepads and was removed; the menu
+   * uses the flight actions like the keyboard does.
    */
-  inmenu = 0;
-  if (inmenu) {
-    *down = is_joystick_action_active(t, &joystick_config[t].down);
-    *up = is_joystick_action_active(t, &joystick_config[t].up);
-    *power = is_joystick_action_active(t, &joystick_config[t].guns);
-    *roll = is_joystick_action_active(t, &joystick_config[t].bombs);
-    *guns = is_joystick_action_active(t, &joystick_config[t].power);
-    *bombs = is_joystick_action_active(t, &joystick_config[t].brake);
-  } else {
+  (void)inmenu;
+  {
     *roll = is_joystick_action_active(t, &joystick_config[t].roll);
     *guns = is_joystick_action_active(t, &joystick_config[t].guns);
     *bombs = is_joystick_action_active(t, &joystick_config[t].bombs);
@@ -275,18 +300,18 @@ int joystick_has_roll_button(int t) {
 
 /** Allocate enough memory to hold state of axes of given joy. */
 Sint16 *allocate_axis_state(int joy) {
-  return (Sint16 *)util::wutil::walloc(SDL_JoystickNumAxes(joydev[joy]) * sizeof(Sint16));
+  return (Sint16 *)util::wutil::walloc(SDL_GetNumJoystickAxes(joydev[joy]) * sizeof(Sint16));
 }
 
 /** Save state of all axes of a given joystick */
 void save_axis_state(Sint16 *axes, int joy) {
   int i, num;
 
-  num = SDL_JoystickNumAxes(joydev[joy]);
+  num = SDL_GetNumJoystickAxes(joydev[joy]);
   assert(num >= 0);
 
   for (i = 0; i < num; i++) {
-    axes[i] = SDL_JoystickGetAxis(joydev[joy], i);
+    axes[i] = SDL_GetJoystickAxis(joydev[joy], i);
   }
 }
 
@@ -295,7 +320,7 @@ void find_changed_axis(struct joystick_action *act, Sint16 *idle,
                        Sint16 *current, int joy) {
   int i, num, max_index, max_value;
 
-  num = SDL_JoystickNumAxes(joydev[joy]);
+  num = SDL_GetNumJoystickAxes(joydev[joy]);
   assert(num >= 0);
 
   max_index = 0;
@@ -325,11 +350,11 @@ void find_changed_axis(struct joystick_action *act, Sint16 *idle,
 int find_changed_button(struct joystick_action *act, int joy) {
   int i, num;
 
-  num = SDL_JoystickNumButtons(joydev[joy]);
+  num = SDL_GetNumJoystickButtons(joydev[joy]);
   assert(num >= 0);
 
   for (i = 0; i < num; i++) {
-    if (SDL_JoystickGetButton(joydev[joy], i)) {
+    if (SDL_GetJoystickButton(joydev[joy], i)) {
       act->type = 1;
       act->n = i;
       return 1;

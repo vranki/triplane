@@ -29,8 +29,7 @@
 #include "../gfx/gfx.h"
 #include "../io/trip_io.h"
 #include "../util/wutil.h"
-#include <SDL/SDL.h>
-#include <SDL/SDL_endian.h>
+#include <SDL3/SDL.h>
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
@@ -42,13 +41,15 @@ constexpr int32_t MAX_BITMAPS = 8192;
 Bitmap *all_bitmaps[MAX_BITMAPS];
 int all_bitmaps_n = 0;
 
-unsigned char *pointti;
 
 static void all_bitmaps_add(Bitmap *b) {
   if (draw_with_vircr_mode)
     return;
 
-  assert(all_bitmaps_n < MAX_BITMAPS);
+  if (all_bitmaps_n >= MAX_BITMAPS) {
+    fprintf(stderr, "Too many bitmaps (limit %d)\n", MAX_BITMAPS);
+    exit(1);
+  }
   all_bitmaps[all_bitmaps_n++] = b;
 }
 
@@ -75,120 +76,47 @@ void all_bitmaps_refresh() {
     all_bitmaps[i]->refresh_sdlsurface();
 }
 
-/* Make a copy of the image data in source, enlarged zoom times */
-static unsigned char *duplicate_enlarged(const unsigned char *source, int width,
-                                         int height, int zoom) {
-  uint8_t *target = (uint8_t *)util::wutil::walloc(width * height * zoom * zoom);
-  int i, j, k;
-  const uint8_t *in = source;
-  uint8_t *out = target;
-
-  /* optimized versions using 32-bit and 16-bit writes when possible */
-  if (zoom == 4 && sizeof(char *) >= 4) { /* word size >= 4 */
-    uint32_t cccc;
-    for (j = 0; j < height * zoom; j += zoom) {
-      for (i = 0; i < width * zoom; i += zoom) {
-        cccc = *in | (*in << 8) | (*in << 16) | (*in << 24);
-        in++;
-        for (k = 0; k < zoom; k++) {
-          *(uint32_t *)(&out[(j + k) * (width * zoom) + i]) = cccc;
-        }
-      }
-    }
-  } else if (zoom == 3) {
-    uint16_t cc, c;
-    for (j = 0; j < height * zoom; j += zoom) {
-      for (i = 0; i < width * zoom; i += zoom) {
-        c = *in++;
-        cc = c | (c << 8);
-        for (k = 0; k < zoom; k++) {
-          *(uint16_t *)(&out[(j + k) * (width * zoom) + i]) = cc;
-          out[(j + k) * (width * zoom) + i + 2] = c;
-        }
-      }
-    }
-  } else if (zoom == 2) {
-    uint16_t cc;
-    for (j = 0; j < height * zoom; j += zoom) {
-      for (i = 0; i < width * zoom; i += zoom) {
-        cc = *in | (*in << 8);
-        in++;
-        for (k = 0; k < zoom; k++) {
-          *(uint16_t *)(&out[(j + k) * (width * zoom) + i]) = cc;
-        }
-      }
-    }
-  } else { /* unoptimized version */
-    int l;
-    uint8_t c;
-    for (j = 0; j < height * zoom; j += zoom) {
-      for (i = 0; i < width * zoom; i += zoom) {
-        c = *in++;
-        for (k = 0; k < zoom; k++) {
-          for (l = 0; l < zoom; l++) {
-            out[(j + k) * (width * zoom) + (i + l)] = c;
-          }
-        }
-      }
-    }
-  }
-
-  return target;
-}
-
 void Bitmap::refresh_sdlsurface() {
-  unsigned char *imgmult = nullptr;
   SDL_Surface *tmps;
 
   if (sdlsurface != nullptr) {
-    SDL_FreeSurface(sdlsurface);
+    SDL_DestroySurface(sdlsurface);
     sdlsurface = nullptr;
   }
 
   if (draw_with_vircr_mode)
     return; /* sdlsurfaces are not used */
 
-  if (pixel_multiplier > 1) {
-    imgmult = duplicate_enlarged(image_data, width, height, pixel_multiplier);
-    tmps = SDL_CreateRGBSurfaceFrom(imgmult, width * pixel_multiplier,
-                                    height * pixel_multiplier, 8,
-                                    width * pixel_multiplier, 0, 0, 0, 0);
-  } else {
-    tmps = SDL_CreateRGBSurfaceFrom(image_data, width, height, 8, width, 0, 0,
-                                    0, 0);
-  }
+  tmps = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_INDEX8,
+                               image_data, width);
 
   if (tmps == nullptr) {
-    fprintf(stderr, "SDL_CreateRGBSurfaceFrom: %s\n", SDL_GetError());
+    fprintf(stderr, "SDL_CreateSurfaceFrom: %s\n", SDL_GetError());
     exit(1);
   }
-  SDL_SetPalette(tmps, SDL_LOGPAL, curpal, 0, 256);
-  if (hastransparency)
-    SDL_SetColorKey(tmps, SDL_SRCCOLORKEY | SDL_RLEACCEL, 0xff);
-  sdlsurface = SDL_DisplayFormat(tmps);
+  /* share the screen palette so that blits copy indices unchanged */
+  SDL_SetSurfacePalette(tmps, video_state.palette);
+  sdlsurface = SDL_DuplicateSurface(tmps); /* image data may be freed later */
   if (sdlsurface == nullptr) {
-    fprintf(stderr, "SDL_DisplayFormat: %s\n", SDL_GetError());
+    fprintf(stderr, "SDL_DuplicateSurface: %s\n", SDL_GetError());
     exit(1);
   }
 
-  SDL_FreeSurface(tmps);
-  if (pixel_multiplier > 1) {
-      util::wutil::wfree(imgmult);
-  }
+  if (hastransparency)
+    SDL_SetSurfaceColorKey(sdlsurface, true, 0xff);
+  SDL_DestroySurface(tmps);
 }
 
 Bitmap::Bitmap(const char *image_name, int transparent) {
   unsigned int xx, yy, lask, lask2;
-  int laskx;
   uint32_t koko;
   char nimmi[7];
-  char longname[12];
+  char longname[FILENAME_MAX];
   unsigned char *pointteri2;
 
   if (dksopen(image_name) == 0) {
 
-    strcpy(longname, image_name);
-    strcat(longname, ".pgd");
+    snprintf(longname, sizeof(longname), "%s.pgd", image_name);
     dks_faili = fopen(longname, "rb");
 
     if (dks_faili == nullptr) {
@@ -202,9 +130,9 @@ Bitmap::Bitmap(const char *image_name, int transparent) {
   dksread(&koko, sizeof(koko));
   dksread(nimmi, sizeof(nimmi));
 
-  width = SDL_SwapLE16(width);
-  height = SDL_SwapLE16(height);
-  koko = SDL_SwapLE32(koko);
+  width = SDL_Swap16LE(width);
+  height = SDL_Swap16LE(height);
+  koko = SDL_Swap32LE(koko);
 
   xx = width;
   yy = height;
@@ -219,23 +147,22 @@ Bitmap::Bitmap(const char *image_name, int transparent) {
 
   lask = 0;
 
+  /* RLE: a byte above the mark means "repeat the next byte that many times" */
   for (lask2 = 0; lask2 < (koko - 1); lask2++) {
+    unsigned int run = 1;
+    unsigned char value = pointteri2[lask2];
 
-    if (pointteri2[lask2] > RLE_REPETITION_MARK) {
-      for (laskx = 1; laskx <= (pointteri2[lask2] - RLE_REPETITION_MARK);
-           laskx++)
-        image_data[lask + laskx - 1] = pointteri2[lask2 + 1];
+    if (value > RLE_REPETITION_MARK) {
+      run = value - RLE_REPETITION_MARK;
+      value = pointteri2[lask2 + 1];
       lask2++;
-      lask += (laskx - 1);
-    } else {
-      image_data[lask] = pointteri2[lask2];
-      lask++;
     }
-  }
-
-  if ((lask - 1) > (xx * yy)) {
-    printf("Unpacking failure %d %d %s\n", lask, lask2, nimmi);
-    exit(1);
+    if (lask + run > xx * yy) {
+      fprintf(stderr, "Unpacking failure %d %d %s\n", lask, lask2, nimmi);
+      exit(1);
+    }
+    memset(&image_data[lask], value, run);
+    lask += run;
   }
 
   free(pointteri2);
@@ -248,11 +175,11 @@ Bitmap::Bitmap(const char *image_name, int transparent) {
 }
 
 Bitmap::Bitmap(const int width_bitmap, const int height_bitmap, unsigned char *image_data_bitmap,
-               const char *name_bitmap) {
+               const char *name_bitmap, bool owns_data) {
   this->image_data = image_data_bitmap;
   this->width = width_bitmap;
   this->height = height_bitmap;
-  this->external_image_data = 1;
+  this->external_image_data = owns_data ? 0 : 1;
   this->name = name_bitmap;
   this->hastransparency = 1;
   this->sdlsurface = nullptr;
@@ -263,7 +190,7 @@ Bitmap::Bitmap(const int width_bitmap, const int height_bitmap, unsigned char *i
 Bitmap::~Bitmap() {
   all_bitmaps_delete(this);
   if (sdlsurface != nullptr) {
-    SDL_FreeSurface(sdlsurface);
+    SDL_DestroySurface(sdlsurface);
     sdlsurface = nullptr;
   }
   if (!external_image_data)
@@ -273,7 +200,6 @@ Bitmap::~Bitmap() {
 void Bitmap::blit_fullscreen() {
   assert(current_mode == VGA_MODE);
   assert(!hastransparency);
-  pointti = image_data;
 
   if (update_vircr_mode)
     memcpy(vircr, image_data, 320 * 200);
@@ -348,20 +274,12 @@ void Bitmap::blit(int xx, int yy, int rx, int ry, int rx2, int ry2) {
     clip.h = ry2 - ry + 1;
     pos.x = xx;
     pos.y = yy;
-    if (pixel_multiplier > 1) {
-      clip.x *= pixel_multiplier;
-      clip.y *= pixel_multiplier;
-      clip.w *= pixel_multiplier;
-      clip.h *= pixel_multiplier;
-      pos.x *= pixel_multiplier;
-      pos.y *= pixel_multiplier;
-    }
-    SDL_SetClipRect(video_state.surface, &clip);
-    if (SDL_BlitSurface(sdlsurface, nullptr, video_state.surface, &pos) != 0) {
+    SDL_SetSurfaceClipRect(video_state.surface, &clip);
+    if (!SDL_BlitSurface(sdlsurface, nullptr, video_state.surface, &pos)) {
       fprintf(stderr, "SDL_BlitSurface: %s\n", SDL_GetError());
       exit(1);
     }
-    SDL_SetClipRect(video_state.surface, nullptr);
+    SDL_SetSurfaceClipRect(video_state.surface, nullptr);
   }
 }
 
@@ -448,7 +366,7 @@ void Bitmap::blit_to_bitmap(std::unique_ptr<Bitmap>& to, int xx, int yy) {
     to->refresh_sdlsurface();
 }
 
-std::unique_ptr<Bitmap> rotate_bitmap(std::unique_ptr<Bitmap>& picture, int degrees) {
+std::unique_ptr<Bitmap> rotate_bitmap(Bitmap *picture, int degrees) {
     std::unique_ptr<Bitmap> picture2;
     unsigned char *picture_data;
     unsigned char *temp_data;
@@ -467,7 +385,6 @@ std::unique_ptr<Bitmap> rotate_bitmap(std::unique_ptr<Bitmap>& picture, int degr
 
     for (count = 0; count < (nxl * nyl); count++)
         temp_data[count] = 255;
-    picture2 = std::make_unique<Bitmap>(xl, yl, picture_data, "rotated");
 
     for (count = 0; count < xl; count++)
         for (count2 = 0; count2 < yl; count2++)
@@ -488,7 +405,7 @@ std::unique_ptr<Bitmap> rotate_bitmap(std::unique_ptr<Bitmap>& picture, int degr
         }
     free(temp_data);
 
-    picture2->refresh_sdlsurface();
+    picture2 = std::make_unique<Bitmap>(xl, yl, picture_data, "rotated", true);
     return picture2;
 }
 

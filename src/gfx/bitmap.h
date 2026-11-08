@@ -21,7 +21,7 @@
 #ifndef BITMAP_H
 #define BITMAP_H
 
-#include <SDL/SDL.h>
+#include <SDL3/SDL.h>
 #include <cstdint>
 #include <cstdlib>
 #include <memory>
@@ -36,8 +36,9 @@ class Bitmap {
 
 public:
   Bitmap(const char *image_name, int transparent = 1);
+  /* owns_data: free image_data in the destructor */
   Bitmap(int xl, int yl, unsigned char *image_data,
-         const char *name = "unknown");
+         const char *name = "unknown", bool owns_data = false);
   Bitmap(int x1, int y1, int xl, int yl, std::unique_ptr<Bitmap>& source_image);
   Bitmap(int x, int y, int w, int h);
   ~Bitmap();
@@ -51,7 +52,7 @@ public:
 };
 
 void all_bitmaps_refresh();
-std::unique_ptr<Bitmap> rotate_bitmap(std::unique_ptr<Bitmap>& picture, int degrees);
+std::unique_ptr<Bitmap> rotate_bitmap(Bitmap *picture, int degrees);
 int bitmap_exists(const char *name);
 
 #endif
