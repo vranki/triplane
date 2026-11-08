@@ -25,6 +25,7 @@
 
 *******************************************************************************/
 
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -112,7 +113,7 @@ void pakit(int dx, int dy, char inputfile[], char picturename[]) {
       }
       for (lask3 = lask;
            ((*(pointteri + lask3) == *(pointteri + lask)) &&
-            (lask3 < (koko - 1)) && (lask3 - lask) < (255 - RAJA));
+            (lask3 < (unsigned int)(koko - 1)) && (lask3 - lask) < (255 - RAJA));
            lask3++)
         ;
 
