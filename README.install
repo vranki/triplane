@@ -4,17 +4,32 @@ Building from source
 Dependencies
 ------------
 
-* g++
-* SDL 1.2 
-* SDL mixer 1.2
-* GNU make
+* a C++23 compiler (g++ or clang++)
+* CMake 3.24 or newer
+* SDL 3
+* libmikmod (plays the music)
+* pkg-config
+* make (optional, see below)
+
+On macOS with Homebrew:
+
+$ brew install cmake sdl3 libmikmod pkg-config
 
 Build procedure
 ---------------
 
-$ make depend
 $ make
+$ make run
 $ make install
+
+The Makefile is a thin wrapper around CMake. The equivalent CMake
+commands are:
+
+$ cmake -S . -B build
+$ cmake --build build
+$ cmake --install build
+
+The game and fokker.dks end up in build/.
 
 DESTDIR and PREFIX are supported. See doc/mingw32.txt for Windows
 build instructions.

@@ -20,16 +20,12 @@
 
 #include <cstdint>
 
-constexpr int32_t NUMBER_OF_COUNTRIES = 4;
-constexpr int32_t NUMBER_OF_MISSIONS = 6;
 
 constexpr int32_t GERMANY = 0;
 constexpr int32_t FINLAND = 1;
 constexpr int32_t ENGLAND = 2;
 constexpr int32_t JAPAN = 3;
 
-constexpr int32_t TRUE = 1;
-constexpr int32_t FALSE = 0;
 
 constexpr int32_t GERMAN_1 = 0;
 constexpr int32_t FINLAND_1 = 1;
@@ -53,7 +49,6 @@ constexpr int32_t PLANE = 1;
 constexpr int32_t FIGHTER = 2;
 
 constexpr int32_t LEFT = 0;
-constexpr int32_t RIGHT = 1;
 
 extern int player_sides[16];
 

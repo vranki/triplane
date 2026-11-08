@@ -29,7 +29,7 @@
 #include "settings.h"
 #include "world/constants.h"
 #include "gfx/bitmap.h"
-#include <SDL/SDL.h>
+#include <SDL3/SDL.h>
 
 #define DKS_FILENAME "fokker.dks"
 #define CALIBRATION_FILENAME "joystic.dta"
@@ -42,7 +42,8 @@ extern std::unique_ptr<Bitmap> pwon;
 extern std::unique_ptr<Bitmap> pwoff;
 extern std::unique_ptr<Bitmap> picons[4];
 extern std::unique_ptr<Bitmap> plane1;
-extern std::unique_ptr<Bitmap> planes[16][61][4][2];
+/* Players 5-16 share the sprites of players 1-4, so ownership is shared. */
+extern std::shared_ptr<Bitmap> planes[16][61][4][2];
 extern std::unique_ptr<Bitmap> bomb[61];
 extern std::unique_ptr<Bitmap> boards[4];
 extern std::unique_ptr<Bitmap> closed;

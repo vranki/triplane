@@ -19,8 +19,7 @@
  */
 
 #include "io/sound.h"
-#include <SDL/SDL.h>
-#include <SDL/SDL_endian.h>
+#include <SDL3/SDL.h>
 #include <cstdlib>
 #include <cstring>
 #include <sys/stat.h>
@@ -30,7 +29,6 @@
 
 //\\ Keys
 
-Uint8 *key = SDL_GetKeyState(nullptr);
 struct keymap player_keys[4];
 
 //\\ Rosterdata
@@ -110,11 +108,11 @@ FILE *settings_open(const char *filename, const char *mode) {
 void wait_relase() {
   int c = 0;
 
-  while (c != SDLK_LAST) {
+  while (c != TK_LAST) {
     update_key_state();
-    for (c = 0; c < SDLK_LAST; c++)
-      if (key[c] && c != SDLK_NUMLOCK && c != SDLK_CAPSLOCK &&
-          c != SDLK_SCROLLOCK)
+    for (c = 0; c < TK_LAST; c++)
+      if (key[c] && c != TK_NUMLOCK && c != TK_CAPSLOCK &&
+          c != TK_SCROLLOCK)
         break;
   }
 }
@@ -124,18 +122,18 @@ int select_key(int player, int old) {
   int flag = 1;
 
   while (flag) {
-    if (key[SDLK_ESCAPE])
+    if (key[TK_ESCAPE])
       flag = 0;
 
     update_key_state();
 
-    for (c = 0; c < SDLK_LAST; c++)
-      if (key[c] && c != SDLK_NUMLOCK && c != SDLK_CAPSLOCK &&
-          c != SDLK_SCROLLOCK)
+    for (c = 0; c < TK_LAST; c++)
+      if (key[c] && c != TK_NUMLOCK && c != TK_CAPSLOCK &&
+          c != TK_SCROLLOCK)
         break;
 
-    if (c != SDLK_LAST)
-      if ((c != SDLK_ESCAPE) && (c != SDLK_PAUSE)) {
+    if (c != TK_LAST)
+      if ((c != TK_ESCAPE) && (c != TK_PAUSE)) {
         wait_relase();
         return c;
       }
@@ -151,37 +149,37 @@ void swap_roster_endianes() {
   int l, l2, l3;
 
   for (l = 0; l < MAX_PLAYERS_IN_ROSTER; l++) {
-    roster[l].solo_mis_flown = SDL_SwapLE32(roster[l].solo_mis_flown);
-    roster[l].solo_mis_success = SDL_SwapLE32(roster[l].solo_mis_success);
-    roster[l].solo_mis_drops = SDL_SwapLE32(roster[l].solo_mis_drops);
-    roster[l].solo_mis_shotsf = SDL_SwapLE32(roster[l].solo_mis_shotsf);
-    roster[l].solo_mis_shotshit = SDL_SwapLE32(roster[l].solo_mis_shotshit);
-    roster[l].solo_mis_bombs = SDL_SwapLE32(roster[l].solo_mis_bombs);
-    roster[l].solo_mis_bombshit = SDL_SwapLE32(roster[l].solo_mis_bombshit);
-    roster[l].solo_mis_totals = SDL_SwapLE32(roster[l].solo_mis_totals);
-    roster[l].solo_mis_dropped = SDL_SwapLE32(roster[l].solo_mis_dropped);
+    roster[l].solo_mis_flown = SDL_Swap32LE(roster[l].solo_mis_flown);
+    roster[l].solo_mis_success = SDL_Swap32LE(roster[l].solo_mis_success);
+    roster[l].solo_mis_drops = SDL_Swap32LE(roster[l].solo_mis_drops);
+    roster[l].solo_mis_shotsf = SDL_Swap32LE(roster[l].solo_mis_shotsf);
+    roster[l].solo_mis_shotshit = SDL_Swap32LE(roster[l].solo_mis_shotshit);
+    roster[l].solo_mis_bombs = SDL_Swap32LE(roster[l].solo_mis_bombs);
+    roster[l].solo_mis_bombshit = SDL_Swap32LE(roster[l].solo_mis_bombshit);
+    roster[l].solo_mis_totals = SDL_Swap32LE(roster[l].solo_mis_totals);
+    roster[l].solo_mis_dropped = SDL_Swap32LE(roster[l].solo_mis_dropped);
 
     for (l2 = 0; l2 < 4; l2++)
       for (l3 = 0; l3 < 7; l3++)
         roster[l].solo_mis_scores[l2][l3] =
-            SDL_SwapLE32(roster[l].solo_mis_scores[l2][l3]);
+            SDL_Swap32LE(roster[l].solo_mis_scores[l2][l3]);
 
-    roster[l].multi_mis_flown = SDL_SwapLE32(roster[l].multi_mis_flown);
-    roster[l].multi_mis_success = SDL_SwapLE32(roster[l].multi_mis_success);
-    roster[l].multi_mis_drops = SDL_SwapLE32(roster[l].multi_mis_drops);
-    roster[l].multi_mis_shotsf = SDL_SwapLE32(roster[l].multi_mis_shotsf);
-    roster[l].multi_mis_shotshit = SDL_SwapLE32(roster[l].multi_mis_shotshit);
-    roster[l].multi_mis_bombs = SDL_SwapLE32(roster[l].multi_mis_bombs);
-    roster[l].multi_mis_bombshit = SDL_SwapLE32(roster[l].multi_mis_bombshit);
-    roster[l].multi_mis_totals = SDL_SwapLE32(roster[l].multi_mis_totals);
-    roster[l].multi_mis_dropped = SDL_SwapLE32(roster[l].multi_mis_dropped);
+    roster[l].multi_mis_flown = SDL_Swap32LE(roster[l].multi_mis_flown);
+    roster[l].multi_mis_success = SDL_Swap32LE(roster[l].multi_mis_success);
+    roster[l].multi_mis_drops = SDL_Swap32LE(roster[l].multi_mis_drops);
+    roster[l].multi_mis_shotsf = SDL_Swap32LE(roster[l].multi_mis_shotsf);
+    roster[l].multi_mis_shotshit = SDL_Swap32LE(roster[l].multi_mis_shotshit);
+    roster[l].multi_mis_bombs = SDL_Swap32LE(roster[l].multi_mis_bombs);
+    roster[l].multi_mis_bombshit = SDL_Swap32LE(roster[l].multi_mis_bombshit);
+    roster[l].multi_mis_totals = SDL_Swap32LE(roster[l].multi_mis_totals);
+    roster[l].multi_mis_dropped = SDL_Swap32LE(roster[l].multi_mis_dropped);
 
-    roster[l].up = SDL_SwapLE32(roster[l].up);
-    roster[l].down = SDL_SwapLE32(roster[l].down);
-    roster[l].roll = SDL_SwapLE32(roster[l].roll);
-    roster[l].power = SDL_SwapLE32(roster[l].power);
-    roster[l].guns = SDL_SwapLE32(roster[l].guns);
-    roster[l].bombs = SDL_SwapLE32(roster[l].bombs);
+    roster[l].up = SDL_Swap32LE(roster[l].up);
+    roster[l].down = SDL_Swap32LE(roster[l].down);
+    roster[l].roll = SDL_Swap32LE(roster[l].roll);
+    roster[l].power = SDL_Swap32LE(roster[l].power);
+    roster[l].guns = SDL_Swap32LE(roster[l].guns);
+    roster[l].bombs = SDL_Swap32LE(roster[l].bombs);
   }
 }
 
@@ -216,12 +214,12 @@ void convert_dos_roster(struct dos_roster *droster) {
     roster[l].multi_mis_totals = droster[l].multi_mis_totals;
     roster[l].multi_mis_dropped = droster[l].multi_mis_dropped;
 
-    roster[l].up = SDLK_x;
-    roster[l].down = SDLK_w;
-    roster[l].roll = SDLK_s;
-    roster[l].power = SDLK_TAB;
-    roster[l].guns = SDLK_2;
-    roster[l].bombs = SDLK_1;
+    roster[l].up = TK_x;
+    roster[l].down = TK_w;
+    roster[l].roll = TK_s;
+    roster[l].power = TK_TAB;
+    roster[l].guns = TK_2;
+    roster[l].bombs = TK_1;
   }
 }
 
@@ -229,12 +227,12 @@ void swap_keyset_endianes() {
   int i;
 
   for (i = 0; i < 4; i++) {
-    player_keys[i].up = SDL_SwapLE32(player_keys[i].up);
-    player_keys[i].down = SDL_SwapLE32(player_keys[i].down);
-    player_keys[i].roll = SDL_SwapLE32(player_keys[i].roll);
-    player_keys[i].power = SDL_SwapLE32(player_keys[i].power);
-    player_keys[i].guns = SDL_SwapLE32(player_keys[i].guns);
-    player_keys[i].bombs = SDL_SwapLE32(player_keys[i].bombs);
+    player_keys[i].up = SDL_Swap32LE(player_keys[i].up);
+    player_keys[i].down = SDL_Swap32LE(player_keys[i].down);
+    player_keys[i].roll = SDL_Swap32LE(player_keys[i].roll);
+    player_keys[i].power = SDL_Swap32LE(player_keys[i].power);
+    player_keys[i].guns = SDL_Swap32LE(player_keys[i].guns);
+    player_keys[i].bombs = SDL_Swap32LE(player_keys[i].bombs);
   }
 }
 
@@ -256,33 +254,33 @@ void load_keyset() {
   FILE *faili;
 
   if ((faili = settings_open("keyset.dta", "rb")) == nullptr) {
-    player_keys[0].up = SDLK_x;
-    player_keys[0].down = SDLK_w;
-    player_keys[0].roll = SDLK_s;
-    player_keys[0].power = SDLK_TAB;
-    player_keys[0].guns = SDLK_2;
-    player_keys[0].bombs = SDLK_1;
+    player_keys[0].up = TK_x;
+    player_keys[0].down = TK_w;
+    player_keys[0].roll = TK_s;
+    player_keys[0].power = TK_TAB;
+    player_keys[0].guns = TK_2;
+    player_keys[0].bombs = TK_1;
 
-    player_keys[2].up = SDLK_v;
-    player_keys[2].down = SDLK_t;
-    player_keys[2].roll = SDLK_g;
-    player_keys[2].power = SDLK_j;
-    player_keys[2].guns = SDLK_h;
-    player_keys[2].bombs = SDLK_y;
+    player_keys[2].up = TK_v;
+    player_keys[2].down = TK_t;
+    player_keys[2].roll = TK_g;
+    player_keys[2].power = TK_j;
+    player_keys[2].guns = TK_h;
+    player_keys[2].bombs = TK_y;
 
-    player_keys[3].up = SDLK_COMMA;
-    player_keys[3].down = SDLK_o;
-    player_keys[3].roll = SDLK_l;
+    player_keys[3].up = TK_COMMA;
+    player_keys[3].down = TK_o;
+    player_keys[3].roll = TK_l;
     player_keys[3].power = 40;
     player_keys[3].guns = 39;
-    player_keys[3].bombs = SDLK_p;
+    player_keys[3].bombs = TK_p;
 
-    player_keys[1].up = SDLK_DOWN;
-    player_keys[1].down = SDLK_UP;
-    player_keys[1].roll = SDLK_KP5;
-    player_keys[1].power = SDLK_KP_PLUS;
-    player_keys[1].guns = SDLK_HOME;
-    player_keys[1].bombs = SDLK_LEFT;
+    player_keys[1].up = TK_DOWN;
+    player_keys[1].down = TK_UP;
+    player_keys[1].roll = TK_KP5;
+    player_keys[1].power = TK_KP_PLUS;
+    player_keys[1].guns = TK_HOME;
+    player_keys[1].bombs = TK_LEFT;
 
     save_keyset();
   } else {
@@ -328,12 +326,12 @@ void load_roster() {
       roster[l].multi_mis_totals = 0;
       roster[l].multi_mis_dropped = 0;
 
-      roster[l].up = SDLK_x;
-      roster[l].down = SDLK_w;
-      roster[l].roll = SDLK_s;
-      roster[l].power = SDLK_TAB;
-      roster[l].guns = SDLK_2;
-      roster[l].bombs = SDLK_1;
+      roster[l].up = TK_x;
+      roster[l].down = TK_w;
+      roster[l].roll = TK_s;
+      roster[l].power = TK_TAB;
+      roster[l].guns = TK_2;
+      roster[l].bombs = TK_1;
     }
 
     swap_roster_endianes();
@@ -354,8 +352,8 @@ void load_roster() {
         printf("failed to read roster.dta header\n");
         exit(1);
       }
-      hdr.magic = SDL_SwapLE32(hdr.magic);
-      hdr.version = SDL_SwapLE32(hdr.version);
+      hdr.magic = SDL_Swap32LE(hdr.magic);
+      hdr.version = SDL_Swap32LE(hdr.version);
       if (hdr.magic != ROSTERI_MAGIC) {
         printf("invalid roster.dta magic %08x, expected %08x\n", hdr.magic,
                ROSTERI_MAGIC);
@@ -386,8 +384,8 @@ void save_roster() {
 
   {
     struct rosteri_header hdr;
-    hdr.magic = SDL_SwapLE32(ROSTERI_MAGIC);
-    hdr.version = SDL_SwapLE32(ROSTERI_VERSION);
+    hdr.magic = SDL_Swap32LE(ROSTERI_MAGIC);
+    hdr.version = SDL_Swap32LE(ROSTERI_VERSION);
     fwrite(&hdr, sizeof(hdr), 1, faili);
   }
   swap_roster_endianes();
@@ -398,52 +396,52 @@ void save_roster() {
 
 void swap_config_endianes() {
   int i;
-  config.current_multilevel = SDL_SwapLE32(config.current_multilevel);
+  config.current_multilevel = SDL_Swap32LE(config.current_multilevel);
   for (i = 0; i < 4; i++) {
-    config.player_type[i] = SDL_SwapLE32(config.player_type[i]);
-    config.player_number[i] = SDL_SwapLE32(config.player_number[i]);
-    config.plane_count[i] = SDL_SwapLE32(config.plane_count[i]);
+    config.player_type[i] = SDL_Swap32LE(config.player_type[i]);
+    config.player_number[i] = SDL_Swap32LE(config.player_number[i]);
+    config.plane_count[i] = SDL_Swap32LE(config.plane_count[i]);
   }
 
   // Graphics
-  config.shots_visible = SDL_SwapLE32(config.shots_visible);
-  config.it_shots_visible = SDL_SwapLE32(config.it_shots_visible);
-  config.aa_mg_shots_visible = SDL_SwapLE32(config.aa_mg_shots_visible);
-  config.flags = SDL_SwapLE32(config.flags);
-  config.flames = SDL_SwapLE32(config.flames);
-  config.structure_smoke = SDL_SwapLE32(config.structure_smoke);
-  config.svga = SDL_SwapLE32(config.svga);
+  config.shots_visible = SDL_Swap32LE(config.shots_visible);
+  config.it_shots_visible = SDL_Swap32LE(config.it_shots_visible);
+  config.aa_mg_shots_visible = SDL_Swap32LE(config.aa_mg_shots_visible);
+  config.flags = SDL_Swap32LE(config.flags);
+  config.flames = SDL_Swap32LE(config.flames);
+  config.structure_smoke = SDL_Swap32LE(config.structure_smoke);
+  config.svga = SDL_Swap32LE(config.svga);
 
   // Audio
-  config.sound_on = SDL_SwapLE32(config.sound_on);
-  config.music_on = SDL_SwapLE32(config.music_on);
-  config.sfx_on = SDL_SwapLE32(config.sfx_on);
-  config.explosion_sounds = SDL_SwapLE32(config.explosion_sounds);
-  config.gunshot_sounds = SDL_SwapLE32(config.gunshot_sounds);
-  config.ground_i_sounds = SDL_SwapLE32(config.ground_i_sounds);
-  config.explosion_sounds = SDL_SwapLE32(config.explosion_sounds);
-  config.splash = SDL_SwapLE32(config.splash);
-  config.infantry_sounds = SDL_SwapLE32(config.infantry_sounds);
+  config.sound_on = SDL_Swap32LE(config.sound_on);
+  config.music_on = SDL_Swap32LE(config.music_on);
+  config.sfx_on = SDL_Swap32LE(config.sfx_on);
+  config.explosion_sounds = SDL_Swap32LE(config.explosion_sounds);
+  config.gunshot_sounds = SDL_Swap32LE(config.gunshot_sounds);
+  config.ground_i_sounds = SDL_Swap32LE(config.ground_i_sounds);
+  config.explosion_sounds = SDL_Swap32LE(config.explosion_sounds);
+  config.splash = SDL_Swap32LE(config.splash);
+  config.infantry_sounds = SDL_Swap32LE(config.infantry_sounds);
 
   // General Flying
-  config.poweronoff = SDL_SwapLE32(config.poweronoff);
-  config.powerrev = SDL_SwapLE32(config.powerrev);
+  config.poweronoff = SDL_Swap32LE(config.poweronoff);
+  config.powerrev = SDL_Swap32LE(config.powerrev);
 
   // Multiplayer Game
-  config.all_planes_are = SDL_SwapLE32(config.all_planes_are);
-  config.nocollision = SDL_SwapLE32(config.nocollision);
-  config.partcollision = SDL_SwapLE32(config.partcollision);
-  config.stop = SDL_SwapLE32(config.stop);
-  config.alliance = SDL_SwapLE32(config.alliance);
-  config.aa_mgs = SDL_SwapLE32(config.aa_mgs);
-  config.it_guns = SDL_SwapLE32(config.it_guns);
-  config.infantry = SDL_SwapLE32(config.infantry);
-  config.unlimited_ammo = SDL_SwapLE32(config.unlimited_ammo);
-  config.unlimited_gas = SDL_SwapLE32(config.unlimited_gas);
+  config.all_planes_are = SDL_Swap32LE(config.all_planes_are);
+  config.nocollision = SDL_Swap32LE(config.nocollision);
+  config.partcollision = SDL_Swap32LE(config.partcollision);
+  config.stop = SDL_Swap32LE(config.stop);
+  config.alliance = SDL_Swap32LE(config.alliance);
+  config.aa_mgs = SDL_Swap32LE(config.aa_mgs);
+  config.it_guns = SDL_Swap32LE(config.it_guns);
+  config.infantry = SDL_Swap32LE(config.infantry);
+  config.unlimited_ammo = SDL_Swap32LE(config.unlimited_ammo);
+  config.unlimited_gas = SDL_Swap32LE(config.unlimited_gas);
 
   for (i = 0; i < 5; i++) {
-    config.joystick[i] = SDL_SwapLE32(config.joystick[i]);
-    config.joystick_calibrated[i] = SDL_SwapLE32(config.joystick_calibrated[i]);
+    config.joystick[i] = SDL_Swap32LE(config.joystick[i]);
+    config.joystick_calibrated[i] = SDL_Swap32LE(config.joystick_calibrated[i]);
   }
 }
 

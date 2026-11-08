@@ -21,7 +21,7 @@
 #ifndef BITMAP_H
 #define BITMAP_H
 
-#include <SDL/SDL.h>
+#include <SDL3/SDL.h>
 #include <cstdint>
 #include <cstdlib>
 #include <memory>
@@ -51,7 +51,7 @@ public:
 };
 
 void all_bitmaps_refresh();
-std::unique_ptr<Bitmap> rotate_bitmap(std::unique_ptr<Bitmap>& picture, int degrees);
+std::unique_ptr<Bitmap> rotate_bitmap(Bitmap *picture, int degrees);
 int bitmap_exists(const char *name);
 
 #endif

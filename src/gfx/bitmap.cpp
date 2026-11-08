@@ -29,8 +29,7 @@
 #include "../gfx/gfx.h"
 #include "../io/trip_io.h"
 #include "../util/wutil.h"
-#include <SDL/SDL.h>
-#include <SDL/SDL_endian.h>
+#include <SDL3/SDL.h>
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
@@ -141,7 +140,7 @@ void Bitmap::refresh_sdlsurface() {
   SDL_Surface *tmps;
 
   if (sdlsurface != nullptr) {
-    SDL_FreeSurface(sdlsurface);
+    SDL_DestroySurface(sdlsurface);
     sdlsurface = nullptr;
   }
 
@@ -150,28 +149,30 @@ void Bitmap::refresh_sdlsurface() {
 
   if (pixel_multiplier > 1) {
     imgmult = duplicate_enlarged(image_data, width, height, pixel_multiplier);
-    tmps = SDL_CreateRGBSurfaceFrom(imgmult, width * pixel_multiplier,
-                                    height * pixel_multiplier, 8,
-                                    width * pixel_multiplier, 0, 0, 0, 0);
+    tmps = SDL_CreateSurfaceFrom(width * pixel_multiplier,
+                                 height * pixel_multiplier,
+                                 SDL_PIXELFORMAT_INDEX8, imgmult,
+                                 width * pixel_multiplier);
   } else {
-    tmps = SDL_CreateRGBSurfaceFrom(image_data, width, height, 8, width, 0, 0,
-                                    0, 0);
+    tmps = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_INDEX8,
+                                 image_data, width);
   }
 
   if (tmps == nullptr) {
-    fprintf(stderr, "SDL_CreateRGBSurfaceFrom: %s\n", SDL_GetError());
+    fprintf(stderr, "SDL_CreateSurfaceFrom: %s\n", SDL_GetError());
     exit(1);
   }
-  SDL_SetPalette(tmps, SDL_LOGPAL, curpal, 0, 256);
-  if (hastransparency)
-    SDL_SetColorKey(tmps, SDL_SRCCOLORKEY | SDL_RLEACCEL, 0xff);
-  sdlsurface = SDL_DisplayFormat(tmps);
+  /* share the screen palette so that blits copy indices unchanged */
+  SDL_SetSurfacePalette(tmps, video_state.palette);
+  sdlsurface = SDL_DuplicateSurface(tmps); /* image data may be freed later */
   if (sdlsurface == nullptr) {
-    fprintf(stderr, "SDL_DisplayFormat: %s\n", SDL_GetError());
+    fprintf(stderr, "SDL_DuplicateSurface: %s\n", SDL_GetError());
     exit(1);
   }
 
-  SDL_FreeSurface(tmps);
+  if (hastransparency)
+    SDL_SetSurfaceColorKey(sdlsurface, true, 0xff);
+  SDL_DestroySurface(tmps);
   if (pixel_multiplier > 1) {
       util::wutil::wfree(imgmult);
   }
@@ -202,9 +203,9 @@ Bitmap::Bitmap(const char *image_name, int transparent) {
   dksread(&koko, sizeof(koko));
   dksread(nimmi, sizeof(nimmi));
 
-  width = SDL_SwapLE16(width);
-  height = SDL_SwapLE16(height);
-  koko = SDL_SwapLE32(koko);
+  width = SDL_Swap16LE(width);
+  height = SDL_Swap16LE(height);
+  koko = SDL_Swap32LE(koko);
 
   xx = width;
   yy = height;
@@ -263,7 +264,7 @@ Bitmap::Bitmap(const int width_bitmap, const int height_bitmap, unsigned char *i
 Bitmap::~Bitmap() {
   all_bitmaps_delete(this);
   if (sdlsurface != nullptr) {
-    SDL_FreeSurface(sdlsurface);
+    SDL_DestroySurface(sdlsurface);
     sdlsurface = nullptr;
   }
   if (!external_image_data)
@@ -356,12 +357,12 @@ void Bitmap::blit(int xx, int yy, int rx, int ry, int rx2, int ry2) {
       pos.x *= pixel_multiplier;
       pos.y *= pixel_multiplier;
     }
-    SDL_SetClipRect(video_state.surface, &clip);
-    if (SDL_BlitSurface(sdlsurface, nullptr, video_state.surface, &pos) != 0) {
+    SDL_SetSurfaceClipRect(video_state.surface, &clip);
+    if (!SDL_BlitSurface(sdlsurface, nullptr, video_state.surface, &pos)) {
       fprintf(stderr, "SDL_BlitSurface: %s\n", SDL_GetError());
       exit(1);
     }
-    SDL_SetClipRect(video_state.surface, nullptr);
+    SDL_SetSurfaceClipRect(video_state.surface, nullptr);
   }
 }
 
@@ -448,7 +449,7 @@ void Bitmap::blit_to_bitmap(std::unique_ptr<Bitmap>& to, int xx, int yy) {
     to->refresh_sdlsurface();
 }
 
-std::unique_ptr<Bitmap> rotate_bitmap(std::unique_ptr<Bitmap>& picture, int degrees) {
+std::unique_ptr<Bitmap> rotate_bitmap(Bitmap *picture, int degrees) {
     std::unique_ptr<Bitmap> picture2;
     unsigned char *picture_data;
     unsigned char *temp_data;

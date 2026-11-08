@@ -20,7 +20,6 @@
 
 #include "video.h"
 
-#include <SDL/SDL.h>
 #include <cassert>
 #include <csignal>
 #include <unistd.h>
@@ -28,7 +27,7 @@
 #include "dksfile.h"
 #include "../util/wutil.h"
 
-struct video_state_t video_state = {nullptr, 0, 0};
+struct video_state_t video_state;
 
 struct naytto ruutu;
 
@@ -74,25 +73,15 @@ void setpal_range(const char pal[][3], int firstcolor, int n, int reverse) {
       from++;
   }
 
-  if (draw_with_vircr_mode) {
-    SDL_SetPalette(video_state.surface,
-                   video_state.haverealpalette ? SDL_PHYSPAL : SDL_LOGPAL, cc,
-                   firstcolor, n);
-  } else {
-    SDL_SetPalette(video_state.surface, SDL_PHYSPAL | SDL_LOGPAL, cc,
-                   firstcolor, n);
-  }
+  for (i = 0; i < n; i++)
+    cc[i].a = SDL_ALPHA_OPAQUE;
+  if (video_state.palette)
+    SDL_SetPaletteColors(video_state.palette, cc, firstcolor, n);
   memcpy(&curpal[firstcolor], cc, n * sizeof(SDL_Color));
   util::wutil::wfree(cc);
 }
 
-static Uint32 getcolor(unsigned char c) {
-  if (video_state.haverealpalette)
-    return c;
-  else
-    return SDL_MapRGB(video_state.surface->format, curpal[c].r, curpal[c].g,
-                      curpal[c].b);
-}
+static Uint32 getcolor(unsigned char c) { return c; }
 
 void fillrect(const int x, const int y, const int w, const int h, const int c) {
   SDL_Rect r;
@@ -106,7 +95,34 @@ void fillrect(const int x, const int y, const int w, const int h, const int c) {
     r.w *= pixel_multiplier;
     r.h *= pixel_multiplier;
   }
-  SDL_FillRect(video_state.surface, &r, getcolor(c));
+  SDL_FillSurfaceRect(video_state.surface, &r, getcolor(c));
+}
+
+/* Convert the paletted frame buffer to RGB and show it. */
+static void present_frame() {
+  SDL_Surface *src = video_state.surface;
+  void *pixels;
+  int pitch;
+  Uint32 lut[256];
+
+  for (int i = 0; i < 256; i++)
+    lut[i] = 0xff000000u | ((Uint32)curpal[i].r << 16) |
+             ((Uint32)curpal[i].g << 8) | (Uint32)curpal[i].b;
+
+  if (SDL_LockTexture(video_state.texture, nullptr, &pixels, &pitch)) {
+    for (int y = 0; y < src->h; y++) {
+      const uint8_t *in = (const uint8_t *)src->pixels + y * src->pitch;
+      Uint32 *out = (Uint32 *)((uint8_t *)pixels + y * pitch);
+      for (int x = 0; x < src->w; x++)
+        out[x] = lut[in[x]];
+    }
+    SDL_UnlockTexture(video_state.texture);
+  }
+
+  SDL_SetRenderDrawColor(video_state.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+  SDL_RenderClear(video_state.renderer);
+  SDL_RenderTexture(video_state.renderer, video_state.texture, nullptr, nullptr);
+  SDL_RenderPresent(video_state.renderer);
 }
 
 void do_all(int /*do_retrace*/) {
@@ -168,30 +184,36 @@ void do_all(int /*do_retrace*/) {
     }
   }
 
-  SDL_Flip(video_state.surface);
+  present_frame();
 }
 
 static void sigint_handler(int /*dummy*/) { _exit(1); }
 
 void init_video() {
-  int ret;
-
   if (!video_state.init_done) {
-    ret = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK |
-                   SDL_INIT_NOPARACHUTE);
-    if (ret) {
-      fprintf(stderr,
-              "SDL_Init failed with %d. Is your DISPLAY environment variable "
-              "set?\n",
-              ret);
+    SDL_SetAppMetadata("Triplane Classic", TRIPLANE_VERSION,
+                       "fi.iki.triplane");
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)) {
+      fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
       exit(1);
     }
     signal(SIGINT, sigint_handler);
     atexit(SDL_Quit);
     video_state.init_done = 1;
 
-    SDL_WM_SetCaption("Triplane Classic", "Triplane Classic");
-    SDL_ShowCursor(SDL_DISABLE);
+    if (!SDL_CreateWindowAndRenderer("Triplane Classic", 960, 600,
+                                     SDL_WINDOW_RESIZABLE |
+                                         (wantfullscreen ? SDL_WINDOW_FULLSCREEN
+                                                         : 0),
+                                     &video_state.window,
+                                     &video_state.renderer)) {
+      fprintf(stderr, "SDL_CreateWindowAndRenderer: %s\n", SDL_GetError());
+      exit(1);
+    }
+    SDL_HideCursor();
+
+    video_state.palette = SDL_CreatePalette(256);
+    assert(video_state.palette);
 
     if (!draw_with_vircr_mode) {
       vircr = (unsigned char *)util::wutil::walloc(screen_width * screen_height);
@@ -200,20 +222,11 @@ void init_video() {
 }
 
 static int init_mode(int new_mode, const char *paletname) {
-  Uint32 mode_flags;
-  const SDL_VideoInfo *vi;
   int las, las2;
   int w = (new_mode == SVGA_MODE) ? screen_width : 320;
   int h = (new_mode == SVGA_MODE) ? screen_height : 200;
 
   init_video();
-
-  mode_flags = SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_HWPALETTE;
-
-  if (!draw_with_vircr_mode)
-    mode_flags |= SDL_ANYFORMAT;
-  if (wantfullscreen)
-    mode_flags |= SDL_FULLSCREEN;
 
   if (draw_with_vircr_mode && pixel_multiplier > 1)
       util::wutil::wfree(vircr);
@@ -221,9 +234,33 @@ static int init_mode(int new_mode, const char *paletname) {
   pixel_multiplier =
       (new_mode == SVGA_MODE) ? pixel_multiplier_svga : pixel_multiplier_vga;
 
-  video_state.surface = SDL_SetVideoMode(w * pixel_multiplier,
-                                         h * pixel_multiplier, 8, mode_flags);
+  int sw = w * pixel_multiplier, sh = h * pixel_multiplier;
+
+  if (video_state.surface)
+    SDL_DestroySurface(video_state.surface);
+  video_state.surface = SDL_CreateSurface(sw, sh, SDL_PIXELFORMAT_INDEX8);
   assert(video_state.surface);
+  SDL_SetSurfacePalette(video_state.surface, video_state.palette);
+  /* the game writes to vircr directly, so the pitch must equal the width */
+  assert(video_state.surface->pitch == sw);
+
+  if (video_state.texture)
+    SDL_DestroyTexture(video_state.texture);
+  video_state.texture =
+      SDL_CreateTexture(video_state.renderer, SDL_PIXELFORMAT_XRGB8888,
+                        SDL_TEXTUREACCESS_STREAMING, sw, sh);
+  assert(video_state.texture);
+  SDL_SetTextureScaleMode(video_state.texture, SDL_SCALEMODE_NEAREST);
+  SDL_SetRenderLogicalPresentation(video_state.renderer, sw, sh,
+                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+  if (!wantfullscreen) {
+    /* Show low resolution modes at a usable size, like 3x for 320x200. */
+    int scale = 1;
+    while (sw * (scale + 1) <= 1280 && sh * (scale + 1) <= 800)
+      scale++;
+    SDL_SetWindowSize(video_state.window, sw * scale, sh * scale);
+  }
 
   if (draw_with_vircr_mode) {
     if (pixel_multiplier > 1) {
@@ -233,8 +270,7 @@ static int init_mode(int new_mode, const char *paletname) {
     }
   }
   /* else vircr is preallocated in init_video */
-  vi = SDL_GetVideoInfo();
-  video_state.haverealpalette = (vi->vfmt->palette != nullptr);
+  video_state.haverealpalette = 1;
 
   dksopen(paletname);
 

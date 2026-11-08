@@ -26,7 +26,7 @@
 constexpr int32_t VGA_MODE = 0;
 constexpr int32_t SVGA_MODE = 1;
 
-#include <SDL/SDL.h>
+#include <SDL3/SDL.h>
 #include <memory>
 #include "../gfx/bitmap.h"
 #include "../gfx/gfx.h"
@@ -40,7 +40,11 @@ struct naytto {
 extern naytto ruutu;
 
 struct video_state_t {
-  SDL_Surface *surface{};
+  SDL_Surface *surface{};   /* 8-bit paletted frame buffer */
+  SDL_Palette *palette{};   /* palette shared by the frame buffer and bitmaps */
+  SDL_Window *window{};
+  SDL_Renderer *renderer{};
+  SDL_Texture *texture{};
   int init_done{};
   int haverealpalette{};
 };

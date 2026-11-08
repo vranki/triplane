@@ -39,8 +39,7 @@ constexpr int32_t SUB_VERSION = 3;
 #include "world/tmexept.h"
 #include "world/tripaudio.h"
 #include "world/tripai.h"
-#include <SDL/SDL.h>
-#include <SDL/SDL_endian.h>
+#include <SDL3/SDL.h>
 #include <cstdint>
 #include <cstring>
 #include <ctime>
@@ -57,7 +56,7 @@ std::unique_ptr<Bitmap> pwon;
 std::unique_ptr<Bitmap> pwoff;
 std::unique_ptr<Bitmap> picons[4];
 std::unique_ptr<Bitmap> plane1;
-std::unique_ptr<Bitmap> planes[16][61][4][2];
+std::shared_ptr<Bitmap> planes[16][61][4][2];
 std::unique_ptr<Bitmap> bomb[61];
 std::unique_ptr<Bitmap> boards[4];
 std::unique_ptr<Bitmap> closed;
@@ -430,7 +429,7 @@ char struct_names[NUMBER_OF_STRUCT_NAMES * 2][7] = {
 static void record_random_swap_endianess() {
   int i;
   for (i = 0; i < 24 * 1280; i++) {
-    record_random[i] = SDL_SwapLE32(record_random[i]);
+    record_random[i] = SDL_Swap32LE(record_random[i]);
   }
 }
 
@@ -1637,17 +1636,17 @@ void main_engine() {
   while (flag) {
     update_key_state();
 
-    if (key[SDLK_PAUSE]) {
+    if (key[TK_PAUSE]) {
       // wait until pause key is released, then pressed and released again
-      while (key[SDLK_PAUSE]) { // still pressed
+      while (key[TK_PAUSE]) { // still pressed
         io::timing::nopeuskontrolli();
         update_key_state();
       }
-      while (!key[SDLK_PAUSE]) { // released
+      while (!key[TK_PAUSE]) { // released
         io::timing::nopeuskontrolli();
         update_key_state();
       }
-      while (key[SDLK_PAUSE]) { // pressed again
+      while (key[TK_PAUSE]) { // pressed again
         io::timing::nopeuskontrolli();
         update_key_state();
       }
@@ -1655,23 +1654,23 @@ void main_engine() {
     // use F4 as an alias for the Pause key
     // because Pause does not always work reliably
     // (and is not present on all keyboards)
-    if (key[SDLK_F4]) {
+    if (key[TK_F4]) {
       // wait until F4 is released, then pressed and released again
-      while (key[SDLK_F4]) { // still pressed
+      while (key[TK_F4]) { // still pressed
         io::timing::nopeuskontrolli();
         update_key_state();
       }
-      while (!key[SDLK_F4]) { // released
+      while (!key[TK_F4]) { // released
         io::timing::nopeuskontrolli();
         update_key_state();
       }
-      while (key[SDLK_F4]) { // pressed again
+      while (key[TK_F4]) { // pressed again
         io::timing::nopeuskontrolli();
         update_key_state();
       }
     }
 
-    if (key[SDLK_ESCAPE]) {
+    if (key[TK_ESCAPE]) {
       flag = 0;
       mission_interrupted = 1;
     }
@@ -1771,7 +1770,7 @@ void main_engine() {
         if (!solo_dest_remaining) { solo_success = 1; }
       }
 
-      if (key[SDLK_F1] && key[SDLK_F2] && key[SDLK_F3]) {
+      if (key[TK_F1] && key[TK_F2] && key[TK_F3]) {
         frost->printf(40, 40, "SoloDestRemaining: %d. l=%d\n",
                       solo_dest_remaining, l);
       }
@@ -2570,7 +2569,7 @@ void load_up() {
     bomb[0] = std::make_unique<Bitmap>("BOMB");
 
     for (l = 1; l < 61; l++) {
-      bomb[l] = rotate_bitmap(bomb[0], l * 6);
+      bomb[l] = rotate_bitmap(bomb[0].get(), l * 6);
     }
 
     loading_text("Loading main planepicture.");
@@ -2583,7 +2582,7 @@ void load_up() {
                 std::make_unique<Bitmap>(1 + l3 * 21, 1 + l2 * 21, 20, 20, plane1);
         plane_p[l2][0][l3][0] = planes[l2][0][l3][0]->info(&xxx, &yyy);
         for (l = 1; l < 16; l++) {
-          planes[l2][l][l3][0] = rotate_bitmap(planes[l2][0][l3][0], l * 6);
+          planes[l2][l][l3][0] = rotate_bitmap(planes[l2][0][l3][0].get(), l * 6);
           plane_p[l2][l][l3][0] = planes[l2][l][l3][0]->info(&xxx, &yyy);
         }
       }
@@ -2594,7 +2593,7 @@ void load_up() {
                 std::make_unique<Bitmap>(1 + l3 * 21, 1 + l2 * 21, 20, 20, plane1);
         plane_p[l2][0][l3][0] = planes[l2][0][l3][0]->info(&xxx, &yyy);
         for (l = 45; l < 60; l++) {
-          planes[l2][l][l3][0] = rotate_bitmap(planes[l2][0][l3][0], l * 6);
+          planes[l2][l][l3][0] = rotate_bitmap(planes[l2][0][l3][0].get(), l * 6);
           plane_p[l2][l][l3][0] = planes[l2][l][l3][0]->info(&xxx, &yyy);
         }
       }
@@ -2699,18 +2698,18 @@ void load_up() {
           plane_p[14][l][l2][l3] = plane_p[3][l][l2][l3];
           plane_p[15][l][l2][l3] = plane_p[0][l][l2][l3];
 
-          planes[4][l][l2][l3] = std::move(planes[0][l][l2][l3]);
-          planes[5][l][l2][l3] = std::move(planes[1][l][l2][l3]);
-          planes[6][l][l2][l3] = std::move(planes[2][l][l2][l3]);
-          planes[7][l][l2][l3] = std::move(planes[3][l][l2][l3]);
-          planes[8][l][l2][l3] = std::move(planes[0][l][l2][l3]);
-          planes[9][l][l2][l3] = std::move(planes[1][l][l2][l3]);
-          planes[10][l][l2][l3] = std::move(planes[2][l][l2][l3]);
-          planes[11][l][l2][l3] = std::move(planes[3][l][l2][l3]);
-          planes[12][l][l2][l3] = std::move(planes[1][l][l2][l3]);
-          planes[13][l][l2][l3] = std::move(planes[2][l][l2][l3]);
-          planes[14][l][l2][l3] = std::move(planes[3][l][l2][l3]);
-          planes[15][l][l2][l3] = std::move(planes[0][l][l2][l3]);
+          planes[4][l][l2][l3] = planes[0][l][l2][l3];
+          planes[5][l][l2][l3] = planes[1][l][l2][l3];
+          planes[6][l][l2][l3] = planes[2][l][l2][l3];
+          planes[7][l][l2][l3] = planes[3][l][l2][l3];
+          planes[8][l][l2][l3] = planes[0][l][l2][l3];
+          planes[9][l][l2][l3] = planes[1][l][l2][l3];
+          planes[10][l][l2][l3] = planes[2][l][l2][l3];
+          planes[11][l][l2][l3] = planes[3][l][l2][l3];
+          planes[12][l][l2][l3] = planes[1][l][l2][l3];
+          planes[13][l][l2][l3] = planes[2][l][l2][l3];
+          planes[14][l][l2][l3] = planes[3][l][l2][l3];
+          planes[15][l][l2][l3] = planes[0][l][l2][l3];
         }
 
   } // debug
@@ -2778,7 +2777,7 @@ void load_level() {
       sprintf(levelname, "%d-%d", solo_country, solo_mission);
     }
   } else {
-    sprintf(levelname, parametrit[findparameter("-level")] + 6);
+    sprintf(levelname, "%s", parametrit[findparameter("-level")] + 6);
   }
 
   if (!dksopen(levelname)) {
@@ -2798,18 +2797,18 @@ void load_level() {
   // Byte order conversion
 
   for (i = 0; i < MAX_STRUCTURES; i++) {
-    leveldata.struct_x[i] = SDL_SwapLE32(leveldata.struct_x[i]);
-    leveldata.struct_y[i] = SDL_SwapLE32(leveldata.struct_y[i]);
-    leveldata.struct_hit[i] = SDL_SwapLE32(leveldata.struct_hit[i]);
-    leveldata.struct_owner[i] = SDL_SwapLE32(leveldata.struct_owner[i]);
-    leveldata.struct_type[i] = SDL_SwapLE32(leveldata.struct_type[i]);
+    leveldata.struct_x[i] = SDL_Swap32LE(leveldata.struct_x[i]);
+    leveldata.struct_y[i] = SDL_Swap32LE(leveldata.struct_y[i]);
+    leveldata.struct_hit[i] = SDL_Swap32LE(leveldata.struct_hit[i]);
+    leveldata.struct_owner[i] = SDL_Swap32LE(leveldata.struct_owner[i]);
+    leveldata.struct_type[i] = SDL_Swap32LE(leveldata.struct_type[i]);
   }
 
   for (i = 0; i < 4; i++) {
-    leveldata.airfield_x[i] = SDL_SwapLE32(leveldata.airfield_x[i]);
-    leveldata.airfield_y[i] = SDL_SwapLE32(leveldata.airfield_y[i]);
-    leveldata.airfield_lenght[i] = SDL_SwapLE32(leveldata.airfield_lenght[i]);
-    leveldata.plane_direction[i] = SDL_SwapLE32(leveldata.plane_direction[i]);
+    leveldata.airfield_x[i] = SDL_Swap32LE(leveldata.airfield_x[i]);
+    leveldata.airfield_y[i] = SDL_Swap32LE(leveldata.airfield_y[i]);
+    leveldata.airfield_lenght[i] = SDL_Swap32LE(leveldata.airfield_lenght[i]);
+    leveldata.plane_direction[i] = SDL_Swap32LE(leveldata.plane_direction[i]);
   }
 
   for (l = 0; l < 4; l++) {

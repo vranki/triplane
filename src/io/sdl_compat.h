@@ -21,13 +21,11 @@
 #ifndef SDL_COMPAT_H
 #define SDL_COMPAT_H
 #include <cstdint>
-#ifdef HAVE_SDL_MIXER
-#include <SDL/SDL_mixer.h>
-#endif
+#include "keys.h"
 
 constexpr int32_t SAMPLE_VOLUME = 20;
 
-#define PAUSE_KEY SDLK_PAUSE
+#define PAUSE_KEY TK_PAUSE
 
 constexpr int32_t SOUNDCARD_NONE = 0;
 constexpr int32_t SOUNDCARD_GUS = 1;
@@ -37,22 +35,18 @@ constexpr int32_t SOUNDCARD_SDL = 3;
 int kbhit();
 int getch();
 
-extern unsigned char *key;
-
 typedef struct {
   int right_volume, left_volume;
-#ifdef HAVE_SDL_MIXER
-  Mix_Chunk *chunk;
-#endif
+  float *pcm;  /* mono, 32-bit float, MIXER_RATE Hz */
+  int frames;
 } sb_sample;
 
 typedef struct {
-#ifdef HAVE_SDL_MIXER
-  Mix_Music *music;
-#endif
+  void *module; /* MikMod MODULE */
 } sb_mod_file;
 
 void update_key_state();
+void pump_events();
 int sdl_init_sounds();
 void sdl_uninit_sounds();
 void sdl_play_sample(sb_sample *sample, int looping = 0);

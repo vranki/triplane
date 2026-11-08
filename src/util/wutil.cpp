@@ -22,8 +22,7 @@
 #include "../io/dksfile.h"
 #include "random.h"
 #include "../triplane.h"
-#include <SDL/SDL.h>
-#include <SDL/SDL_endian.h>
+#include <SDL3/SDL.h>
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
@@ -104,12 +103,12 @@ namespace util::wutil {
         dksclose();
 
         for (i = 0; i < SIN_COS_NRO; i++) {
-            sinit[i] = SDL_SwapLE32(sinit[i]);
-            cosinit[i] = SDL_SwapLE32(cosinit[i]);
+            sinit[i] = SDL_Swap32LE(sinit[i]);
+            cosinit[i] = SDL_Swap32LE(cosinit[i]);
         }
 
         for (i = 0; i < ASIN_NRO; i++) {
-            asinit[i] = SDL_SwapLE32(asinit[i]);
+            asinit[i] = SDL_Swap32LE(asinit[i]);
         }
 
         trigs_initialized = 1;

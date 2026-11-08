@@ -23,15 +23,13 @@
 #include "../../gfx/font.h"
 #include "../../io/sdl_compat.h"
 #include "../../io/trip_io.h"
-#include <SDL/SDL.h>
-#include <SDL/SDL_endian.h>
+#include <SDL3/SDL.h>
 #include <cstdio>
 #include <cstring>
 #include <utility>
 
 constexpr int32_t MAX_STRUCTURES = 100;
 constexpr int32_t MAX_TYPES = 3;
-constexpr int32_t AIRFIELD_LENGHT = 110;
 
 constexpr int32_t MIN_AIRFIELD_LENGHT = 40;
 constexpr int32_t MAX_AIRFIELD_LENGHT = 200;
@@ -75,18 +73,18 @@ void swap_byte_order() {
   int i;
 
   for (i = 0; i < MAX_STRUCTURES; i++) {
-    leveldata.struct_x[i] = SDL_SwapLE32(leveldata.struct_x[i]);
-    leveldata.struct_y[i] = SDL_SwapLE32(leveldata.struct_y[i]);
-    leveldata.struct_hit[i] = SDL_SwapLE32(leveldata.struct_hit[i]);
-    leveldata.struct_owner[i] = SDL_SwapLE32(leveldata.struct_owner[i]);
-    leveldata.struct_type[i] = SDL_SwapLE32(leveldata.struct_type[i]);
+    leveldata.struct_x[i] = SDL_Swap32LE(leveldata.struct_x[i]);
+    leveldata.struct_y[i] = SDL_Swap32LE(leveldata.struct_y[i]);
+    leveldata.struct_hit[i] = SDL_Swap32LE(leveldata.struct_hit[i]);
+    leveldata.struct_owner[i] = SDL_Swap32LE(leveldata.struct_owner[i]);
+    leveldata.struct_type[i] = SDL_Swap32LE(leveldata.struct_type[i]);
   }
 
   for (i = 0; i < 4; i++) {
-    leveldata.airfield_x[i] = SDL_SwapLE32(leveldata.airfield_x[i]);
-    leveldata.airfield_y[i] = SDL_SwapLE32(leveldata.airfield_y[i]);
-    leveldata.airfield_lenght[i] = SDL_SwapLE32(leveldata.airfield_lenght[i]);
-    leveldata.plane_direction[i] = SDL_SwapLE32(leveldata.plane_direction[i]);
+    leveldata.airfield_x[i] = SDL_Swap32LE(leveldata.airfield_x[i]);
+    leveldata.airfield_y[i] = SDL_Swap32LE(leveldata.airfield_y[i]);
+    leveldata.airfield_lenght[i] = SDL_Swap32LE(leveldata.airfield_lenght[i]);
+    leveldata.plane_direction[i] = SDL_Swap32LE(leveldata.plane_direction[i]);
   }
 }
 
@@ -125,7 +123,7 @@ void edit_level() {
 
   std::unique_ptr<Bitmap> pointti(new Bitmap(1, 1, &colori));
 
-  while (ch != SDLK_ESCAPE) {
+  while (ch != TK_ESCAPE) {
     colori++;
     pb_picture->blit(-kohta, 0);
     for (c = 0; c < MAX_STRUCTURES; c++) {
@@ -209,7 +207,7 @@ void edit_level() {
       ch = getch();
 
       switch (ch) {
-      case SDLK_F2:
+      case TK_F2:
         swap_byte_order();
         faili = fopen(filename, "wb");
         fwrite(&leveldata, sizeof(leveldata), 1, faili);
@@ -217,7 +215,7 @@ void edit_level() {
         swap_byte_order();
         break;
 
-      case SDLK_INSERT:
+      case TK_INSERT:
         if (active != -1)
           break;
 
@@ -240,7 +238,7 @@ void edit_level() {
         current = c;
         break;
 
-      case SDLK_F5:
+      case TK_F5:
         if (active != -1)
           break;
 
@@ -264,7 +262,7 @@ void edit_level() {
         current = c;
         break;
 
-      case SDLK_F6:
+      case TK_F6:
         if (active != -1)
           break;
 
@@ -287,7 +285,7 @@ void edit_level() {
         current = c;
         break;
 
-      case SDLK_F7:
+      case TK_F7:
         if (active != -1)
           break;
 
@@ -310,7 +308,7 @@ void edit_level() {
         current = c;
         break;
 
-      case SDLK_F8:
+      case TK_F8:
         if (active != -1)
           break;
 
@@ -333,14 +331,14 @@ void edit_level() {
         current = c;
         break;
 
-      case SDLK_DELETE:
+      case TK_DELETE:
         if (active != -1) {
           leveldata.struct_x[active] = 0;
           active = -1;
         }
         break;
 
-      case SDLK_HOME:
+      case TK_HOME:
         if (active != -1) {
           leveldata.struct_owner[active]++;
           if (leveldata.struct_owner[active] >= 5)
@@ -348,26 +346,26 @@ void edit_level() {
         }
         break;
 
-      case SDLK_END:
+      case TK_END:
         if (active != -1) {
           leveldata.struct_hit[active]++;
           if (leveldata.struct_hit[active] >= 2)
             leveldata.struct_hit[active] = 0;
         }
         break;
-      case SDLK_RIGHT:
+      case TK_RIGHT:
         kohta += 106;
         if (kohta > 2080)
           kohta = 2080;
         break;
 
-      case SDLK_LEFT:
+      case TK_LEFT:
         kohta -= 106;
         if (kohta < 0)
           kohta = 0;
         break;
 
-      case SDLK_PAGEUP:
+      case TK_PAGEUP:
         char temp_stringi[10];
         temp_stringi[0] = 0;
         fontti->scanf(265, 178, temp_stringi, 6);
@@ -379,59 +377,59 @@ void edit_level() {
         pb_picture = std::make_unique<Bitmap>(temp_stringi);
         break;
 
-      case SDLK_PAGEDOWN:
+      case TK_PAGEDOWN:
         if (active != -1) {
           leveldata.struct_type[active]++;
           if (leveldata.struct_type[active] >= MAX_TYPES)
             leveldata.struct_type[active] = 0;
         }
         break;
-      case SDLK_q:
+      case TK_q:
         leveldata.airfield_lenght[0]++;
         if (leveldata.airfield_lenght[0] > MAX_AIRFIELD_LENGHT)
           leveldata.airfield_lenght[0] = MAX_AIRFIELD_LENGHT;
         break;
-      case SDLK_w:
+      case TK_w:
         leveldata.airfield_lenght[1]++;
         if (leveldata.airfield_lenght[1] > MAX_AIRFIELD_LENGHT)
           leveldata.airfield_lenght[1] = MAX_AIRFIELD_LENGHT;
         break;
-      case SDLK_e:
+      case TK_e:
         leveldata.airfield_lenght[2]++;
         if (leveldata.airfield_lenght[2] > MAX_AIRFIELD_LENGHT)
           leveldata.airfield_lenght[2] = MAX_AIRFIELD_LENGHT;
         break;
-      case SDLK_r:
+      case TK_r:
         leveldata.airfield_lenght[3]++;
         if (leveldata.airfield_lenght[3] > MAX_AIRFIELD_LENGHT)
           leveldata.airfield_lenght[3] = MAX_AIRFIELD_LENGHT;
         break;
 
-      case SDLK_a:
+      case TK_a:
         leveldata.airfield_lenght[0]--;
         if (leveldata.airfield_lenght[0] < MIN_AIRFIELD_LENGHT)
           leveldata.airfield_lenght[0] = MIN_AIRFIELD_LENGHT;
         break;
 
-      case SDLK_s:
+      case TK_s:
         leveldata.airfield_lenght[1]--;
         if (leveldata.airfield_lenght[1] < MIN_AIRFIELD_LENGHT)
           leveldata.airfield_lenght[1] = MIN_AIRFIELD_LENGHT;
         break;
 
-      case SDLK_d:
+      case TK_d:
         leveldata.airfield_lenght[2]--;
         if (leveldata.airfield_lenght[2] < MIN_AIRFIELD_LENGHT)
           leveldata.airfield_lenght[2] = MIN_AIRFIELD_LENGHT;
         break;
 
-      case SDLK_f:
+      case TK_f:
         leveldata.airfield_lenght[3]--;
         if (leveldata.airfield_lenght[3] < MIN_AIRFIELD_LENGHT)
           leveldata.airfield_lenght[3] = MIN_AIRFIELD_LENGHT;
         break;
 
-      case SDLK_PLUS:
+      case TK_PLUS:
         if (active == -1 || active == 99)
           break;
 
@@ -439,7 +437,7 @@ void edit_level() {
           active++;
         break;
 
-      case SDLK_MINUS:
+      case TK_MINUS:
         if (active < 1)
           break;
 
@@ -447,8 +445,8 @@ void edit_level() {
           active--;
         break;
       default:
-        if ((ch >= SDLK_1) && (ch <= SDLK_4)) {
-          airfield_set = ch - SDLK_1;
+        if ((ch >= TK_1) && (ch <= TK_4)) {
+          airfield_set = ch - TK_1;
           hiirikursori = std::move(pointti);
         }
         break;

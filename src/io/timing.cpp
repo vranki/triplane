@@ -19,7 +19,7 @@
  */
 
 #include "sdl_compat.h"
-#include <SDL/SDL.h>
+#include <SDL3/SDL.h>
 #include <cassert>
 
 namespace io::timing {
@@ -35,8 +35,8 @@ namespace io::timing {
         }
 
         target_tick = viimeinen_aika + 1000 / fps;
-        while (SDL_GetTicks() <= target_tick) {
-            uint32_t diff = target_tick - SDL_GetTicks();
+        while ((uint32_t)SDL_GetTicks() <= target_tick) {
+            uint32_t diff = target_tick - (uint32_t)SDL_GetTicks();
             if (diff > 10 && diff < 1000) {
                 SDL_Delay(diff);
             }
@@ -45,8 +45,8 @@ namespace io::timing {
         viimeinen_aika += 1000 / fps;
 
         // Recover from stopped process
-        if (SDL_GetTicks() > viimeinen_aika + 1000 / fps) {
-            viimeinen_aika = SDL_GetTicks();
+        if ((uint32_t)SDL_GetTicks() > viimeinen_aika + 1000 / fps) {
+            viimeinen_aika = (uint32_t)SDL_GetTicks();
         }
     }
 
