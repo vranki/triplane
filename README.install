@@ -61,6 +61,14 @@ The baseline is built once per commit under build/baseline/. It has to
 be buildable with CMake and SDL3. See tools/compare-baseline -h for the
 remaining options, such as the number of frames compared per game.
 
+"make smoke" only replays the recorded games with your build and checks
+that each draws frames and ends without a crash; it needs no baseline.
+
+GitHub Actions (.github/workflows/ci.yml) runs the build, the smoke test
+and the baseline comparison against the previous commit on Linux
+(Debian trixie), macOS and Windows (MSYS2) for every push and pull
+request.
+
 Regenerating data/
 ------------------
 

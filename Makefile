@@ -4,6 +4,7 @@
 #   make run             build and start the game in a window
 #   make install         install (PREFIX and DESTDIR are honoured)
 #   make test            compare replays against a baseline commit (BASE)
+#   make smoke           replay the recorded games, no baseline needed
 #   make clean           remove build products, keep the configuration
 #   make distclean       remove the whole build directory
 #
@@ -40,6 +41,9 @@ install: all
 test: all
 	CMAKE=$(CMAKE) tools/compare-baseline -b $(BASE) -d $(BUILD_DIR)
 
+smoke: all
+	tools/smoke-test $(BUILD_DIR)
+
 clean:
 	-$(CMAKE) --build $(BUILD_DIR) --target clean
 	rm -f fokker.dks
@@ -47,4 +51,4 @@ clean:
 distclean:
 	rm -rf $(BUILD_DIR) fokker.dks
 
-.PHONY: all configure triplane dksbuild data lvledit pgdview pcx2pgd depend run install test clean distclean
+.PHONY: all configure triplane dksbuild data lvledit pgdview pcx2pgd depend run install test smoke clean distclean
